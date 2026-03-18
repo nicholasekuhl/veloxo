@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — TextApp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: white; border-radius: 20px; padding: 40px; width: 100%; max-width: 400px; border: 1px solid #f0f0f0; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
+    .logo { font-size: 24px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .logo span { color: #6366f1; }
+    .sub { font-size: 13px; color: #9ca3af; margin-bottom: 32px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+    input { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+    input:focus { border-color: #6366f1; }
+    .btn { width: 100%; padding: 11px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; margin-top: 4px; }
+    .btn:hover { background: #4f46e5; }
+    .btn:disabled { background: #c7d2fe; cursor: not-allowed; }
+    .error { background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+    .toggle-link { text-align: center; margin-top: 20px; font-size: 13px; color: #6b7280; }
+    .toggle-link a { color: #6366f1; cursor: pointer; text-decoration: none; font-weight: 500; }
+    .toggle-link a:hover { text-decoration: underline; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Text<span>App</span></div>
+    <div class="sub" id="sub-text">Sign in to your account</div>
+    <div class="error" id="error-msg"></div>
+
+    <!-- Sign In form -->
+    <div id="login-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn" id="login-btn" onclick="login()">Sign In</button>
+    </div>
+
+    <!-- Create Account form -->
+    <div id="signup-form" class="hidden">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="signup-name" placeholder="Nick Kuhl" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
+      </div>
+      <button class="btn" id="signup-btn" onclick="signup()">Create Account</button>
+    </div>
+
+    <div class="toggle-link" id="toggle-login">
+      Don't have an account? <a onclick="showSignup()">Create one</a>
+    </div>
+    <div class="toggle-link hidden" id="toggle-signup">
+      Already have an account? <a onclick="showLogin()">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    fetch('/auth/me').then(r => { if (r.ok) window.location.href = '/' })
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (!document.getElementById('signup-form').classList.contains('hidden')) signup()
+        else login()
+      }
+    })
+
+    const showSignup = () => {
+      document.getElementById('login-form').classList.add('hidden')
+      document.getElementById('signup-form').classList.remove('hidden')
+      document.getElementById('toggle-login').classList.add('hidden')
+      document.getElementById('toggle-signup').classList.remove('hidden')
+      document.getElementById('sub-text').textContent = 'Create your account'
+      document.getElementById('error-msg').style.display = 'none'
+    }
+
+    const showLogin = () => {
+      document.getElementById('signup-form').classList.add('hidden')
+      document.getElementById('login-form').classList.remove('hidden')
+      document.getElementById('toggle-signup').classList.add('hidden')
+      document.getElementById('toggle-login').classList.remove('hidden')
+      document.getElementById('sub-text').textContent = 'Sign in to your account'
+      document.getElementById('error-msg').style.display = 'none'
+    }
+
+    const login = async () => {
+      const email = document.getElementById('login-email').value.trim()
+      const password = document.getElementById('login-password').value
+      const btn = document.getElementById('login-btn')
+      const errEl = document.getElementById('error-msg')
+
+      if (!email || !password) { errEl.textContent = 'Email and password are required.'; errEl.style.display = 'block'; return }
+
+      btn.disabled = true
+      btn.textContent = 'Signing in...'
+      errEl.style.display = 'none'
+
+      try {
+        const res = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) })
+        const data = await res.json()
+        if (data.success) {
+          window.location.href = '/'
+        } else {
+          errEl.textContent = data.error || 'Login failed.'
+          errEl.style.display = 'block'
+          btn.disabled = false
+          btn.textContent = 'Sign In'
+        }
+      } catch {
+        errEl.textContent = 'Something went wrong. Try again.'
+        errEl.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = 'Sign In'
+      }
+    }
+
+    const signup = async () => {
+      const agent_name = document.getElementById('signup-name').value.trim()
+      const email = document.getElementById('signup-email').value.trim()
+      const password = document.getElementById('signup-password').value
+      const btn = document.getElementById('signup-btn')
+      const errEl = document.getElementById('error-msg')
+
+      if (!email || !password) { errEl.textContent = 'Email and password are required.'; errEl.style.display = 'block'; return }
+
+      btn.disabled = true
+      btn.textContent = 'Creating account...'
+      errEl.style.display = 'none'
+
+      try {
+        const res = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, agent_name }) })
+        const data = await res.json()
+        if (data.success) {
+          window.location.href = '/'
+        } else {
+          errEl.textContent = data.error || 'Signup failed.'
+          errEl.style.display = 'block'
+          btn.disabled = false
+          btn.textContent = 'Create Account'
+        }
+      } catch {
+        errEl.textContent = 'Something went wrong. Try again.'
+        errEl.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = 'Create Account'
+      }
+    }
+  </script>
+</body>
+</html>

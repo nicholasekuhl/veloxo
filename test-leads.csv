@@ -1,0 +1,6 @@
+first name,last name,phone,email,state,plan type
+John,Smith,5615550101,john.smith@email.com,FL,ACA
+Maria,Garcia,5615550102,maria.garcia@email.com,Florida,Medicare
+Robert,Johnson,5615550103,,TX,ACA
+Lisa,Williams,5615550104,lisa.w@email.com,GA,Medicaid
+James,Brown,5615550105,,FL,ACA

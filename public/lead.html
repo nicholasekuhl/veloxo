@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lead Profile — TextApp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
+    header { background: white; border-bottom: 1px solid #eee; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 50; }
+    .logo { font-size: 18px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; text-decoration: none; }
+    .logo span { color: #6366f1; }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280; cursor: pointer; background: none; border: none; padding: 6px 12px; border-radius: 8px; transition: background 0.15s; }
+    .back-btn:hover { background: #f3f4f6; color: #374151; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 28px 32px; }
+    .btn { border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-primary:disabled { background: #c7d2fe; cursor: not-allowed; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-ghost { background: none; color: #6b7280; border: 1px solid #e5e7eb; }
+    .btn-ghost:hover { background: #f9fafb; }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-call { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .btn-call:hover { background: #d1fae5; }
+    .btn-sms { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+    .btn-sms:hover { background: #dbeafe; }
+    .btn-disposition { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .btn-disposition:hover { background: #ede9fe; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* LEAD HEADER */
+    .lead-header { background: white; border-radius: 16px; padding: 24px 28px; margin-bottom: 20px; border: 1px solid #f0f0f0; }
+    .lead-header-top { display: flex; align-items: flex-start; gap: 20px; }
+    .lead-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+    .lead-name { font-size: 24px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .lead-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #6b7280; margin-bottom: 10px; }
+    .lead-meta span { display: flex; align-items: center; gap: 4px; }
+    .lead-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .tag-new { background: #e0e7ff; color: #4338ca; }
+    .tag-contacted { background: #d1fae5; color: #065f46; }
+    .tag-booked { background: #fef3c7; color: #92400e; }
+    .tag-opted_out { background: #fee2e2; color: #991b1b; }
+    .tag-campaign { background: #f3e8ff; color: #7c3aed; }
+    .disposition-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: white; }
+    .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; flex-shrink: 0; }
+
+    /* FOLLOWUP BAR */
+    .followup-bar { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .followup-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .followup-badge:hover { background: #fde68a; }
+    .notes-area { flex: 1; min-width: 200px; }
+    .notes-textarea { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; height: 36px; outline: none; transition: all 0.2s; }
+    .notes-textarea:focus { border-color: #6366f1; height: 72px; }
+
+    /* INFO GRID */
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+    .info-item { background: #f9fafb; border-radius: 8px; padding: 10px 14px; }
+    .info-item .lbl { font-size: 11px; color: #9ca3af; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .info-item .val { font-size: 13px; font-weight: 500; color: #1a1a2e; }
+
+    /* MAIN LAYOUT */
+    .main-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+
+    /* TABS */
+    .tabs-card { background: white; border-radius: 16px; border: 1px solid #f0f0f0; overflow: hidden; }
+    .tabs-nav { display: flex; border-bottom: 1px solid #f0f0f0; overflow-x: auto; }
+    .tab-btn { padding: 14px 20px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+    .tab-btn.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .tab-btn:hover:not(.active) { color: #374151; }
+    .tab-panel { display: none; padding: 20px; }
+    .tab-panel.active { display: block; }
+
+    /* ACTIVITY LOG */
+    .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .activity-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .activity-icon.sms { background: #eff6ff; }
+    .activity-icon.disposition { background: #f5f3ff; }
+    .activity-icon.note { background: #fef3c7; }
+    .activity-icon.task { background: #d1fae5; }
+    .activity-icon.call { background: #ecfdf5; }
+    .activity-info { flex: 1; }
+    .activity-text { font-size: 13px; color: #374151; line-height: 1.5; }
+    .activity-time { font-size: 11px; color: #d1d5db; margin-top: 3px; }
+
+    /* SMS PANEL */
+    .sms-history { max-height: 400px; overflow-y: auto; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .msg { display: flex; flex-direction: column; max-width: 75%; }
+    .msg.inbound { align-self: flex-start; }
+    .msg.outbound { align-self: flex-end; }
+    .msg-bubble { padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+    .msg.inbound .msg-bubble { background: #f3f4f6; color: #1a1a2e; border-bottom-left-radius: 4px; }
+    .msg.outbound .msg-bubble { background: #6366f1; color: white; border-bottom-right-radius: 4px; }
+    .msg.outbound.ai .msg-bubble { background: #8b5cf6; }
+    .msg-time { font-size: 11px; color: #d1d5db; margin-top: 3px; }
+    .msg.outbound .msg-time { text-align: right; }
+    .msg-label { font-size: 10px; color: #9ca3af; }
+    .msg.outbound .msg-label { text-align: right; }
+    .sms-send-area { border-top: 1px solid #f0f0f0; padding-top: 16px; }
+    .template-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .sms-input-row { display: flex; gap: 8px; }
+    .sms-textarea { flex: 1; padding: 9px 13px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 13px; font-family: inherit; resize: none; height: 42px; outline: none; transition: all 0.2s; }
+    .sms-textarea:focus { border-color: #6366f1; height: 84px; }
+    .char-count { font-size: 11px; color: #d1d5db; text-align: right; margin-top: 3px; }
+    .char-count.warning { color: #f59e0b; }
+    .char-count.danger { color: #ef4444; }
+
+    /* TASKS */
+    .task-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .task-check { width: 18px; height: 18px; cursor: pointer; accent-color: #6366f1; flex-shrink: 0; }
+    .task-info { flex: 1; }
+    .task-title { font-size: 14px; font-weight: 500; }
+    .task-title.done { text-decoration: line-through; color: #9ca3af; }
+    .task-due { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .task-due.overdue { color: #ef4444; }
+    .task-due.today { color: #f59e0b; }
+    .add-task-form { background: #f9fafb; border-radius: 10px; padding: 16px; margin-bottom: 16px; border: 1px solid #e5e7eb; display: none; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s; background: white; }
+    .form-group input:focus { border-color: #6366f1; }
+
+    /* DISPOSITION HISTORY */
+    .disp-history-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .disp-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .disp-info { flex: 1; }
+    .disp-name { font-size: 14px; font-weight: 600; }
+    .disp-time { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    /* CALL LOG */
+    .call-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .call-direction { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .call-direction.out { background: #ecfdf5; }
+    .call-direction.in { background: #eff6ff; }
+    .call-info { flex: 1; }
+    .call-result { font-size: 13px; font-weight: 500; }
+    .call-time { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+
+    /* AI INSIGHTS */
+    .insights-card { background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-radius: 12px; padding: 20px; border: 1px solid #ddd6fe; margin-bottom: 16px; }
+    .insights-label { font-size: 11px; font-weight: 600; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .insights-text { font-size: 14px; color: #374151; line-height: 1.7; }
+    .insights-loading { display: flex; align-items: center; gap: 8px; color: #9ca3af; font-size: 13px; }
+
+    /* RIGHT PANEL */
+    .right-panel { display: flex; flex-direction: column; gap: 16px; }
+    .panel-card { background: white; border-radius: 16px; padding: 20px; border: 1px solid #f0f0f0; }
+    .panel-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .autopilot-wrap { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f9fafb; border-radius: 10px; }
+    .autopilot-label { font-size: 13px; font-weight: 500; }
+    .autopilot-sublabel { font-size: 12px; color: #9ca3af; }
+    .toggle { position: relative; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 24px; transition: 0.2s; }
+    .toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: 0.2s; }
+    input:checked + .toggle-slider { background: #6366f1; }
+    input:checked + .toggle-slider:before { transform: translateX(20px); }
+    .status-select { width: 100%; padding: 9px 13px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; background: white; margin-top: 10px; }
+    .quick-stat { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f9fafb; font-size: 13px; }
+    .quick-stat .lbl { color: #9ca3af; }
+    .quick-stat .val { font-weight: 500; }
+
+    /* DISPOSITION PICKER */
+    .disp-picker-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+    .disp-pick-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; color: white; transition: opacity 0.15s; }
+    .disp-pick-btn:hover { opacity: 0.85; }
+
+    .empty-state { text-align: center; padding: 32px; color: #d1d5db; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">Text<span>App</span></a>
+  <button class="back-btn" onclick="window.close()">← Close Profile</button>
+</header>
+
+<div class="container" id="main-container">
+  <div class="empty-state">Loading lead profile...</div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search)
+  const leadId = params.get('id')
+
+  let lead = null
+  let allTemplates = []
+  let allDispositionTags = []
+  let allCampaigns = []
+  let conversation = null
+  let tasks = []
+  let dispositionHistory = []
+  let callLog = []
+
+  const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+  const formatDateTime = (iso) => {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  }
+  const formatTime = (iso) => {
+    if (!iso) return ''
+    const d = new Date(iso), now = new Date(), diff = now - d
+    if (diff < 86400000) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    if (diff < 604800000) return d.toLocaleDateString('en-US', { weekday: 'short' })
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+  const getLocalTime = (tz) => { try { return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' }) } catch { return '' } }
+  const getInitials = (first, last) => ((first?.[0] || '') + (last?.[0] || '')).toUpperCase() || '?'
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/auth/me')
+      if (res.status === 401) { window.location.href = '/login.html'; return false }
+      return true
+    } catch { window.location.href = '/login.html'; return false }
+  }
+
+  const init = async () => {
+    const authed = await checkAuth()
+    if (!authed) return
+
+    if (!leadId) {
+      document.getElementById('main-container').innerHTML = '<div class="empty-state">No lead ID provided</div>'
+      return
+    }
+
+    try {
+      const [leadRes, templatesRes, dispositionsRes, campaignsRes] = await Promise.all([
+        fetch(`/leads/${leadId}`),
+        fetch('/templates'),
+        fetch('/dispositions'),
+        fetch('/campaigns')
+      ])
+
+      const leadData = await leadRes.json()
+      const templatesData = await templatesRes.json()
+      const dispositionsData = await dispositionsRes.json()
+      const campaignsData = await campaignsRes.json()
+
+      lead = leadData.lead
+      allTemplates = templatesData.templates || []
+      allDispositionTags = dispositionsData.tags || []
+      allCampaigns = campaignsData.campaigns || []
+
+      if (!lead) {
+        document.getElementById('main-container').innerHTML = '<div class="empty-state">Lead not found</div>'
+        return
+      }
+
+      renderPage()
+      loadConversation()
+      loadTasks()
+      loadDispositionHistory()
+      loadLeadAppointments()
+
+    } catch (err) {
+      console.error(err)
+      document.getElementById('main-container').innerHTML = '<div class="empty-state">Failed to load lead</div>'
+    }
+  }
+
+  const renderPage = () => {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown'
+    const initials = getInitials(lead.first_name, lead.last_name)
+    const dispTag = allDispositionTags.find(t => t.id === lead.disposition_tag_id)
+    const tags = lead.campaign_tags || []
+    const localTime = lead.timezone ? getLocalTime(lead.timezone) : ''
+
+    document.title = `${name} — TextApp`
+
+    document.getElementById('main-container').innerHTML = `
+      <!-- LEAD HEADER -->
+      <div class="lead-header" style="${lead.disposition_color ? `border-left: 4px solid ${lead.disposition_color};` : ''}">
+        <div class="lead-header-top">
+          <div class="lead-avatar">${initials}</div>
+          <div style="flex:1;">
+            <div class="lead-name">
+              ${name}
+              <span class="tag tag-${lead.status}">${lead.status}</span>
+              ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
+              ${lead.is_sold ? '<span class="tag" style="background:#d1fae5;color:#065f46;">✓ Sold</span>' : ''}
+              ${lead.is_cold ? '<span class="tag" style="background:#e0e7ff;color:#3730a3;">❄ Cold</span>' : ''}
+            </div>
+            <div class="lead-meta">
+              <span>📞 ${lead.phone}</span>
+              ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
+              ${lead.state ? `<span>📍 ${lead.state}${lead.zip_code ? ' ' + lead.zip_code : ''}</span>` : ''}
+              ${localTime ? `<span>🕐 ${localTime} local</span>` : ''}
+              ${lead.bucket ? `<span>📁 ${lead.bucket}</span>` : ''}
+              <span>📅 Added ${formatDate(lead.created_at)}</span>
+            </div>
+            <div class="lead-tags">
+              ${tags.map(t => `<span class="tag tag-campaign">${t}</span>`).join('')}
+            </div>
+          </div>
+          <div class="lead-actions">
+            <button class="btn btn-call" onclick="callLead()">📞 Call</button>
+            <button class="btn btn-disposition" onclick="toggleDispositionPicker()">🏷️ Disposition</button>
+            <button class="btn btn-primary" onclick="switchTab('sms')">💬 Send SMS</button>
+          </div>
+        </div>
+
+        <div id="disp-picker" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #f3f4f6;">
+          <div style="font-size:12px;font-weight:500;color:#6b7280;margin-bottom:8px;">Apply Disposition Tag:</div>
+          <div class="disp-picker-grid">
+            ${allDispositionTags.map(t => `<button class="disp-pick-btn" style="background:${t.color}" onclick="applyDisposition('${t.id}')">${t.name}</button>`).join('')}
+          </div>
+          ${allDispositionTags.length === 0 ? '<div style="font-size:13px;color:#9ca3af;">No disposition tags yet. Create them in Settings.</div>' : ''}
+        </div>
+
+        <div class="followup-bar">
+          <div>
+            ${lead.next_followup_at ? `
+              <div class="followup-badge" onclick="switchTab('tasks')">
+                📅 Next Follow Up: ${formatDateTime(lead.next_followup_at)}${lead.next_followup_note ? ' — ' + lead.next_followup_note : ''}
+              </div>
+            ` : `<span style="font-size:13px;color:#d1d5db;">No follow-up scheduled</span>`}
+          </div>
+          <div class="notes-area">
+            <textarea class="notes-textarea" placeholder="Add notes..." onblur="saveNotes(this.value)">${lead.notes || ''}</textarea>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-item"><div class="lbl">Plan Type</div><div class="val">${lead.plan_type || '—'}</div></div>
+          <div class="info-item"><div class="lbl">Date of Birth</div><div class="val">${lead.date_of_birth || '—'}</div></div>
+          <div class="info-item"><div class="lbl">Address</div><div class="val">${lead.address || '—'}</div></div>
+          <div class="info-item"><div class="lbl">Timezone</div><div class="val">${lead.timezone?.replace('America/', '') || '—'}</div></div>
+        </div>
+      </div>
+
+      <!-- MAIN LAYOUT -->
+      <div class="main-layout">
+
+        <!-- LEFT: TABS -->
+        <div class="tabs-card">
+          <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('activity')">Activity Log</button>
+            <button class="tab-btn" onclick="switchTab('sms')">SMS History</button>
+            <button class="tab-btn" onclick="switchTab('tasks')">Tasks</button>
+            <button class="tab-btn" onclick="switchTab('dispositions')">Disposition History</button>
+            <button class="tab-btn" onclick="switchTab('calls')">Call Log</button>
+            <button class="tab-btn" onclick="switchTab('appointments')">Appointments</button>
+            <button class="tab-btn" onclick="switchTab('insights')">AI Insights</button>
+          </div>
+
+          <!-- ACTIVITY LOG -->
+          <div class="tab-panel active" id="tab-activity">
+            <div id="activity-list"><div class="empty-state">Loading activity...</div></div>
+          </div>
+
+          <!-- SMS HISTORY -->
+          <div class="tab-panel" id="tab-sms">
+            <div class="sms-history" id="sms-history"><div class="empty-state">No messages yet</div></div>
+            <div class="sms-send-area">
+              <div class="template-pills" id="template-pills"></div>
+              <div class="sms-input-row">
+                <div style="flex:1;">
+                  <textarea class="sms-textarea" id="sms-input" placeholder="Type a message..." oninput="updateSMSChar(this)"></textarea>
+                  <div class="char-count" id="sms-char">0 / 160</div>
+                </div>
+                <button class="btn btn-primary" onclick="sendSMS()" style="align-self:flex-end;">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TASKS -->
+          <div class="tab-panel" id="tab-tasks">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:14px;font-weight:600;">Follow-up Tasks</div>
+              <button class="btn btn-primary btn-sm" onclick="toggleAddTaskForm()">+ Add Task</button>
+            </div>
+            <div class="add-task-form" id="add-task-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Task Title</label>
+                  <input type="text" id="task-title" placeholder="e.g. Follow up call, Send quote">
+                </div>
+                <div class="form-group">
+                  <label>Due Date & Time</label>
+                  <input type="datetime-local" id="task-due">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Notes (optional)</label>
+                <input type="text" id="task-notes" placeholder="Additional context...">
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn btn-secondary btn-sm" onclick="toggleAddTaskForm()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="saveTask()">Save Task</button>
+              </div>
+            </div>
+            <div id="tasks-list"><div class="empty-state">No tasks yet</div></div>
+          </div>
+
+          <!-- DISPOSITION HISTORY -->
+          <div class="tab-panel" id="tab-dispositions">
+            <div id="disp-history-list"><div class="empty-state">No disposition history yet</div></div>
+          </div>
+
+          <!-- CALL LOG -->
+          <div class="tab-panel" id="tab-calls">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div style="font-size:14px;font-weight:600;">Call History</div>
+              <button class="btn btn-primary btn-sm" onclick="toggleAddCallForm()">+ Log Call</button>
+            </div>
+            <div class="add-task-form" id="add-call-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Outcome</label>
+                  <select id="call-outcome">
+                    <option value="Answered">Answered</option>
+                    <option value="No Answer">No Answer</option>
+                    <option value="Left Voicemail">Left Voicemail</option>
+                    <option value="Busy">Busy</option>
+                    <option value="Wrong Number">Wrong Number</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Duration (minutes)</label>
+                  <input type="number" id="call-duration" placeholder="0" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Notes</label>
+                <input type="text" id="call-notes" placeholder="What was discussed...">
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn btn-secondary btn-sm" onclick="toggleAddCallForm()">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="saveCallLog()">Save</button>
+              </div>
+            </div>
+            <div id="calls-list"><div class="empty-state">No calls logged yet</div></div>
+          </div>
+
+          <!-- APPOINTMENTS -->
+          <div class="tab-panel" id="tab-appointments">
+            <div id="lead-appts-list"><div class="empty-state">No appointments yet</div></div>
+          </div>
+
+          <!-- AI INSIGHTS -->
+          <div class="tab-panel" id="tab-insights">
+            <div class="insights-card">
+              <div class="insights-label">⚡ AI Analysis</div>
+              <div id="insights-text" class="insights-loading">Click "Generate Insights" to analyze this lead's conversation history and get recommended next steps.</div>
+            </div>
+            <button class="btn btn-primary" onclick="generateInsights()" id="insights-btn">⚡ Generate Insights</button>
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+
+          <div class="panel-card">
+            <h3>Lead Controls</h3>
+            <div class="autopilot-wrap">
+              <div>
+                <div class="autopilot-label">Autopilot</div>
+                <div class="autopilot-sublabel">AI responds automatically</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="autopilot-toggle" ${lead.autopilot ? 'checked' : ''} onchange="toggleAutopilot(this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <select class="status-select" onchange="updateStatus(this.value)">
+              <option value="new" ${lead.status === 'new' ? 'selected' : ''}>New</option>
+              <option value="contacted" ${lead.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+              <option value="booked" ${lead.status === 'booked' ? 'selected' : ''}>Booked</option>
+              <option value="opted_out" ${lead.status === 'opted_out' ? 'selected' : ''}>Opted Out</option>
+            </select>
+          </div>
+
+          <div class="panel-card">
+            <h3>Quick Stats</h3>
+            <div class="quick-stat"><span class="lbl">Status</span><span class="val">${lead.status}</span></div>
+            <div class="quick-stat"><span class="lbl">Autopilot</span><span class="val">${lead.autopilot ? 'ON' : 'OFF'}</span></div>
+            <div class="quick-stat"><span class="lbl">Bucket</span><span class="val">${lead.bucket || '—'}</span></div>
+            <div class="quick-stat"><span class="lbl">Added</span><span class="val">${formatDate(lead.created_at)}</span></div>
+            <div class="quick-stat"><span class="lbl">Plan Type</span><span class="val">${lead.plan_type || '—'}</span></div>
+            <div class="quick-stat"><span class="lbl">Timezone</span><span class="val">${lead.timezone?.replace('America/', '') || '—'}</span></div>
+          </div>
+
+          <div class="panel-card">
+            <h3>Active Campaigns</h3>
+            <div id="active-campaigns-list"><div style="font-size:13px;color:#d1d5db;">Loading...</div></div>
+          </div>
+
+        </div>
+      </div>
+    `
+
+    renderTemplatePills()
+    loadActiveCampaigns()
+  }
+
+  const switchTab = (tab) => {
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      const tabs = ['activity', 'sms', 'tasks', 'dispositions', 'calls', 'appointments', 'insights']
+      btn.classList.toggle('active', tabs[i] === tab)
+    })
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+    document.getElementById(`tab-${tab}`)?.classList.add('active')
+    if (tab === 'appointments') loadLeadAppointments()
+  }
+
+  const loadLeadAppointments = async () => {
+    try {
+      const res = await fetch(`/appointments/lead/${leadId}`)
+      const data = await res.json()
+      const container = document.getElementById('lead-appts-list')
+      if (!data.appointments?.length) {
+        container.innerHTML = `<div class="empty-state">No appointments yet</div>`
+        return
+      }
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+      container.innerHTML = data.appointments.map(a => {
+        const dt = new Date(a.scheduled_at)
+        const dateStr = dt.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' })
+        const timeStr = dt.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' })
+        return `<div style="padding:12px 0;border-bottom:1px solid #f9fafb;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="font-size:14px;font-weight:600;">${dateStr} at ${timeStr}</div>
+            <span class="status-badge status-${a.status}">${a.status}</span>
+          </div>
+          ${a.notes ? `<div style="font-size:13px;color:#6b7280;">${a.notes}</div>` : ''}
+        </div>`
+      }).join('')
+    } catch (err) { console.error(err) }
+  }
+
+  const loadConversation = async () => {
+    try {
+      const res = await fetch('/conversations')
+      const data = await res.json()
+      const conv = (data.conversations || []).find(c => c.lead_id === leadId)
+      if (!conv) return
+      const res2 = await fetch(`/conversations/${conv.id}`)
+      const data2 = await res2.json()
+      conversation = data2.conversation
+      renderSMSHistory()
+      renderActivityLog()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderSMSHistory = () => {
+    const container = document.getElementById('sms-history')
+    if (!container) return
+    const messages = conversation?.messages || []
+    if (!messages.length) {
+      container.innerHTML = '<div class="empty-state">No messages yet</div>'
+      return
+    }
+    container.innerHTML = messages.map(m => `
+      <div class="msg ${m.direction} ${m.is_ai ? 'ai' : ''}">
+        <div class="msg-bubble">${m.body}</div>
+        <div class="msg-time">${formatTime(m.sent_at)}</div>
+        ${m.is_ai ? '<div class="msg-label">AI response</div>' : ''}
+      </div>
+    `).join('')
+    container.scrollTop = container.scrollHeight
+  }
+
+  const renderActivityLog = () => {
+    const container = document.getElementById('activity-list')
+    if (!container) return
+    const items = []
+    const messages = conversation?.messages || []
+    messages.forEach(m => {
+      items.push({
+        time: new Date(m.sent_at),
+        icon: m.direction === 'inbound' ? '💬' : '📤',
+        type: 'sms',
+        text: m.direction === 'inbound' ? `Lead replied: "${m.body.substring(0, 60)}${m.body.length > 60 ? '...' : ''}"` : `${m.is_ai ? 'AI sent' : 'You sent'}: "${m.body.substring(0, 60)}${m.body.length > 60 ? '...' : ''}"`
+      })
+    })
+    dispositionHistory.forEach(h => {
+      items.push({
+        time: new Date(h.applied_at),
+        icon: '🏷️',
+        type: 'disposition',
+        text: `Disposition applied: ${h.disposition_tags?.name || 'Unknown'}${h.notes ? ' — ' + h.notes : ''}`
+      })
+    })
+    tasks.forEach(t => {
+      items.push({
+        time: new Date(t.created_at),
+        icon: '✅',
+        type: 'task',
+        text: `Task created: ${t.title} — due ${formatDateTime(t.due_date)}`
+      })
+      if (t.completed && t.completed_at) {
+        items.push({
+          time: new Date(t.completed_at),
+          icon: '✅',
+          type: 'task',
+          text: `Task completed: ${t.title}`
+        })
+      }
+    })
+    callLog.forEach(c => {
+      items.push({
+        time: new Date(c.logged_at || c.created_at),
+        icon: '📞',
+        type: 'call',
+        text: `Call logged: ${c.outcome}${c.duration ? ' (' + c.duration + ' min)' : ''}${c.notes ? ' — ' + c.notes : ''}`
+      })
+    })
+    items.sort((a, b) => b.time - a.time)
+    if (!items.length) { container.innerHTML = '<div class="empty-state">No activity yet</div>'; return }
+    container.innerHTML = items.map(item => `
+      <div class="activity-item">
+        <div class="activity-icon ${item.type}">${item.icon}</div>
+        <div class="activity-info">
+          <div class="activity-text">${item.text}</div>
+          <div class="activity-time">${formatTime(item.time.toISOString())}</div>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  const renderTemplatePills = () => {
+    const container = document.getElementById('template-pills')
+    if (!container) return
+    if (!allTemplates.length) { container.innerHTML = ''; return }
+    container.innerHTML = allTemplates.map(t => `
+      <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="useTemplate('${t.id}')">📝 ${t.name}</button>
+    `).join('')
+  }
+
+  const useTemplate = (templateId) => {
+    const template = allTemplates.find(t => t.id === templateId)
+    if (!template) return
+    const input = document.getElementById('sms-input')
+    if (!input) return
+    input.value = template.body.replace(/\[First Name\]/g, lead.first_name || 'there')
+    input.style.height = '84px'
+    updateSMSChar(input)
+    switchTab('sms')
+  }
+
+  const updateSMSChar = (textarea) => {
+    const count = textarea.value.length
+    const el = document.getElementById('sms-char')
+    if (!el) return
+    el.textContent = `${count} / 160`
+    el.className = 'char-count' + (count > 160 ? ' danger' : count > 130 ? ' warning' : '')
+  }
+
+  const sendSMS = async () => {
+    const input = document.getElementById('sms-input')
+    const body = input?.value.trim()
+    if (!body) return alert('Please enter a message')
+    if (!conversation) {
+      const res = await fetch('/conversations')
+      const data = await res.json()
+      conversation = (data.conversations || []).find(c => c.lead_id === leadId)
+      if (!conversation) {
+        alert('No conversation found. Send the first message from the leads page.')
+        return
+      }
+      const res2 = await fetch(`/conversations/${conversation.id}`)
+      const data2 = await res2.json()
+      conversation = data2.conversation
+    }
+    try {
+      const res = await fetch('/messages/send-manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversation.id, lead_id: leadId, body })
+      })
+      const data = await res.json()
+      if (data.success) {
+        input.value = ''
+        input.style.height = '42px'
+        updateSMSChar(input)
+        await loadConversation()
+        switchTab('sms')
+      } else alert(data.error || 'Failed to send')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const loadTasks = async () => {
+    try {
+      const res = await fetch(`/tasks/${leadId}`)
+      const data = await res.json()
+      tasks = data.tasks || []
+      renderTasks()
+      renderActivityLog()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderTasks = () => {
+    const container = document.getElementById('tasks-list')
+    if (!container) return
+    if (!tasks.length) { container.innerHTML = '<div class="empty-state">No tasks yet</div>'; return }
+    const now = new Date()
+    container.innerHTML = tasks.map(t => {
+      const due = new Date(t.due_date)
+      const isOverdue = !t.completed && due < now
+      const isToday = !t.completed && due.toDateString() === now.toDateString()
+      return `
+        <div class="task-row">
+          <input type="checkbox" class="task-check" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked)">
+          <div class="task-info">
+            <div class="task-title ${t.completed ? 'done' : ''}">${t.title}</div>
+            <div class="task-due ${isOverdue ? 'overdue' : isToday ? 'today' : ''}">${isOverdue ? '⚠️ Overdue — ' : isToday ? '📅 Today — ' : ''}${formatDateTime(t.due_date)}${t.notes ? ' · ' + t.notes : ''}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Delete</button>
+        </div>
+      `
+    }).join('')
+  }
+
+  const toggleAddTaskForm = () => {
+    const form = document.getElementById('add-task-form')
+    const isVisible = form.style.display === 'block'
+    form.style.display = isVisible ? 'none' : 'block'
+    if (!isVisible) {
+      document.getElementById('task-title').value = ''
+      document.getElementById('task-notes').value = ''
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      tomorrow.setHours(10, 0, 0, 0)
+      const pad = n => String(n).padStart(2, '0')
+      document.getElementById('task-due').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
+    }
+  }
+
+  const saveTask = async () => {
+    const title = document.getElementById('task-title').value.trim()
+    const due_date = document.getElementById('task-due').value
+    const notes = document.getElementById('task-notes').value.trim()
+    if (!title) return alert('Please enter a task title')
+    if (!due_date) return alert('Please set a due date')
+    try {
+      const res = await fetch('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, title, due_date: new Date(due_date).toISOString(), notes })
+      })
+      const data = await res.json()
+      if (data.success) {
+        document.getElementById('add-task-form').style.display = 'none'
+        lead.next_followup_at = data.task.due_date
+        lead.next_followup_note = data.task.title
+        await loadTasks()
+        renderPage()
+        renderTemplatePills()
+        loadConversation()
+        loadDispositionHistory()
+        loadActiveCampaigns()
+      } else alert(data.error || 'Failed to save task')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const toggleTask = async (taskId, completed) => {
+    try {
+      await fetch(`/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed })
+      })
+      await loadTasks()
+      const res = await fetch(`/leads/${leadId}`)
+      const data = await res.json()
+      if (data.lead) {
+        lead.next_followup_at = data.lead.next_followup_at
+        lead.next_followup_note = data.lead.next_followup_note
+      }
+    } catch (err) { console.error(err) }
+  }
+
+  const deleteTask = async (taskId) => {
+    if (!confirm('Delete this task?')) return
+    try {
+      await fetch(`/tasks/${taskId}`, { method: 'DELETE' })
+      await loadTasks()
+    } catch (err) { console.error(err) }
+  }
+
+  const loadDispositionHistory = async () => {
+    try {
+      const res = await fetch(`/dispositions/history/${leadId}`)
+      const data = await res.json()
+      dispositionHistory = data.history || []
+      renderDispositionHistory()
+      renderActivityLog()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderDispositionHistory = () => {
+    const container = document.getElementById('disp-history-list')
+    if (!container) return
+    if (!dispositionHistory.length) { container.innerHTML = '<div class="empty-state">No disposition history yet</div>'; return }
+    container.innerHTML = dispositionHistory.map(h => `
+      <div class="disp-history-item">
+        <div class="disp-dot" style="background:${h.disposition_tags?.color || '#6366f1'}"></div>
+        <div class="disp-info">
+          <div class="disp-name">${h.disposition_tags?.name || 'Unknown'}</div>
+          <div class="disp-time">${formatTime(h.applied_at)}${h.notes ? ' · ' + h.notes : ''}</div>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  const toggleAddCallForm = () => {
+    const form = document.getElementById('add-call-form')
+    form.style.display = form.style.display === 'block' ? 'none' : 'block'
+  }
+
+  const saveCallLog = async () => {
+    const outcome = document.getElementById('call-outcome').value
+    const duration = document.getElementById('call-duration').value
+    const notes = document.getElementById('call-notes').value.trim()
+    callLog.unshift({
+      outcome,
+      duration: duration || null,
+      notes,
+      logged_at: new Date().toISOString()
+    })
+    document.getElementById('add-call-form').style.display = 'none'
+    renderCallLog()
+    renderActivityLog()
+
+    if (lead.notes) {
+      const callNote = `[Call ${new Date().toLocaleDateString()}] ${outcome}${duration ? ' (' + duration + ' min)' : ''}${notes ? ' — ' + notes : ''}`
+      const updated = lead.notes + '\n' + callNote
+      await fetch(`/leads/${leadId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: updated })
+      })
+    }
+  }
+
+  const renderCallLog = () => {
+    const container = document.getElementById('calls-list')
+    if (!container) return
+    if (!callLog.length) { container.innerHTML = '<div class="empty-state">No calls logged yet — click "+ Log Call" after each call</div>'; return }
+    container.innerHTML = callLog.map(c => `
+      <div class="call-row">
+        <div class="call-direction out">📞</div>
+        <div class="call-info">
+          <div class="call-result">${c.outcome}${c.duration ? ' · ' + c.duration + ' min' : ''}</div>
+          <div class="call-time">${formatTime(c.logged_at || c.created_at)}${c.notes ? ' · ' + c.notes : ''}</div>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  const generateInsights = async () => {
+    const btn = document.getElementById('insights-btn')
+    const text = document.getElementById('insights-text')
+    btn.disabled = true
+    btn.textContent = 'Analyzing...'
+    text.className = 'insights-loading'
+    text.textContent = 'Claude is analyzing this lead\'s conversation history and activity...'
+
+    try {
+      const messages = conversation?.messages || []
+      const dispHistory = dispositionHistory.map(h => h.disposition_tags?.name).filter(Boolean)
+
+      const res = await fetch('/messages/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversation_id: conversation?.id || 'none',
+          lead_id: leadId,
+          mode: 'insights'
+        })
+      })
+      const data = await res.json()
+
+      if (data.suggestion) {
+        text.className = 'insights-text'
+        text.textContent = data.suggestion
+      } else {
+        const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ')
+        const msgCount = messages.length
+        const lastMsg = messages[messages.length - 1]
+        const inbound = messages.filter(m => m.direction === 'inbound').length
+
+        text.className = 'insights-text'
+        text.innerHTML = `
+          <strong>${name}</strong> has ${msgCount} total messages in their conversation (${inbound} replies from them).
+          ${dispHistory.length ? `Current disposition: ${dispHistory[0]}.` : ''}
+          ${lastMsg ? `Last activity: ${formatTime(lastMsg.sent_at)}.` : ''}
+          ${lead.status === 'new' ? '📌 This lead has not been contacted yet — consider sending an initial outreach.' : ''}
+          ${lead.status === 'contacted' && inbound === 0 ? '📌 Lead has not replied yet — try a different approach or wait for your next campaign message.' : ''}
+          ${inbound > 0 ? '📌 Lead has engaged — prioritize follow-up and move toward booking a call.' : ''}
+        `
+      }
+    } catch (err) {
+      text.className = 'insights-text'
+      text.textContent = 'Could not generate insights. Make sure your Anthropic API key is configured.'
+    }
+
+    btn.disabled = false
+    btn.textContent = '⚡ Regenerate Insights'
+  }
+
+  const callLead = () => window.open(`tel:${lead.phone}`)
+
+  const toggleDispositionPicker = () => {
+    const picker = document.getElementById('disp-picker')
+    picker.style.display = picker.style.display === 'none' ? 'block' : 'none'
+  }
+
+  const applyDisposition = async (tagId) => {
+    try {
+      const res = await fetch('/dispositions/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, disposition_tag_id: tagId })
+      })
+      const data = await res.json()
+      if (data.success) {
+        const res2 = await fetch(`/leads/${leadId}`)
+        const data2 = await res2.json()
+        lead = data2.lead
+        renderPage()
+        renderTemplatePills()
+        loadConversation()
+        loadDispositionHistory()
+        loadActiveCampaigns()
+        document.getElementById('disp-picker').style.display = 'none'
+      } else alert(data.error || 'Failed to apply disposition')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const toggleAutopilot = async (value) => {
+    try {
+      await fetch(`/leads/${leadId}/autopilot`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autopilot: value })
+      })
+      lead.autopilot = value
+    } catch (err) { console.error(err) }
+  }
+
+  const updateStatus = async (status) => {
+    try {
+      await fetch(`/leads/${leadId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: lead.notes })
+      })
+      const res = await fetch('/leads/' + leadId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      lead.status = status
+    } catch (err) { console.error(err) }
+  }
+
+  const saveNotes = async (notes) => {
+    try {
+      await fetch(`/leads/${leadId}/notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes })
+      })
+      lead.notes = notes
+    } catch (err) { console.error(err) }
+  }
+
+  const loadActiveCampaigns = async () => {
+    try {
+      const res = await fetch('/campaigns')
+      const data = await res.json()
+      const campaigns = data.campaigns || []
+      const container = document.getElementById('active-campaigns-list')
+      if (!container) return
+      const activeTags = lead.campaign_tags || []
+      const active = campaigns.filter(c => activeTags.includes(c.name))
+      if (!active.length) {
+        container.innerHTML = '<div style="font-size:13px;color:#d1d5db;">No active campaigns</div>'
+        return
+      }
+      container.innerHTML = active.map(c => `
+        <div class="quick-stat">
+          <span class="lbl">${c.name}</span>
+          <span class="val" style="color:${c.status === 'active' ? '#059669' : '#9ca3af'}">${c.status}</span>
+        </div>
+      `).join('')
+    } catch (err) { console.error(err) }
+  }
+
+  init()
+</script>
+
+</body>
+</html>

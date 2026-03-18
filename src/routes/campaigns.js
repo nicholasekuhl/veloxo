@@ -1,0 +1,23 @@
+const express = require('express')
+const router = express.Router()
+const {
+  getCampaigns,
+  getCampaign,
+  createCampaign,
+  updateCampaign,
+  deleteCampaign,
+  enrollLeads,
+  startCampaign,
+  pauseCampaign
+} = require('../controllers/campaignsController')
+
+router.get('/', getCampaigns)
+router.get('/:id', getCampaign)
+router.post('/', createCampaign)
+router.put('/:id', updateCampaign)
+router.delete('/:id', deleteCampaign)
+router.post('/:id/enroll', enrollLeads)
+router.post('/:id/start', startCampaign)
+router.post('/:id/pause', pauseCampaign)
+
+module.exports = router

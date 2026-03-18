@@ -1,0 +1,3131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextApp</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
+    header { background: white; border-bottom: 1px solid #eee; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 50; }
+    .logo { font-size: 18px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; }
+    .logo span { color: #6366f1; }
+    .nav { display: flex; gap: 4px; }
+    .nav-btn { padding: 8px 16px; border: none; background: none; cursor: pointer; font-size: 14px; color: #888; border-radius: 8px; transition: all 0.2s; font-weight: 500; }
+    .nav-btn.active { background: #f0f0ff; color: #6366f1; }
+    .nav-btn:hover { background: #f7f8fa; color: #1a1a2e; }
+    .header-right { font-size: 13px; color: #888; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 28px 32px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .btn { border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-primary:hover { background: #4f46e5; }
+    .btn-primary:disabled { background: #c7d2fe; cursor: not-allowed; }
+    .btn-secondary { background: #f3f4f6; color: #374151; }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-ghost { background: none; color: #6b7280; border: 1px solid #e5e7eb; }
+    .btn-ghost:hover { background: #f9fafb; }
+    .btn-danger { background: #fee2e2; color: #dc2626; }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success { background: #d1fae5; color: #059669; }
+    .btn-success:hover { background: #a7f3d0; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-call { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+    .btn-call:hover { background: #d1fae5; }
+    .btn-sms { background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; }
+    .btn-sms:hover { background: #dbeafe; }
+    .btn-disposition { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+    .btn-disposition:hover { background: #ede9fe; }
+
+    .upload-zone { background: white; border-radius: 16px; padding: 24px 28px; margin-bottom: 24px; border: 2px dashed #e5e7eb; text-align: center; transition: all 0.2s; cursor: pointer; }
+    .upload-zone.dragover { border-color: #6366f1; background: #f5f3ff; }
+    .upload-zone h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+    .upload-zone p { color: #9ca3af; font-size: 13px; margin-bottom: 12px; }
+    #file-input { display: none; }
+    .status-bar { padding: 10px 16px; border-radius: 8px; margin-top: 12px; font-size: 13px; display: none; }
+    .status-bar.success { background: #d1fae5; color: #065f46; display: block; }
+    .status-bar.error { background: #fee2e2; color: #991b1b; display: block; }
+    .status-bar.loading { background: #e0e7ff; color: #3730a3; display: block; }
+
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: white; border-radius: 12px; padding: 16px 20px; border: 1px solid #f0f0f0; }
+    .stat-card .num { font-size: 28px; font-weight: 700; color: #6366f1; line-height: 1; }
+    .stat-card .lbl { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+
+    .bucket-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .bucket-tab { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #e5e7eb; background: white; color: #6b7280; transition: all 0.15s; white-space: nowrap; }
+    .bucket-tab.active { background: #6366f1; color: white; border-color: #6366f1; }
+    .bucket-tab:hover:not(.active) { background: #f3f4f6; }
+    .bucket-tab .count { font-size: 11px; opacity: 0.7; margin-left: 4px; }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .search-input { padding: 8px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; width: 200px; outline: none; }
+    .search-input:focus { border-color: #6366f1; }
+    select.filter { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; background: white; }
+
+    .leads-grid { display: flex; flex-direction: column; gap: 10px; }
+    .lead-card { background: white; border-radius: 14px; padding: 18px 22px; border: 1px solid #f0f0f0; transition: box-shadow 0.2s; }
+    .lead-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .lead-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+    .lead-card-left { display: flex; align-items: flex-start; gap: 14px; flex: 1; }
+    .lead-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+    .lead-info { flex: 1; }
+    .lead-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .lead-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .lead-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+    .tag-new { background: #e0e7ff; color: #4338ca; }
+    .tag-contacted { background: #d1fae5; color: #065f46; }
+    .tag-booked { background: #fef3c7; color: #92400e; }
+    .tag-opted_out { background: #fee2e2; color: #991b1b; }
+    .tag-campaign { background: #f3e8ff; color: #7c3aed; }
+    .tag-plan { background: #e0f2fe; color: #0369a1; }
+    .tag-bucket { background: #fef9c3; color: #854d0e; }
+    .disposition-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; color: white; }
+
+    .autopilot-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .autopilot-label { font-size: 11px; color: #9ca3af; font-weight: 500; }
+    .autopilot-label.on { color: #6366f1; }
+    .toggle { position: relative; width: 38px; height: 20px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 20px; transition: 0.2s; }
+    .toggle-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+    input:checked + .toggle-slider { background: #6366f1; }
+    input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    .lead-card-bottom { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #f9fafb; flex-wrap: wrap; }
+    .notes-input { flex: 1; min-width: 180px; padding: 7px 11px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; resize: none; height: 34px; transition: all 0.2s; }
+    .notes-input:focus { border-color: #6366f1; height: 68px; }
+    .card-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .bulk-bar { background: #1a1a2e; color: white; border-radius: 12px; padding: 12px 20px; margin-top: 16px; display: none; align-items: center; gap: 12px; }
+    .bulk-bar.visible { display: flex; }
+    .bulk-bar span { font-size: 13px; flex: 1; }
+
+    .conv-layout { display: flex; height: calc(100vh - 116px); background: white; border-radius: 16px; border: 1px solid #f0f0f0; overflow: hidden; }
+    .conv-sidebar { width: 300px; border-right: 1px solid #f0f0f0; display: flex; flex-direction: column; flex-shrink: 0; }
+    .conv-sidebar-header { padding: 16px 18px; border-bottom: 1px solid #f0f0f0; }
+    .conv-sidebar-header h2 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+    .conv-search { width: 100%; padding: 7px 11px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; }
+    .conv-list { flex: 1; overflow-y: auto; }
+    .conv-item { padding: 12px 18px; border-bottom: 1px solid #f9fafb; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 10px; }
+    .conv-item:hover { background: #f9fafb; }
+    .conv-item.active { background: #f0f0ff; }
+    .conv-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; position: relative; }
+    .unread-dot { position: absolute; top: 0; right: 0; width: 9px; height: 9px; background: #6366f1; border-radius: 50%; border: 2px solid white; }
+    .conv-item-info { flex: 1; min-width: 0; }
+    .conv-item-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .conv-item-preview { font-size: 12px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .conv-item-time { font-size: 11px; color: #d1d5db; flex-shrink: 0; }
+    .conv-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .conv-header { padding: 14px 22px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .conv-header-info { display: flex; align-items: center; gap: 10px; }
+    .conv-header-name { font-size: 15px; font-weight: 600; }
+    .conv-header-meta { font-size: 12px; color: #9ca3af; }
+    .conv-header-actions { display: flex; align-items: center; gap: 8px; }
+    .conv-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { display: flex; flex-direction: column; max-width: 68%; }
+    .msg.inbound { align-self: flex-start; }
+    .msg.outbound { align-self: flex-end; }
+    .msg-bubble { padding: 9px 13px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+    .msg.inbound .msg-bubble { background: #f3f4f6; color: #1a1a2e; border-bottom-left-radius: 4px; }
+    .msg.outbound .msg-bubble { background: #6366f1; color: white; border-bottom-right-radius: 4px; }
+    .msg.outbound.ai .msg-bubble { background: #8b5cf6; }
+    .msg-time { font-size: 11px; color: #d1d5db; margin-top: 3px; }
+    .msg.outbound .msg-time { text-align: right; }
+    .msg-label { font-size: 10px; color: #9ca3af; margin-top: 2px; }
+    .msg.outbound .msg-label { text-align: right; }
+    .conv-input-area { padding: 14px 22px; border-top: 1px solid #f0f0f0; }
+    .autopilot-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 20px; margin-bottom: 8px; }
+    .autopilot-status.on { background: #f0f0ff; color: #6366f1; }
+    .autopilot-status.off { background: #f3f4f6; color: #9ca3af; }
+    .conv-input-row { display: flex; gap: 8px; }
+    .conv-textarea { flex: 1; padding: 9px 13px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-family: inherit; resize: none; height: 42px; outline: none; transition: all 0.2s; }
+    .conv-textarea:focus { border-color: #6366f1; height: 84px; }
+    .ai-suggestion { background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 9px 13px; font-size: 13px; color: #5b21b6; margin-bottom: 8px; line-height: 1.5; }
+    .ai-suggestion-label { font-size: 11px; font-weight: 600; color: #8b5cf6; margin-bottom: 4px; }
+    .empty-conv { flex: 1; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 14px; flex-direction: column; gap: 8px; }
+
+    .campaigns-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .campaigns-search { padding: 8px 14px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; width: 260px; outline: none; }
+    .campaigns-search:focus { border-color: #6366f1; }
+    .table-card { background: white; border-radius: 16px; overflow: visible; border: 1px solid #f0f0f0; }
+    .table-card table { width: 100%; border-collapse: collapse; }
+    .table-card th { padding: 12px 20px; text-align: left; font-size: 12px; color: #9ca3af; font-weight: 500; border-bottom: 1px solid #f3f4f6; background: #fafafa; cursor: pointer; user-select: none; white-space: nowrap; }
+    .table-card th:hover { color: #6366f1; }
+    .table-card td { padding: 14px 20px; font-size: 14px; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
+    .table-card tr:last-child td { border-bottom: none; }
+    .table-card tr:hover td { background: #fafafa; }
+    .campaign-name-cell { font-weight: 600; font-size: 14px; }
+    .campaign-desc { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .type-label { font-size: 12px; color: #6b7280; display: block; margin-bottom: 3px; }
+    .drip-badge { background: #ff6b35; color: white; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: inline-block; }
+    .status-active { background: #d1fae5; color: #065f46; }
+    .status-draft { background: #f3f4f6; color: #6b7280; }
+    .status-paused { background: #fef3c7; color: #92400e; }
+    .status-completed { background: #e0e7ff; color: #3730a3; }
+    .progress-wrap { min-width: 120px; }
+    .progress-bar-bg { background: #f3f4f6; border-radius: 4px; height: 6px; margin-bottom: 4px; overflow: hidden; }
+    .progress-bar-fill { background: #6366f1; height: 6px; border-radius: 4px; transition: width 0.3s; }
+    .progress-text { font-size: 12px; color: #9ca3af; }
+    .actions-menu { position: relative; }
+    .actions-btn { background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; font-size: 18px; color: #9ca3af; line-height: 1; }
+    .actions-btn:hover { background: #f3f4f6; color: #374151; }
+    .actions-dropdown { position: absolute; right: 0; background: white; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); z-index: 20; min-width: 140px; overflow: hidden; display: none; }
+    .actions-dropdown.open { display: block; }
+    .actions-dropdown.up { bottom: 100%; top: auto; margin-bottom: 4px; }
+    .actions-dropdown.down { top: 100%; margin-top: 4px; }
+    .actions-dropdown button { display: block; width: 100%; padding: 9px 16px; text-align: left; border: none; background: none; font-size: 13px; cursor: pointer; color: #374151; }
+    .actions-dropdown button:hover { background: #f9fafb; }
+    .actions-dropdown button.danger { color: #dc2626; }
+
+    /* SETTINGS PAGE */
+    .settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; }
+    .settings-nav { background: white; border-radius: 16px; padding: 16px; border: 1px solid #f0f0f0; height: fit-content; }
+    .settings-nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; color: #6b7280; font-weight: 500; transition: all 0.15s; margin-bottom: 2px; }
+    .settings-nav-item.active { background: #f0f0ff; color: #6366f1; }
+    .settings-nav-item:hover:not(.active) { background: #f9fafb; }
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
+    .settings-card { background: white; border-radius: 16px; padding: 28px; border: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .settings-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .settings-card p { font-size: 13px; color: #9ca3af; margin-bottom: 24px; }
+    .settings-section-title { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 12px; margin-top: 20px; }
+
+    /* DISPOSITION TAGS */
+    .disp-tag-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 8px; border: 1px solid #f0f0f0; }
+    .disp-tag-color { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; border: 2px solid rgba(0,0,0,0.1); }
+    .disp-tag-name { flex: 1; font-size: 14px; font-weight: 500; }
+    .disp-tag-drip { font-size: 12px; color: #9ca3af; }
+    .disp-tag-actions { display: flex; gap: 6px; }
+    .color-picker-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: all 0.15s; }
+    .color-swatch.selected { border-color: #1a1a2e; transform: scale(1.15); }
+
+    /* MODALS */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; display: none; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; padding: 30px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
+    .modal-header h2 { font-size: 19px; font-weight: 700; }
+    .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9ca3af; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .modal-close:hover { background: #f3f4f6; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; padding-top: 18px; border-top: 1px solid #f3f4f6; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 9px 13px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; background: white; }
+    .form-group input:focus, .form-group textarea:focus { border-color: #6366f1; }
+    .form-group textarea { resize: vertical; min-height: 76px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: #f9fafb; border-radius: 10px; margin-bottom: 16px; }
+    .toggle-row-label { font-size: 14px; font-weight: 500; color: #374151; }
+    .toggle-row-sub { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .toggle-lg { position: relative; width: 48px; height: 26px; }
+    .toggle-lg input { opacity: 0; width: 0; height: 0; }
+    .toggle-lg .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #e5e7eb; border-radius: 26px; transition: 0.2s; }
+    .toggle-lg .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background: white; border-radius: 50%; transition: 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .toggle-lg input:checked + .toggle-slider { background: #6366f1; }
+    .toggle-lg input:checked + .toggle-slider:before { transform: translateX(22px); }
+    .message-step { background: #f9fafb; border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
+    .message-step-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .message-step-header span { font-size: 13px; font-weight: 600; color: #6366f1; }
+    .day-input { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .day-input label { font-size: 13px; color: #6b7280; white-space: nowrap; }
+    .day-input input[type="number"] { width: 60px; padding: 5px 9px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; outline: none; }
+    .day-input input[type="time"] { padding: 5px 9px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; outline: none; }
+    .char-count { font-size: 11px; color: #d1d5db; text-align: right; margin-top: 3px; }
+    .char-count.warning { color: #f59e0b; }
+    .char-count.danger { color: #ef4444; }
+    .tip { background: #f5f3ff; border-left: 3px solid #8b5cf6; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: #6d28d9; margin-bottom: 16px; }
+    .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f9fafb; }
+    .checkbox-row input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: #6366f1; }
+    .checkbox-row label { font-size: 13px; cursor: pointer; flex: 1; }
+    .checkbox-row .lead-info { font-size: 11px; color: #9ca3af; }
+    .file-drop-area { border: 2px dashed #e5e7eb; border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+    .file-drop-area:hover, .file-drop-area.dragover { border-color: #6366f1; background: #f5f3ff; }
+    .file-drop-area .file-icon { font-size: 28px; margin-bottom: 8px; }
+    .file-drop-area p { font-size: 13px; color: #6b7280; }
+    .file-drop-area .file-name { font-size: 14px; font-weight: 600; color: #6366f1; margin-top: 4px; }
+    #modal-file-input { display: none; }
+
+    /* DISPOSITION PICKER */
+    .disp-picker-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .disp-pick-btn { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; color: white; transition: opacity 0.15s; }
+    .disp-pick-btn:hover { opacity: 0.85; }
+    
+    .action-row { background: #f9fafb; border-radius: 10px; padding: 14px; margin-bottom: 10px; border: 1px solid #e5e7eb; }
+    .action-row-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .action-type-select { flex: 1; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; background: white; }
+    .action-value-area { margin-top: 10px; }
+    .action-value-area label { font-size: 12px; font-weight: 500; color: #6b7280; margin-bottom: 4px; display: block; }
+    .action-value-area input, .action-value-area select, .action-value-area textarea { width: 100%; padding: 7px 11px; border: 1px solid #e5e7eb; border-radius: 7px; font-size: 13px; font-family: inherit; outline: none; background: white; }
+    .action-value-area textarea { resize: vertical; min-height: 60px; }
+    .search-panel { background: white; border-radius: 16px; padding: 20px 24px; margin-bottom: 20px; border: 1px solid #f0f0f0; }
+    .search-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .search-panel-header h3 { font-size: 15px; font-weight: 600; }
+    .search-panel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .search-panel-grid .form-group { margin-bottom: 0; }
+    .search-panel-grid .form-group label { font-size: 11px; font-weight: 500; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .search-panel-grid input, .search-panel-grid select { padding: 7px 11px; font-size: 13px; }
+    .search-panel-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .active-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .filter-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #f0f0ff; color: #6366f1; border-radius: 20px; font-size: 12px; font-weight: 500; }
+    .filter-pill button { background: none; border: none; cursor: pointer; color: #6366f1; font-size: 14px; line-height: 1; padding: 0; margin-left: 2px; }
+    
+    .lead-detail-modal { max-width: 860px; }
+    .lead-detail-header { display: flex; align-items: flex-start; gap: 16px; padding-bottom: 20px; border-bottom: 1px solid #f3f4f6; margin-bottom: 20px; }
+    .lead-detail-avatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; flex-shrink: 0; }
+    .lead-detail-info { flex: 1; }
+    .lead-detail-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .lead-detail-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #6b7280; }
+    .lead-detail-tabs { display: flex; gap: 4px; border-bottom: 1px solid #f3f4f6; margin-bottom: 20px; }
+    .lead-detail-tab { padding: 8px 16px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .lead-detail-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .lead-detail-tab:hover:not(.active) { color: #374151; }
+    .lead-detail-panel { display: none; }
+    .lead-detail-panel.active { display: block; }
+    .detail-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .detail-info-item { background: #f9fafb; border-radius: 10px; padding: 12px 16px; }
+    .detail-info-item .lbl { font-size: 11px; color: #9ca3af; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .detail-info-item .val { font-size: 14px; font-weight: 500; color: #1a1a2e; }
+    .task-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .task-check { width: 18px; height: 18px; cursor: pointer; accent-color: #6366f1; flex-shrink: 0; }
+    .task-info { flex: 1; }
+    .task-title { font-size: 14px; font-weight: 500; color: #1a1a2e; }
+    .task-title.completed { text-decoration: line-through; color: #9ca3af; }
+    .task-due { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .task-due.overdue { color: #ef4444; }
+    .task-due.today { color: #f59e0b; }
+    .followup-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; }
+    .followup-badge:hover { background: #fde68a; }
+    .msg-history-item { padding: 12px 0; border-bottom: 1px solid #f9fafb; }
+    .msg-history-item .direction { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .msg-history-item.inbound .direction { color: #6366f1; }
+    .msg-history-item.outbound .direction { color: #059669; }
+    .msg-history-item .body { font-size: 13px; color: #374151; line-height: 1.5; }
+    .msg-history-item .time { font-size: 11px; color: #d1d5db; margin-top: 4px; }
+    .disp-history-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f9fafb; }
+    .disp-history-item .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .disp-history-item .info { flex: 1; }
+    .disp-history-item .tag-name { font-size: 13px; font-weight: 600; }
+    .disp-history-item .applied { font-size: 12px; color: #9ca3af; }
+    /* HANDOFF BANNERS */
+    .handoff-banner { padding: 10px 16px; font-size: 13px; font-weight: 500; border-radius: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .handoff-banner.green { background: #d1fae5; color: #065f46; }
+    .handoff-banner.blue { background: #dbeafe; color: #1e40af; }
+    .handoff-banner.purple { background: #ede9fe; color: #5b21b6; }
+    .handoff-banner.amber { background: #fef3c7; color: #92400e; }
+    .handoff-banner.red { background: #fee2e2; color: #991b1b; }
+    .handoff-banner.gray { background: #f3f4f6; color: #6b7280; }
+    .handoff-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .conv-sidebar-tabs { display: flex; border-bottom: 1px solid #f0f0f0; }
+    .conv-sidebar-tab { flex: 1; padding: 9px; border: none; background: none; cursor: pointer; font-size: 12px; font-weight: 500; color: #9ca3af; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .conv-sidebar-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .conv-item-handoff { font-size: 10px; font-weight: 600; margin-top: 2px; }
+
+    /* CALENDAR */
+    .cal-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+    .cal-main { background: white; border-radius: 16px; border: 1px solid #f0f0f0; overflow: hidden; }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #f0f0f0; }
+    .cal-header h2 { font-size: 17px; font-weight: 700; }
+    .cal-nav-btn { background: none; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 16px; color: #6b7280; }
+    .cal-nav-btn:hover { background: #f3f4f6; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .cal-day-label { padding: 10px 0; text-align: center; font-size: 12px; font-weight: 600; color: #9ca3af; border-bottom: 1px solid #f0f0f0; }
+    .cal-cell { min-height: 90px; border-right: 1px solid #f9fafb; border-bottom: 1px solid #f9fafb; padding: 8px; cursor: pointer; transition: background 0.1s; }
+    .cal-cell:hover { background: #f9fafb; }
+    .cal-cell.other-month { background: #fafafa; }
+    .cal-cell.today { background: #f0f0ff; }
+    .cal-cell.selected { background: #e0e7ff; }
+    .cal-date { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 4px; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+    .cal-cell.today .cal-date { background: #6366f1; color: white; }
+    .cal-dot { width: 8px; height: 8px; border-radius: 50%; background: #6366f1; margin: 2px 0; display: inline-block; }
+    .cal-dot-cancelled { background: #d1d5db; }
+    .cal-dot-completed { background: #22c55e; }
+    .cal-appt-label { font-size: 10px; color: #6366f1; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appt-card { background: white; border-radius: 12px; border: 1px solid #f0f0f0; padding: 16px; margin-bottom: 10px; transition: box-shadow 0.15s; }
+    .appt-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .appt-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+    .appt-name { font-size: 15px; font-weight: 600; }
+    .appt-phone { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .appt-time { font-size: 13px; font-weight: 600; color: #6366f1; }
+    .appt-notes { font-size: 12px; color: #6b7280; margin-bottom: 10px; line-height: 1.5; }
+    .appt-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .status-scheduled { background: #e0e7ff; color: #3730a3; }
+    .status-completed { background: #d1fae5; color: #065f46; }
+    .status-cancelled { background: #f3f4f6; color: #6b7280; }
+    .today-section { background: white; border-radius: 16px; border: 1px solid #f0f0f0; padding: 20px; }
+    .today-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .today-count { background: #6366f1; color: white; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Text<span>App</span></div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('leads', this)">Leads</button>
+    <button class="nav-btn" onclick="showPage('conversations', this)">Conversations</button>
+    <button class="nav-btn" onclick="showPage('campaigns', this)">Campaigns</button>
+    <button class="nav-btn" onclick="showPage('stats', this)">Stats</button>
+    <button class="nav-btn" onclick="showPage('calendar', this)" id="nav-calendar">Calendar <span id="today-appt-badge" style="display:none;background:#ef4444;color:white;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;"></span></button>
+    <button class="nav-btn" onclick="showPage('settings', this)">Settings</button>
+  </nav>
+  <div class="header-right" style="display:flex;align-items:center;gap:12px;">
+    <span id="header-agent-name" style="font-size:13px;color:#888;"></span>
+    <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEADS PAGE -->
+  <div class="page active" id="page-leads">
+    <div class="upload-zone" id="drop-zone" onclick="openUploadModal()">
+      <h3>Upload Lead Sheet</h3>
+      <p>Click to configure and import, or drag and drop a file here</p>
+      <button class="btn btn-primary" onclick="event.stopPropagation(); openUploadModal()">Import Leads</button>
+      <div class="status-bar" id="status-bar"></div>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Total Leads</div></div>
+      <div class="stat-card"><div class="num" id="stat-new">0</div><div class="lbl">New</div></div>
+      <div class="stat-card"><div class="num" id="stat-contacted">0</div><div class="lbl">Contacted</div></div>
+      <div class="stat-card"><div class="num" id="stat-booked">0</div><div class="lbl">Booked</div></div>
+      <div class="stat-card"><div class="num" id="stat-autopilot">0</div><div class="lbl">On Autopilot</div></div>
+    </div>
+    <div class="bucket-tabs" id="bucket-tabs">
+      <div class="bucket-tab active" onclick="selectBucket('', this)">All Leads</div>
+    </div>
+    <div class="search-panel" id="search-panel">
+      <div class="search-panel-header">
+        <h3>Search & Filter</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
+          <button class="btn btn-primary btn-sm" onclick="applyFilters()">Apply Filters</button>
+          <button class="btn btn-success btn-sm" onclick="exportFilteredLeads()">⬇ Export CSV</button>
+        </div>
+      </div>
+      <div class="search-panel-grid">
+        <div class="form-group">
+          <label>Search</label>
+          <input type="text" id="sf-search" placeholder="Name, phone, email...">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="sf-status">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="booked">Booked</option>
+            <option value="opted_out">Opted out</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>State</label>
+          <select id="sf-state">
+            <option value="">All states</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plan Type</label>
+          <select id="sf-plan">
+            <option value="">All plans</option>
+            <option value="ACA">ACA</option>
+            <option value="Medicare">Medicare</option>
+            <option value="Medicaid">Medicaid</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Disposition Tag</label>
+          <select id="sf-disposition">
+            <option value="">All dispositions</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Campaign</label>
+          <select id="sf-campaign">
+            <option value="">All campaigns</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Bucket</label>
+          <select id="sf-bucket">
+            <option value="">All buckets</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Timezone</label>
+          <select id="sf-timezone">
+            <option value="">All timezones</option>
+            <option value="America/New_York">Eastern</option>
+            <option value="America/Chicago">Central</option>
+            <option value="America/Denver">Mountain</option>
+            <option value="America/Los_Angeles">Pacific</option>
+            <option value="America/Phoenix">Arizona</option>
+            <option value="America/Anchorage">Alaska</option>
+            <option value="Pacific/Honolulu">Hawaii</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Autopilot</label>
+          <select id="sf-autopilot">
+            <option value="">All</option>
+            <option value="true">On</option>
+            <option value="false">Off</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Sold</label>
+          <select id="sf-sold">
+            <option value="">All</option>
+            <option value="true">Sold only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date From</label>
+          <input type="date" id="sf-date-from">
+        </div>
+        <div class="form-group">
+          <label>Date To</label>
+          <input type="date" id="sf-date-to">
+        </div>
+      </div>
+      <div class="active-filters" id="active-filters"></div>
+    </div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+  <div style="font-size:13px;color:#9ca3af;" id="leads-count"></div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="accent-color:#6366f1;">
+    <label for="select-all" style="font-size:13px;color:#6b7280;cursor:pointer;">Select all</label>
+  </div>
+</div>
+
+<div class="leads-grid" id="leads-grid"></div>
+<div class="bulk-bar" id="bulk-actions">
+  <span id="selected-count"></span>
+  <button class="btn btn-primary btn-sm" onclick="openEnrollModal()">Tag with Campaign</button>
+</div>
+
+
+    <div class="leads-grid" id="leads-grid"></div>
+    <div class="bulk-bar" id="bulk-actions">
+      <span id="selected-count"></span>
+      <button class="btn btn-primary btn-sm" onclick="openEnrollModal()">Tag with Campaign</button>
+    </div>
+  </div>
+
+  <!-- CONVERSATIONS PAGE -->
+  <div class="page" id="page-conversations">
+    <div class="conv-layout">
+      <div class="conv-sidebar">
+        <div class="conv-sidebar-header">
+          <h2>Conversations</h2>
+          <input type="text" class="conv-search" placeholder="Search..." oninput="filterConversations(this.value)">
+        </div>
+        <div class="conv-sidebar-tabs">
+          <button class="conv-sidebar-tab active" id="conv-tab-all" onclick="setConvTab('all')">All</button>
+          <button class="conv-sidebar-tab" id="conv-tab-review" onclick="setConvTab('review')">Needs Review <span id="review-badge" style="display:none;background:#ef4444;color:white;border-radius:20px;font-size:10px;padding:1px 5px;margin-left:2px;"></span></button>
+        </div>
+        <div class="conv-list" id="conv-list"></div>
+      </div>
+      <div class="conv-main" id="conv-main">
+        <div class="empty-conv"><div style="font-size:32px;">💬</div><div>Select a conversation</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CAMPAIGNS PAGE -->
+  <div class="page" id="page-campaigns">
+    <div class="campaigns-toolbar">
+      <input type="text" class="campaigns-search" placeholder="Search campaigns..." oninput="filterCampaigns(this.value)">
+      <button class="btn btn-primary" onclick="openCreateCampaignModal()">+ New Campaign</button>
+    </div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortCampaigns('name')">Name ↕</th>
+            <th>Type</th>
+            <th onclick="sortCampaigns('created_at')">Created ↕</th>
+            <th>Messages</th>
+            <th onclick="sortCampaigns('status')">Status ↕</th>
+            <th>Progress</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="campaigns-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STATS PAGE -->
+  <div class="page" id="page-stats">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">SMS Delivery Stats</h2>
+        <div style="font-size:13px;color:#9ca3af;">Live delivery data updated via Twilio status callbacks</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-secondary btn-sm" id="period-btn-7" onclick="setStatsPeriod(7)">7 days</button>
+        <button class="btn btn-primary btn-sm" id="period-btn-30" onclick="setStatsPeriod(30)">30 days</button>
+        <button class="btn btn-secondary btn-sm" id="period-btn-90" onclick="setStatsPeriod(90)">90 days</button>
+      </div>
+    </div>
+
+    <div class="stats" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+      <div class="stat-card" style="border-left:3px solid #6366f1;">
+        <div class="num" id="stats-total">—</div>
+        <div class="lbl">Total Sent</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid #22c55e;">
+        <div class="num" style="color:#059669;" id="stats-delivered">—</div>
+        <div class="lbl">Delivered</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid #ef4444;">
+        <div class="num" style="color:#dc2626;" id="stats-failed">—</div>
+        <div class="lbl">Failed</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid #f97316;">
+        <div class="num" style="color:#f97316;" id="stats-undelivered">—</div>
+        <div class="lbl">Undelivered</div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid #9ca3af;">
+        <div class="num" style="color:#9ca3af;" id="stats-pending">—</div>
+        <div class="lbl">Pending</div>
+      </div>
+    </div>
+
+    <div style="background:white;border-radius:16px;padding:24px 28px;border:1px solid #f0f0f0;margin-bottom:20px;display:flex;align-items:center;gap:20px;">
+      <div style="font-size:48px;font-weight:800;color:#6366f1;line-height:1;min-width:100px;" id="stats-rate">—</div>
+      <div style="width:1px;height:52px;background:#f0f0f0;"></div>
+      <div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:3px;">Delivery Rate</div>
+        <div style="font-size:13px;color:#9ca3af;" id="stats-rate-sub">Loading...</div>
+      </div>
+    </div>
+
+    <div id="stats-errors-wrap" style="display:none;margin-bottom:20px;">
+      <div class="table-card">
+        <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;font-size:15px;font-weight:600;">Failure Reasons</div>
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th>Error Code</th>
+              <th>Reason</th>
+              <th style="text-align:right;">Count</th>
+            </tr>
+          </thead>
+          <tbody id="stats-error-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="stats-callback-note" style="display:none;background:#fef3c7;border-radius:12px;padding:14px 18px;font-size:13px;color:#92400e;border:1px solid #fde68a;">
+      <strong>Set up delivery tracking:</strong> Add <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">/messages/status-callback</code> as the Status Callback URL on your Twilio phone number, or set <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">STATUS_CALLBACK_URL=https://yourdomain.com/messages/status-callback</code> in your <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">.env</code>. Without this, messages stay as "Pending."
+    </div>
+  </div>
+
+  <!-- CALENDAR PAGE -->
+  <div class="page" id="page-calendar">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:2px;">Calendar</h2>
+        <div style="font-size:13px;color:#9ca3af;">Your upcoming appointments</div>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateApptModal()">+ New Appointment</button>
+    </div>
+
+    <!-- Today's Calls -->
+    <div class="today-section" style="margin-bottom:20px;" id="today-section">
+      <h3>Today's Calls <span class="today-count" id="today-count">0</span></h3>
+      <div id="today-appts"><div style="color:#d1d5db;font-size:13px;">No calls scheduled for today</div></div>
+    </div>
+
+    <div class="cal-layout">
+      <!-- Month View -->
+      <div class="cal-main">
+        <div class="cal-header">
+          <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+          <h2 id="cal-month-label"></h2>
+          <button class="cal-nav-btn" onclick="calNext()">›</button>
+        </div>
+        <div class="cal-grid" id="cal-day-labels">
+          <div class="cal-day-label">Sun</div>
+          <div class="cal-day-label">Mon</div>
+          <div class="cal-day-label">Tue</div>
+          <div class="cal-day-label">Wed</div>
+          <div class="cal-day-label">Thu</div>
+          <div class="cal-day-label">Fri</div>
+          <div class="cal-day-label">Sat</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+      <!-- Day View -->
+      <div class="today-section" id="day-view">
+        <h3 id="day-view-label">Select a date</h3>
+        <div id="day-appts"><div style="color:#d1d5db;font-size:13px;">Click a date to see appointments</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS PAGE -->
+  <div class="page" id="page-settings">
+    <div class="settings-layout">
+      <div class="settings-nav">
+        <div class="settings-nav-item active" onclick="showSettingsPanel('dispositions', this)">Disposition Tags</div>
+        <div class="settings-nav-item" onclick="showSettingsPanel('templates', this)">Preset Templates</div>
+        <div class="settings-nav-item" onclick="showSettingsPanel('phone-numbers', this)">Phone Numbers</div>
+        <div class="settings-nav-item" onclick="showSettingsPanel('team', this)">Team & Invites</div>
+        <div class="settings-nav-item" onclick="showSettingsPanel('account', this)">Account</div>
+      </div>
+      <div>
+        <!-- TEMPLATES PANEL -->
+        <div class="settings-panel" id="panel-templates">
+          <div class="settings-card">
+            <h2>Preset Templates</h2>
+            <p>Save your best messages and fire them with one click from any conversation.</p>
+            <button class="btn btn-primary" onclick="openCreateTemplateModal()">+ New Template</button>
+            <div class="settings-section-title" style="margin-top:24px;">Current Templates</div>
+            <div id="templates-list">
+              <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No templates yet</div>
+            </div>
+          </div>
+        </div>
+        <!-- DISPOSITION TAGS PANEL -->
+        <div class="settings-panel active" id="panel-dispositions">
+          <div class="settings-card">
+            <h2>Disposition Tags</h2>
+            <p>Create tags to categorize leads after conversations. Each tag can optionally trigger a drip sequence.</p>
+            <button class="btn btn-primary" onclick="openCreateDispositionModal()">+ New Disposition Tag</button>
+            <div class="settings-section-title" style="margin-top:24px;">Current Tags</div>
+            <div id="disposition-tags-list">
+              <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No disposition tags yet</div>
+            </div>
+          </div>
+        </div>
+        <!-- PHONE NUMBERS PANEL -->
+        <div class="settings-panel" id="panel-phone-numbers">
+          <div class="settings-card">
+            <h2>Phone Numbers</h2>
+            <p>Add one number per state or region. Incoming messages route to you based on which number was texted.</p>
+            <button class="btn btn-primary" onclick="openAddNumberModal()">+ Add Number</button>
+            <div class="settings-section-title" style="margin-top:24px;">Your Numbers</div>
+            <div id="phone-numbers-list">
+              <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet</div>
+            </div>
+          </div>
+        </div>
+        <!-- TEAM & INVITES PANEL -->
+        <div class="settings-panel" id="panel-team">
+          <div class="settings-card">
+            <h2>Team & Invites</h2>
+            <p>Invite agents to join TextApp. Each agent gets their own isolated workspace.</p>
+            <button class="btn btn-primary" onclick="openInviteModal()" style="width:auto;">+ Invite Agent</button>
+            <div class="settings-section-title" style="margin-top:24px;">Pending Invites</div>
+            <div id="invites-list">
+              <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No pending invites</div>
+            </div>
+          </div>
+        </div>
+        <!-- ACCOUNT PANEL -->
+        <div class="settings-panel" id="panel-account">
+          <div class="settings-card">
+            <h2>Profile Settings</h2>
+            <p>Your identity and Twilio credentials used for all outbound messages.</p>
+            <div class="settings-section-title">Identity</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Agent Name</label>
+                <input type="text" id="profile-agent-name" placeholder="Your name">
+              </div>
+              <div class="form-group">
+                <label>Agency Name</label>
+                <input type="text" id="profile-agency-name" placeholder="Your agency">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Calendly URL</label>
+              <input type="text" id="profile-calendly-url" placeholder="https://calendly.com/your-link">
+            </div>
+            <div class="form-group">
+              <label>Timezone</label>
+              <select id="profile-timezone">
+                <option value="America/New_York">Eastern</option>
+                <option value="America/Chicago">Central</option>
+                <option value="America/Denver">Mountain</option>
+                <option value="America/Los_Angeles">Pacific</option>
+                <option value="America/Phoenix">Arizona</option>
+                <option value="America/Anchorage">Alaska</option>
+                <option value="Pacific/Honolulu">Hawaii</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="text" id="profile-email" readonly style="background:#f9fafb;">
+            </div>
+            <div class="settings-section-title">Twilio Credentials</div>
+            <div class="form-group">
+              <label>Account SID</label>
+              <input type="text" id="profile-twilio-sid" placeholder="ACxxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label>Auth Token</label>
+              <input type="password" id="profile-twilio-token" placeholder="Your Twilio auth token">
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" id="profile-twilio-phone" placeholder="+15551234567">
+            </div>
+            <div id="profile-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
+            <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Import Lead Sheet</h2>
+      <button class="modal-close" onclick="closeUploadModal()">×</button>
+    </div>
+    <div class="file-drop-area" id="modal-drop-zone" onclick="document.getElementById('modal-file-input').click()">
+      <div class="file-icon">📄</div>
+      <p>Drop your CSV or Excel file here, or click to browse</p>
+      <div class="file-name" id="modal-file-name"></div>
+    </div>
+    <input type="file" id="modal-file-input" accept=".csv,.xlsx,.xls">
+    <div class="form-group">
+      <label>Bucket Name (required)</label>
+      <input type="text" id="import-bucket" placeholder="e.g. Dynasty Batch - March 16">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Assign to Campaign (optional)</label>
+        <select id="import-campaign"><option value="">No campaign</option></select>
+      </div>
+      <div class="form-group" id="import-start-wrap" style="display:none;">
+        <label>Campaign Start Date</label>
+        <input type="datetime-local" id="import-campaign-start">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Apply Disposition Tag (optional)</label>
+      <select id="import-disposition">
+        <option value="">No disposition tag</option>
+      </select>
+      <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Tag will be applied to every lead in this import and trigger any attached drip sequence.</p>
+    </div>    
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-row-label">⚡ Autopilot for all leads</div>
+        <div class="toggle-row-sub">AI will automatically respond to replies from this import</div>
+      </div>
+      <label class="toggle-lg"><input type="checkbox" id="import-autopilot"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="status-bar" id="import-status-bar"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitImport()">Import Leads</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE/EDIT CAMPAIGN MODAL -->
+<div class="modal-overlay" id="campaign-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="campaign-modal-title">Create Campaign</h2>
+      <button class="modal-close" onclick="closeCampaignModal()">×</button>
+    </div>
+    <div class="tip">Use <strong>[First Name]</strong> for personalization. Use <strong>{Hi|Hey|Hello}</strong> to randomize phrasing — the scheduler picks one variation per send.</div>
+    <div class="form-group">
+      <label>Campaign Name</label>
+      <input type="text" id="campaign-name" placeholder="e.g. End of Month Push">
+    </div>
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <input type="text" id="campaign-description" placeholder="Internal note">
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <label style="font-size:13px;font-weight:500;color:#374151;">Message Sequence</label>
+      <button class="btn btn-secondary btn-sm" onclick="addMessageStep()">+ Add Message</button>
+    </div>
+    <div id="message-steps"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCampaign()">Save Campaign</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAG LEADS MODAL -->
+<div class="modal-overlay" id="enroll-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Tag Leads with Campaign</h2>
+      <button class="modal-close" onclick="closeEnrollModal()">×</button>
+    </div>
+    <div class="tip">Messages fire at the exact day and time set in the campaign, in each lead's local timezone.</div>
+    <div class="form-group">
+      <label>Select Campaign</label>
+      <select id="enroll-campaign-select"></select>
+    </div>
+    <div class="form-group">
+      <label>First Message Sends On</label>
+      <input type="datetime-local" id="enroll-start-date">
+    </div>
+    <div id="enroll-leads-list" style="max-height:260px;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEnrollModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="enrollSelectedLeads()">Tag Leads</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND SMS MODAL -->
+<div class="modal-overlay" id="sms-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Send SMS</h2>
+      <button class="modal-close" onclick="document.getElementById('sms-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="form-group">
+      <label id="sms-to-label">To:</label>
+      <textarea id="sms-body" placeholder="Type your message..." rows="4"></textarea>
+      <div class="char-count" id="sms-char-count">0 / 160</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('sms-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="sendManualSMS()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISPOSITION PICKER MODAL -->
+<div class="modal-overlay" id="disposition-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Apply Disposition</h2>
+      <button class="modal-close" onclick="document.getElementById('disposition-modal').classList.remove('open')">×</button>
+    </div>
+    <div id="disposition-lead-name" style="font-size:14px;color:#6b7280;margin-bottom:16px;"></div>
+    <div class="disp-picker-grid" id="disp-picker-grid"></div>
+    <div class="form-group" style="margin-top:16px;">
+      <label>Notes (optional)</label>
+      <textarea id="disposition-notes" placeholder="Add a note about this disposition..." rows="2"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('disposition-modal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE/EDIT DISPOSITION TAG MODAL -->
+<div class="modal-overlay" id="disp-tag-modal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <h2 id="disp-tag-modal-title">Create Disposition Tag</h2>
+      <button class="modal-close" onclick="closeDispTagModal()">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>Tag Name</label>
+      <input type="text" id="disp-tag-name" placeholder="e.g. Positive Reply, Appointment Scheduled">
+    </div>
+
+    <div class="form-group">
+      <label>Color</label>
+      <div class="color-picker-row" id="color-picker-row"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Description (optional)</label>
+      <input type="text" id="disp-tag-description" placeholder="Internal note">
+    </div>
+
+    <div style="border-top:1px solid #f3f4f6;margin:20px 0;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#374151;">Automated Actions</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Actions execute in order when this tag is applied to a lead</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="addActionRow()">+ Add Action</button>
+    </div>
+
+    <div id="action-rows"></div>
+
+    <div style="border-top:1px solid #f3f4f6;margin:20px 0;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#374151;">Drip Sequence</div>
+        <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Messages fire X days after this tag is applied</div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="addDispMessageStep()">+ Add Message</button>
+    </div>
+
+    <div class="tip">Use <strong>[First Name]</strong> for personalization. Use <strong>{Hi|Hey|Hello}</strong> to randomize phrasing — the scheduler picks one variation per send.</div>
+    <div id="disp-message-steps"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDispTagModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDispositionTag()">Save Tag</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allLeads = []
+  let allCampaigns = []
+  let allBuckets = []
+  let allConversations = []
+  let allDispositionTags = []
+  let selectedLeads = new Set()
+  let editingCampaignId = null
+  let editingDispositionId = null
+  let messageStepCount = 0
+  let dispMessageStepCount = 0
+  let activeConvId = null
+  let smsTargetLeadId = null
+  let dispositionTargetLeadId = null
+  let activeBucket = ''
+  let importFile = null
+  let campaignSortKey = 'created_at'
+  let campaignSortDir = -1
+  let selectedDispColor = '#6366f1'
+
+  const COLORS = ['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#64748b','#1a1a2e','#059669']
+
+  const showPage = (page, btn) => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+    document.getElementById(`page-${page}`).classList.add('active')
+    btn.classList.add('active')
+    if (page === 'campaigns') loadCampaigns()
+    if (page === 'conversations') loadConversations()
+    if (page === 'settings') { loadDispositionTags(); loadProfile(); loadPhoneNumbers() }
+    if (page === 'stats') loadDeliveryStats()
+    if (page === 'calendar') loadAppointments()
+  }
+
+  const showSettingsPanel = (panel, el) => {
+    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'))
+    document.getElementById(`panel-${panel}`).classList.add('active')
+    el.classList.add('active')
+    if (panel === 'team') loadInvites()
+  }
+
+  const getInitials = (first, last) => ((first?.[0] || '') + (last?.[0] || '')).toUpperCase() || '?'
+  const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+  const formatTime = (iso) => {
+    if (!iso) return ''
+    const d = new Date(iso), now = new Date(), diff = now - d
+    if (diff < 86400000) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    if (diff < 604800000) return d.toLocaleDateString('en-US', { weekday: 'short' })
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  }
+  const getLocalTime = (tz) => { try { return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' }) } catch { return '' } }
+
+  const selectBucket = (bucket, el) => {
+    activeBucket = bucket
+    document.querySelectorAll('.bucket-tab').forEach(t => t.classList.remove('active'))
+    el.classList.add('active')
+    filterLeads()
+  }
+
+  const renderBucketTabs = () => {
+    const container = document.getElementById('bucket-tabs')
+    const allTab = `<div class="bucket-tab active" onclick="selectBucket('', this)">All Leads <span class="count">${allLeads.length}</span></div>`
+    const bucketTabs = allBuckets.map(b => {
+      const count = allLeads.filter(l => l.bucket === b.bucket).length
+      return `<div class="bucket-tab" onclick="selectBucket('${b.bucket}', this)">${b.bucket} <span class="count">${count}</span></div>`
+    }).join('')
+    container.innerHTML = allTab + bucketTabs
+  }
+
+  let activeFilters = {}
+
+  const filterLeads = () => {
+    const search = document.getElementById('sf-search')?.value.toLowerCase() || ''
+    const status = document.getElementById('sf-status')?.value || ''
+    const state = document.getElementById('sf-state')?.value || ''
+    const plan = document.getElementById('sf-plan')?.value || ''
+    const disposition = document.getElementById('sf-disposition')?.value || ''
+    const campaign = document.getElementById('sf-campaign')?.value || ''
+    const bucket = document.getElementById('sf-bucket')?.value || activeBucket || ''
+    const timezone = document.getElementById('sf-timezone')?.value || ''
+    const autopilot = document.getElementById('sf-autopilot')?.value || ''
+    const sold = document.getElementById('sf-sold')?.value || ''
+    const dateFrom = document.getElementById('sf-date-from')?.value || ''
+    const dateTo = document.getElementById('sf-date-to')?.value || ''
+    const ids = ['sf-search', 'sf-status', 'sf-state', 'sf-plan', 'sf-disposition', 'sf-campaign', 'sf-bucket', 'sf-timezone', 'sf-autopilot', 'sf-sold', 'sf-cold', 'sf-date-from', 'sf-date-to']
+
+    let filtered = allLeads
+
+    if (activeBucket) filtered = filtered.filter(l => l.bucket === activeBucket)
+    if (bucket && !activeBucket) filtered = filtered.filter(l => l.bucket === bucket)
+    if (search) filtered = filtered.filter(l => [l.first_name, l.last_name, l.phone, l.email, l.state, l.zip_code].some(v => v?.toLowerCase().includes(search)))
+    if (status) filtered = filtered.filter(l => l.status === status)
+    if (state) filtered = filtered.filter(l => l.state === state)
+    if (plan) filtered = filtered.filter(l => l.plan_type === plan)
+    if (disposition) filtered = filtered.filter(l => l.disposition_tag_id === disposition)
+    if (campaign) filtered = filtered.filter(l => l.campaign_tags?.includes(campaign))
+    if (timezone) filtered = filtered.filter(l => l.timezone === timezone)
+    if (autopilot === 'true') filtered = filtered.filter(l => l.autopilot === true)
+    if (autopilot === 'false') filtered = filtered.filter(l => !l.autopilot)
+    if (sold === 'true') filtered = filtered.filter(l => l.is_sold === true)
+    if (dateFrom) filtered = filtered.filter(l => l.created_at && new Date(l.created_at) >= new Date(dateFrom))
+    if (dateTo) filtered = filtered.filter(l => l.created_at && new Date(l.created_at) <= new Date(dateTo + 'T23:59:59'))
+
+    const countEl = document.getElementById('leads-count')
+    if (countEl) countEl.textContent = `Showing ${filtered.length} of ${allLeads.length} leads`
+
+    renderLeads(filtered)
+    updateActiveFilterPills()
+  }
+
+  const applyFilters = () => filterLeads()
+
+  const resetFilters = () => {
+    const ids = ['sf-search', 'sf-status', 'sf-state', 'sf-plan', 'sf-disposition', 'sf-campaign', 'sf-bucket', 'sf-timezone', 'sf-autopilot', 'sf-sold', 'sf-date-from']
+    ids.forEach(id => {
+      const el = document.getElementById(id)
+      if (el) el.value = ''
+    })
+    activeBucket = ''
+    document.querySelectorAll('.bucket-tab').forEach(t => t.classList.remove('active'))
+    document.querySelector('.bucket-tab')?.classList.add('active')
+    filterLeads()
+  }
+
+  const updateActiveFilterPills = () => {
+    const container = document.getElementById('active-filters')
+    if (!container) return
+    const pills = []
+    const checks = [
+      { id: 'sf-search', label: 'Search' },
+      { id: 'sf-status', label: 'Status' },
+      { id: 'sf-state', label: 'State' },
+      { id: 'sf-plan', label: 'Plan' },
+      { id: 'sf-timezone', label: 'Timezone' },
+      { id: 'sf-autopilot', label: 'Autopilot' },
+      { id: 'sf-sold', label: 'Sold' },
+      { id: 'sf-date-from', label: 'From date' },
+      { id: 'sf-date-to', label: 'To date' },      
+    ]
+    checks.forEach(({ id, label }) => {
+      const el = document.getElementById(id)
+      if (el?.value) {
+        pills.push(`<div class="filter-pill">${label}: ${el.value} <button onclick="clearFilter('${id}')">×</button></div>`)
+      }
+    })
+    const dispEl = document.getElementById('sf-disposition')
+    if (dispEl?.value) {
+      const tag = allDispositionTags.find(t => t.id === dispEl.value)
+      if (tag) pills.push(`<div class="filter-pill">Disposition: ${tag.name} <button onclick="clearFilter('sf-disposition')">×</button></div>`)
+    }
+    const campEl = document.getElementById('sf-campaign')
+    if (campEl?.value) pills.push(`<div class="filter-pill">Campaign: ${campEl.value} <button onclick="clearFilter('sf-campaign')">×</button></div>`)
+    if (activeBucket) pills.push(`<div class="filter-pill">Bucket: ${activeBucket} <button onclick="clearBucketFilter()">×</button></div>`)
+    container.innerHTML = pills.join('')
+  }
+
+  const clearFilter = (id) => {
+    const el = document.getElementById(id)
+    if (el) el.value = ''
+    filterLeads()
+  }
+
+  const clearBucketFilter = () => {
+    activeBucket = ''
+    document.querySelectorAll('.bucket-tab').forEach(t => t.classList.remove('active'))
+    document.querySelector('.bucket-tab')?.classList.add('active')
+    filterLeads()
+  }
+
+  const exportFilteredLeads = () => {
+    const params = new URLSearchParams()
+    const search = document.getElementById('sf-search')?.value
+    const status = document.getElementById('sf-status')?.value
+    const state = document.getElementById('sf-state')?.value
+    const plan = document.getElementById('sf-plan')?.value
+    const disposition = document.getElementById('sf-disposition')?.value
+    const campaign = document.getElementById('sf-campaign')?.value
+    const bucket = activeBucket || document.getElementById('sf-bucket')?.value
+    const timezone = document.getElementById('sf-timezone')?.value
+    const autopilot = document.getElementById('sf-autopilot')?.value
+    const sold = document.getElementById('sf-sold')?.value
+    const dateTo = document.getElementById('sf-date-to')?.value
+
+    if (search) params.set('search', search)
+    if (status) params.set('status', status)
+    if (state) params.set('state', state)
+    if (plan) params.set('plan_type', plan)
+    if (disposition) params.set('disposition_tag_id', disposition)
+    if (campaign) params.set('campaign_tag', campaign)
+    if (bucket) params.set('bucket', bucket)
+    if (timezone) params.set('timezone', timezone)
+    if (autopilot) params.set('autopilot', autopilot)
+    if (sold) params.set('is_sold', sold)
+    if (dateTo) params.set('date_to', dateTo)
+
+    window.open(`/leads/export?${params.toString()}`, '_blank')
+  }
+
+  const renderLeads = (leads) => {
+    const grid = document.getElementById('leads-grid')
+    if (!leads.length) {
+      grid.innerHTML = `<div style="text-align:center;padding:60px;color:#d1d5db;"><div style="font-size:32px;margin-bottom:8px;">👥</div><div>No leads found</div></div>`
+      return
+    }
+    grid.innerHTML = leads.map(lead => {
+      const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown'
+      const initials = getInitials(lead.first_name, lead.last_name)
+      const localTime = lead.timezone ? getLocalTime(lead.timezone) : ''
+      const tags = lead.campaign_tags || []
+      const dispTag = allDispositionTags.find(t => t.id === lead.disposition_tag_id)
+      return `
+        <div class="lead-card" style="${lead.disposition_color ? `border-left: 4px solid ${lead.disposition_color};` : ''}">
+          <div class="lead-card-top">
+            <div style="display:flex;align-items:flex-start;gap:6px;margin-top:3px;">
+              <input type="checkbox" class="lead-select-cb" data-id="${lead.id}" onchange="toggleLead(this)" ${selectedLeads.has(lead.id) ? 'checked' : ''} style="accent-color:#6366f1;margin-top:2px;">
+            </div>
+            <div class="lead-card-left">
+              <div class="lead-avatar">${initials}</div>
+              <div class="lead-info">
+                <div class="lead-name">
+                  <a href="/lead.html?id=${lead.id}" target="_blank" style="color:inherit;text-decoration:none;cursor:pointer;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='inherit'">${name}</a>
+                  ${lead.bucket ? `<span class="tag tag-bucket" style="font-size:10px;">${lead.bucket}</span>` : ''}
+                  ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
+                </div>
+                <div class="lead-meta">
+                  <span>📞 ${lead.phone}</span>
+                  ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
+                  ${lead.state ? `<span>📍 ${lead.state}</span>` : ''}
+                  ${lead.date_of_birth ? `<span>🎂 ${lead.date_of_birth}</span>` : ''}
+                  ${lead.plan_type ? `<span>🏥 ${lead.plan_type}</span>` : ''}
+                  ${localTime ? `<span>🕐 ${localTime} local</span>` : ''}
+                </div>
+                <div class="lead-tags">
+                  <span class="tag tag-${lead.status}">${lead.status}</span>
+                  ${lead.plan_type ? `<span class="tag tag-plan">${lead.plan_type}</span>` : ''}
+                  ${tags.map(t => `<span class="tag tag-campaign">${t}</span>`).join('')}
+                </div>
+              </div>
+            </div>
+            <div class="autopilot-wrap">
+              <span class="autopilot-label ${lead.autopilot ? 'on' : ''}" id="ap-label-${lead.id}">${lead.autopilot ? 'Autopilot ON' : 'Autopilot'}</span>
+              <label class="toggle">
+                <input type="checkbox" ${lead.autopilot ? 'checked' : ''} onchange="toggleAutopilot('${lead.id}', this.checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="lead-card-bottom">
+            <textarea class="notes-input" placeholder="Add notes..." onblur="saveNotes('${lead.id}', this.value)">${lead.notes || ''}</textarea>
+            <div class="card-actions">
+              <button class="btn btn-call btn-sm" onclick="callLead('${lead.phone}')">📞 Call</button>
+              <button class="btn btn-sms btn-sm" onclick="openSMSModal('${lead.id}', '${name.replace(/'/g, "\\'")}')">💬 SMS</button>
+              <button class="btn btn-disposition btn-sm" onclick="openDispositionModal('${lead.id}', '${name.replace(/'/g, "\\'")}')">🏷️ Disposition</button>
+              <button class="btn btn-ghost btn-sm" onclick="openEnrollModalForLead('${lead.id}')">📋 Campaign</button>
+              <button class="btn btn-ghost btn-sm" onclick="viewConversation('${lead.id}')">💬 Convo</button>
+              </div>
+          </div>
+        </div>
+      `
+    }).join('')
+  }
+
+  const updateStats = (leads) => {
+    document.getElementById('stat-total').textContent = leads.length
+    document.getElementById('stat-new').textContent = leads.filter(l => l.status === 'new').length
+    document.getElementById('stat-contacted').textContent = leads.filter(l => l.status === 'contacted').length
+    document.getElementById('stat-booked').textContent = leads.filter(l => l.status === 'booked').length
+    document.getElementById('stat-autopilot').textContent = leads.filter(l => l.autopilot).length
+  }
+
+  const loadLeads = async () => {
+    try {
+      const [leadsRes, bucketsRes] = await Promise.all([fetch('/leads'), fetch('/leads/buckets')])
+      const leadsData = await leadsRes.json()
+      const bucketsData = await bucketsRes.json()
+      if (leadsData.leads) {
+        allLeads = leadsData.leads
+        updateStats(allLeads)
+        updateCampaignFilter()
+      }
+      if (bucketsData.buckets) allBuckets = bucketsData.buckets
+      renderBucketTabs()
+      filterLeads()
+    } catch (err) { console.error(err) }
+  }
+
+  const updateCampaignFilter = () => {
+    const tags = [...new Set(allLeads.flatMap(l => l.campaign_tags || []))]
+    const campEl = document.getElementById('sf-campaign')
+    if (campEl) {
+      campEl.innerHTML = '<option value="">All campaigns</option>' + tags.map(t => `<option value="${t}">${t}</option>`).join('')
+    }
+
+    const states = [...new Set(allLeads.map(l => l.state).filter(Boolean))].sort()
+    const stateEl = document.getElementById('sf-state')
+    if (stateEl) {
+      stateEl.innerHTML = '<option value="">All states</option>' + states.map(s => `<option value="${s}">${s}</option>`).join('')
+    }
+
+    const bucketEl = document.getElementById('sf-bucket')
+    if (bucketEl) {
+      bucketEl.innerHTML = '<option value="">All buckets</option>' + allBuckets.map(b => `<option value="${b.bucket}">${b.bucket}</option>`).join('')
+    }
+
+    const dispEl = document.getElementById('sf-disposition')
+    if (dispEl) {
+      dispEl.innerHTML = '<option value="">All dispositions</option>' + allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+    }
+  }
+
+  const toggleSelectAll = (cb) => {
+    document.querySelectorAll('.lead-select-cb').forEach(c => { c.checked = cb.checked; if (cb.checked) selectedLeads.add(c.dataset.id); else selectedLeads.delete(c.dataset.id) })
+    updateBulkActions()
+  }
+  const toggleLead = (cb) => { if (cb.checked) selectedLeads.add(cb.dataset.id); else selectedLeads.delete(cb.dataset.id); updateBulkActions() }
+  const updateBulkActions = () => {
+    const bar = document.getElementById('bulk-actions')
+    const count = document.getElementById('selected-count')
+    if (selectedLeads.size > 0) { bar.classList.add('visible'); count.textContent = `${selectedLeads.size} lead${selectedLeads.size > 1 ? 's' : ''} selected` }
+    else bar.classList.remove('visible')
+  }
+
+  const toggleAutopilot = async (leadId, value) => {
+    const label = document.getElementById(`ap-label-${leadId}`)
+    if (label) { label.textContent = value ? 'Autopilot ON' : 'Autopilot'; label.className = `autopilot-label ${value ? 'on' : ''}` }
+    const lead = allLeads.find(l => l.id === leadId)
+    if (lead) lead.autopilot = value
+    updateStats(allLeads)
+    try { await fetch(`/leads/${leadId}/autopilot`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autopilot: value }) }) } catch (err) { console.error(err) }
+  }
+
+  const saveNotes = async (leadId, notes) => {
+    try { await fetch(`/leads/${leadId}/notes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes }) }) } catch (err) { console.error(err) }
+  }
+
+  const callLead = (phone) => window.open(`tel:${phone}`)
+
+  const openSMSModal = (leadId, name) => {
+    smsTargetLeadId = leadId
+    document.getElementById('sms-to-label').textContent = `To: ${name}`
+    document.getElementById('sms-body').value = ''
+    document.getElementById('sms-char-count').textContent = '0 / 160'
+    document.getElementById('sms-modal').classList.add('open')
+    document.getElementById('sms-body').oninput = function() {
+      const count = this.value.length
+      const el = document.getElementById('sms-char-count')
+      el.textContent = `${count} / 160`
+      el.className = 'char-count' + (count > 160 ? ' danger' : count > 130 ? ' warning' : '')
+    }
+  }
+
+  const sendManualSMS = async () => {
+    const body = document.getElementById('sms-body').value.trim()
+    if (!body) return alert('Please enter a message')
+    try {
+      const res = await fetch(`/messages/send/${smsTargetLeadId}`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) { document.getElementById('sms-modal').classList.remove('open'); loadLeads() }
+      else alert(data.error || 'Failed to send')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  // DISPOSITION MODAL
+  const openDispositionModal = (leadId, name) => {
+    dispositionTargetLeadId = leadId
+    document.getElementById('disposition-lead-name').textContent = `Applying disposition to: ${name}`
+    document.getElementById('disposition-notes').value = ''
+    const grid = document.getElementById('disp-picker-grid')
+    if (!allDispositionTags.length) {
+      grid.innerHTML = `<div style="color:#9ca3af;font-size:13px;">No disposition tags yet. Create some in Settings → Disposition Tags.</div>`
+    } else {
+      grid.innerHTML = allDispositionTags.map(tag => `
+        <button class="disp-pick-btn" style="background:${tag.color}" onclick="applyDisposition('${tag.id}')">${tag.name}</button>
+      `).join('')
+    }
+    document.getElementById('disposition-modal').classList.add('open')
+  }
+
+  const applyDisposition = async (tagId) => {
+    const notes = document.getElementById('disposition-notes').value
+    try {
+      const res = await fetch('/dispositions/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: dispositionTargetLeadId, disposition_tag_id: tagId, notes })
+      })
+      const data = await res.json()
+      if (data.success) {
+        document.getElementById('disposition-modal').classList.remove('open')
+        loadLeads()
+      } else { alert(data.error || 'Failed to apply disposition') }
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  // DISPOSITION TAG MANAGEMENT
+  const loadDispositionTags = async () => {
+    try {
+      const res = await fetch('/dispositions')
+      const data = await res.json()
+      allDispositionTags = data.tags || []
+      renderDispositionTags()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderDispositionTags = () => {
+    const container = document.getElementById('disposition-tags-list')
+    if (!allDispositionTags.length) {
+      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No disposition tags yet</div>`
+      return
+    }
+    container.innerHTML = allDispositionTags.map(tag => `
+      <div class="disp-tag-row">
+        <div class="disp-tag-color" style="background:${tag.color}"></div>
+        <div class="disp-tag-name">${tag.name}</div>
+        <div class="disp-tag-drip">${tag.disposition_messages?.length ? `${tag.disposition_messages.length} message drip` : 'No drip'}</div>
+        <div class="disp-tag-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editDispositionTag('${tag.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteDispositionTag('${tag.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('')
+  }
+  let actionRowCount = 0
+let editingActions = []
+
+const ACTION_TYPES = [
+  { value: 'pause_campaigns', label: 'Pause all active campaigns' },
+  { value: 'remove_from_campaigns', label: 'Remove from all campaigns' },
+  { value: 'add_to_campaign', label: 'Add to campaign' },
+  { value: 'remove_disposition_tags', label: 'Remove current disposition tag' },
+  { value: 'add_disposition_tag', label: 'Add another disposition tag' },
+  { value: 'send_immediate_text', label: 'Send immediate text' },
+  { value: 'update_status', label: 'Update lead status' },
+  { value: 'mark_as_sold', label: 'Mark as sold' },
+  { value: 'flag_as_cold', label: 'Flag as cold' },
+  { value: 'add_note', label: 'Add internal note' }
+]
+
+const addActionRow = (existingAction) => {
+  actionRowCount++
+  const id = `action-${actionRowCount}`
+  const container = document.getElementById('action-rows')
+  const div = document.createElement('div')
+  div.className = 'action-row'
+  div.id = id
+  const selectedType = existingAction?.action_type || ''
+  div.innerHTML = `
+    <div class="action-row-header">
+      <select class="action-type-select" onchange="updateActionValueUI('${id}', this.value)">
+        <option value="">Select action...</option>
+        ${ACTION_TYPES.map(t => `<option value="${t.value}" ${t.value === selectedType ? 'selected' : ''}>${t.label}</option>`).join('')}
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()">Remove</button>
+    </div>
+    <div class="action-value-area" id="${id}-value"></div>
+  `
+  container.appendChild(div)
+  if (selectedType) {
+    updateActionValueUI(id, selectedType, existingAction?.action_value)
+  }
+}
+
+const updateActionValueUI = (rowId, actionType, existingValue) => {
+  const container = document.getElementById(`${rowId}-value`)
+  if (!container) return
+  container.innerHTML = ''
+  switch (actionType) {
+    case 'add_to_campaign': {
+      container.innerHTML = `
+        <label>Select Campaign</label>
+        <select id="${rowId}-campaign">
+          <option value="">Choose campaign...</option>
+          ${allCampaigns.map(c => `<option value="${c.id}" ${existingValue?.campaign_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+        </select>
+      `
+      break
+    }
+    case 'add_disposition_tag': {
+      container.innerHTML = `
+        <label>Select Tag to Add</label>
+        <select id="${rowId}-tag">
+          <option value="">Choose tag...</option>
+          ${allDispositionTags.map(t => `<option value="${t.id}" ${existingValue?.tag_id === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}
+        </select>
+      `
+      break
+    }
+    case 'remove_disposition_tags': {
+      container.innerHTML = `
+        <label>Select Tag to Remove</label>
+        <select id="${rowId}-remove-tag">
+          <option value="">Any current tag (removes all)</option>
+          ${allDispositionTags.map(t => `<option value="${t.id}" ${existingValue?.tag_id === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}
+        </select>
+  `
+      break
+    }
+    case 'send_immediate_text': {
+      container.innerHTML = `
+        <label>Message Body</label>
+        <textarea id="${rowId}-message" placeholder="Hi [First Name], just wanted to follow up...">${existingValue?.message || ''}</textarea>
+      `
+      break
+    }
+    case 'update_status': {
+      container.innerHTML = `
+        <label>New Status</label>
+        <select id="${rowId}-status">
+          <option value="new" ${existingValue?.status === 'new' ? 'selected' : ''}>New</option>
+          <option value="contacted" ${existingValue?.status === 'contacted' ? 'selected' : ''}>Contacted</option>
+          <option value="booked" ${existingValue?.status === 'booked' ? 'selected' : ''}>Booked</option>
+        </select>
+      `
+      break
+    }
+    case 'add_note': {
+      container.innerHTML = `
+        <label>Note Text</label>
+        <input type="text" id="${rowId}-note" placeholder="e.g. Appointment scheduled by agent" value="${existingValue?.note || ''}">
+      `
+      break
+    }
+    default:
+      break
+  }
+}
+
+const collectActions = () => {
+  const rows = document.querySelectorAll('.action-row')
+  const actions = []
+  rows.forEach((row, i) => {
+    const typeSelect = row.querySelector('.action-type-select')
+    if (!typeSelect || !typeSelect.value) return
+    const actionType = typeSelect.value
+    const rowId = row.id
+    let actionValue = {}
+    switch (actionType) {
+      case 'add_to_campaign': {
+        const el = document.getElementById(`${rowId}-campaign`)
+        if (el?.value) actionValue = { campaign_id: el.value }
+        break
+      }
+      case 'add_disposition_tag': {
+        const el = document.getElementById(`${rowId}-tag`)
+        if (el?.value) actionValue = { tag_id: el.value }
+        break
+      }
+      case 'send_immediate_text': {
+        const el = document.getElementById(`${rowId}-message`)
+        if (el?.value) actionValue = { message: el.value }
+        break
+      }
+      case 'update_status': {
+        const el = document.getElementById(`${rowId}-status`)
+        if (el?.value) actionValue = { status: el.value }
+        break
+      }
+      case 'add_note': {
+        const el = document.getElementById(`${rowId}-note`)
+        if (el?.value) actionValue = { note: el.value }
+        break
+      }
+      case 'remove_disposition_tags': {
+        const el = document.getElementById(`${rowId}-remove-tag`)
+        actionValue = el?.value ? { tag_ids: [el.value] } : { tag_ids: [] }
+        break
+      }
+      default:
+        break
+    }
+    actions.push({ action_type: actionType, action_value: actionValue, action_order: i })
+  })
+  return actions
+}
+  const openCreateDispositionModal = () => {
+    editingDispositionId = null
+    selectedDispColor = '#6366f1'
+    actionRowCount = 0
+    document.getElementById('disp-tag-name').value = ''
+    document.getElementById('disp-tag-description').value = ''
+    document.getElementById('disp-message-steps').innerHTML = ''
+    document.getElementById('action-rows').innerHTML = ''
+    dispMessageStepCount = 0
+    document.getElementById('disp-tag-modal-title').textContent = 'Create Disposition Tag'
+    renderColorPicker()
+    document.getElementById('disp-tag-modal').classList.add('open')
+  }  
+
+  const closeDispTagModal = () => document.getElementById('disp-tag-modal').classList.remove('open')
+
+  const renderColorPicker = () => {
+    const row = document.getElementById('color-picker-row')
+    row.innerHTML = COLORS.map(c => `
+      <div class="color-swatch ${c === selectedDispColor ? 'selected' : ''}" style="background:${c}" onclick="selectColor('${c}')"></div>
+    `).join('')
+  }
+
+  const selectColor = (color) => {
+    selectedDispColor = color
+    renderColorPicker()
+  }
+  const editDispositionTag = async (id) => {
+    const tag = allDispositionTags.find(t => t.id === id)
+    if (!tag) return
+    editingDispositionId = id
+    selectedDispColor = tag.color || '#6366f1'
+    actionRowCount = 0
+    document.getElementById('disp-tag-name').value = tag.name
+    document.getElementById('disp-tag-description').value = tag.description || ''
+    document.getElementById('disp-message-steps').innerHTML = ''
+    document.getElementById('action-rows').innerHTML = ''
+    dispMessageStepCount = 0
+    document.getElementById('disp-tag-modal-title').textContent = 'Edit Disposition Tag'
+    renderColorPicker()
+    if (tag.disposition_actions) {
+      tag.disposition_actions.sort((a, b) => (a.action_order || 0) - (b.action_order || 0)).forEach(action => {
+        addActionRow(action)
+      })
+    }
+    if (tag.disposition_messages) {
+      tag.disposition_messages.sort((a, b) => a.day_number - b.day_number).forEach(msg => {
+        dispMessageStepCount++
+        const container = document.getElementById('disp-message-steps')
+        const step = document.createElement('div')
+        step.className = 'message-step'
+        step.id = `dstep-${dispMessageStepCount}`
+        step.innerHTML = `
+          <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
+          <div class="day-input">
+            <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${msg.day_number}">
+            <label>at</label><input type="time" class="dstep-time" value="${msg.send_time || '10:00'}">
+            <span style="font-size:11px;color:#9ca3af;">after disposition applied</span>
+          </div>
+          <textarea class="dstep-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
+          <div class="char-count">${msg.message_body.length} / 160</div>
+        `
+        container.appendChild(step)
+      })
+    }
+    document.getElementById('disp-tag-modal').classList.add('open')
+  }
+
+  const addDispMessageStep = () => {
+    dispMessageStepCount++
+    const container = document.getElementById('disp-message-steps')
+    const step = document.createElement('div')
+    step.className = 'message-step'
+    step.id = `dstep-${dispMessageStepCount}`
+    step.innerHTML = `
+      <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
+      <div class="day-input">
+        <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${dispMessageStepCount}">
+        <label>at</label><input type="time" class="dstep-time" value="10:00">
+        <span style="font-size:11px;color:#9ca3af;">after disposition applied</span>
+      </div>
+      <textarea class="dstep-body" placeholder="Hi [First Name], just checking in..." rows="3" oninput="updateCharCount(this)"></textarea>
+      <div class="char-count">0 / 160</div>
+    `
+    container.appendChild(step)
+  }
+
+  const removeDispStep = (id) => document.getElementById(id)?.remove()
+
+  const saveDispositionTag = async () => {
+    const name = document.getElementById('disp-tag-name').value.trim()
+    if (!name) return alert('Please enter a tag name')
+    const description = document.getElementById('disp-tag-description').value.trim()
+    const actions = collectActions()
+    const steps = document.querySelectorAll('.message-step')
+    const messages = []
+    steps.forEach(step => {
+      const dayEl = step.querySelector('.dstep-day')
+      const timeEl = step.querySelector('.dstep-time')
+      const bodyEl = step.querySelector('.dstep-body')
+      if (!dayEl || !bodyEl) return
+      const body = bodyEl.value.trim()
+      if (!body) return
+      messages.push({ day_number: parseInt(dayEl.value), send_time: timeEl?.value || '10:00', message_body: body })
+    })
+    try {
+      const url = editingDispositionId ? `/dispositions/${editingDispositionId}` : '/dispositions'
+      const method = editingDispositionId ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color: selectedDispColor, description, messages, actions })
+      })
+      const data = await res.json()
+      if (data.success) { closeDispTagModal(); loadDispositionTags() }
+      else alert(data.error || 'Failed to save')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const deleteDispositionTag = async (id) => {
+    if (!confirm('Delete this disposition tag?')) return
+    await fetch(`/dispositions/${id}`, { method: 'DELETE' })
+    loadDispositionTags()
+  }
+
+  const viewConversation = async (leadId) => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+    document.querySelectorAll('.nav-btn')[1].classList.add('active')
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.getElementById('page-conversations').classList.add('active')
+    await loadConversations()
+    const conv = allConversations.find(c => c.lead_id === leadId)
+    if (conv) openConversation(conv.id)
+  }
+
+  const openEnrollModalForLead = (leadId) => { selectedLeads.clear(); selectedLeads.add(leadId); openEnrollModal() }
+
+  // UPLOAD
+  const openUploadModal = () => {
+    importFile = null
+    document.getElementById('modal-file-name').textContent = ''
+    document.getElementById('import-bucket').value = ''
+    document.getElementById('import-autopilot').checked = false
+    document.getElementById('import-status-bar').className = 'status-bar'
+    document.getElementById('import-status-bar').textContent = ''
+    const select = document.getElementById('import-campaign')
+    select.innerHTML = '<option value="">No campaign</option>' + allCampaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+    const dispSelect = document.getElementById('import-disposition')
+    dispSelect.innerHTML = '<option value="">No disposition tag</option>' + allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+    document.getElementById('import-start-wrap').style.display = 'none'
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
+    const pad = n => String(n).padStart(2, '0')
+    document.getElementById('import-campaign-start').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
+    document.getElementById('upload-modal').classList.add('open')
+  }
+  const closeUploadModal = () => document.getElementById('upload-modal').classList.remove('open')
+
+  document.getElementById('import-campaign').addEventListener('change', function() {
+    document.getElementById('import-start-wrap').style.display = this.value ? 'block' : 'none'
+  })
+  document.getElementById('modal-file-input').addEventListener('change', function(e) {
+    if (e.target.files[0]) { importFile = e.target.files[0]; document.getElementById('modal-file-name').textContent = importFile.name }
+  })
+  const modalDropZone = document.getElementById('modal-drop-zone')
+  modalDropZone.addEventListener('dragover', (e) => { e.preventDefault(); modalDropZone.classList.add('dragover') })
+  modalDropZone.addEventListener('dragleave', () => modalDropZone.classList.remove('dragover'))
+  modalDropZone.addEventListener('drop', (e) => { e.preventDefault(); modalDropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) { importFile = e.dataTransfer.files[0]; document.getElementById('modal-file-name').textContent = importFile.name } })
+
+  const showImportStatus = (msg, type) => { const bar = document.getElementById('import-status-bar'); bar.textContent = msg; bar.className = `status-bar ${type}` }
+
+  const submitImport = async () => {
+    if (!importFile) return showImportStatus('Please select a file first', 'error')
+    const bucket = document.getElementById('import-bucket').value.trim()
+    if (!bucket) return showImportStatus('Please enter a bucket name', 'error')
+    const autopilot = document.getElementById('import-autopilot').checked
+    const campaignId = document.getElementById('import-campaign').value
+    const campaignStartDate = document.getElementById('import-campaign-start').value
+    if (campaignId && !campaignStartDate) return showImportStatus('Please set a campaign start date', 'error')
+    const formData = new FormData()
+    formData.append('file', importFile)
+    formData.append('bucket', bucket)
+    formData.append('autopilot', autopilot.toString())
+    if (campaignId) formData.append('campaign_id', campaignId)
+    if (campaignStartDate) formData.append('campaign_start_date', new Date(campaignStartDate).toISOString())
+    const dispositionTagId = document.getElementById('import-disposition').value
+    if (dispositionTagId) formData.append('disposition_tag_id', dispositionTagId)
+    showImportStatus('Importing leads...', 'loading')
+    document.querySelector('#upload-modal .btn-primary').disabled = true
+    try {
+      const res = await fetch('/leads/upload', { method: 'POST', body: formData })
+      const data = await res.json()
+      if (data.success) { showImportStatus(data.message, 'success'); setTimeout(() => { closeUploadModal(); loadLeads() }, 1500) }
+      else showImportStatus(data.error || 'Import failed', 'error')
+    } catch (err) { showImportStatus('Something went wrong', 'error') }
+    finally { document.querySelector('#upload-modal .btn-primary').disabled = false }
+  }
+
+  const dropZone = document.getElementById('drop-zone')
+  dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover') })
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'))
+  dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) { importFile = e.dataTransfer.files[0]; document.getElementById('modal-file-name').textContent = importFile.name; openUploadModal() } })
+
+  // CONVERSATIONS
+  let convTab = 'all'
+
+  const handoffLabels = {
+    appointment_confirmed: { text: 'Appointment confirmed', color: 'green' },
+    quote_requested: { text: 'Requesting quote', color: 'blue' },
+    qualification_complete: { text: 'Fully qualified', color: 'purple' },
+    complex_medical: { text: 'Complex medical', color: 'amber' },
+    frustration_detected: { text: 'Frustrated — urgent', color: 'red' },
+    unresponsive_after_followups: { text: 'Dormant — no response', color: 'gray' }
+  }
+
+  const handoffBannerText = {
+    appointment_confirmed: 'Appointment confirmed — agent follow-up needed',
+    quote_requested: 'Lead requesting quote — ready for advisor',
+    qualification_complete: 'Fully qualified — ready for advisor call',
+    complex_medical: 'Complex medical situation — advisor review needed',
+    frustration_detected: 'Lead frustrated — immediate agent attention',
+    unresponsive_after_followups: 'No response after 2 follow-ups — dormant'
+  }
+
+  const setConvTab = (tab) => {
+    convTab = tab
+    document.getElementById('conv-tab-all').classList.toggle('active', tab === 'all')
+    document.getElementById('conv-tab-review').classList.toggle('active', tab === 'review')
+    filterConversations(document.querySelector('.conv-search')?.value || '')
+  }
+
+  const loadConversations = async () => {
+    try {
+      const res = await fetch('/conversations')
+      const data = await res.json()
+      allConversations = data.conversations || []
+      const reviewCount = allConversations.filter(c => c.needs_agent_review).length
+      const badge = document.getElementById('review-badge')
+      if (reviewCount > 0) { badge.textContent = reviewCount; badge.style.display = 'inline' }
+      else badge.style.display = 'none'
+      filterConversations('')
+    } catch (err) { console.error(err) }
+  }
+
+  const renderConversationList = (convs) => {
+    const list = document.getElementById('conv-list')
+    if (!convs.length) { list.innerHTML = `<div style="padding:32px;text-align:center;color:#d1d5db;font-size:13px;">No conversations</div>`; return }
+    list.innerHTML = convs.map(c => {
+      const lead = allLeads.find(l => l.id === c.lead_id)
+      const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ') : 'Unknown'
+      const initials = lead ? getInitials(lead.first_name, lead.last_name) : '?'
+      const lastMsg = c.messages?.[c.messages.length - 1]
+      const hasUnread = c.messages?.some(m => m.direction === 'inbound' && !m.read)
+      const handoff = c.needs_agent_review && c.handoff_reason ? handoffLabels[c.handoff_reason] : null
+      return `<div class="conv-item ${activeConvId === c.id ? 'active' : ''}" onclick="openConversation('${c.id}')">
+        <div class="conv-avatar" style="${c.needs_agent_review ? 'background:linear-gradient(135deg,#ef4444,#f97316);' : ''}">${initials}${hasUnread ? '<div class="unread-dot"></div>' : ''}</div>
+        <div class="conv-item-info">
+          <div class="conv-item-name">${name}</div>
+          <div class="conv-item-preview">${lastMsg?.body || 'No messages yet'}</div>
+          ${handoff ? `<div class="conv-item-handoff" style="color:${handoff.color === 'red' ? '#dc2626' : handoff.color === 'green' ? '#059669' : handoff.color === 'blue' ? '#2563eb' : handoff.color === 'purple' ? '#7c3aed' : handoff.color === 'amber' ? '#d97706' : '#6b7280'};">⚑ ${handoff.text}</div>` : ''}
+        </div>
+        <div class="conv-item-time">${lastMsg ? formatTime(lastMsg.sent_at) : ''}</div>
+      </div>`
+    }).join('')
+  }
+
+  const filterConversations = (search) => {
+    let filtered = allConversations
+    if (convTab === 'review') filtered = filtered.filter(c => c.needs_agent_review)
+    if (search) {
+      const q = search.toLowerCase()
+      filtered = filtered.filter(c => {
+        const lead = allLeads.find(l => l.id === c.lead_id)
+        const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ').toLowerCase() : ''
+        return name.includes(q)
+      })
+    }
+    renderConversationList(filtered)
+  }
+
+  const openConversation = async (convId) => {
+    activeConvId = convId
+    renderConversationList(allConversations)
+    try {
+      const res = await fetch(`/conversations/${convId}`)
+      const data = await res.json()
+      const conv = data.conversation
+      const lead = allLeads.find(l => l.id === conv.lead_id)
+      const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ') : 'Unknown'
+      const initials = lead ? getInitials(lead.first_name, lead.last_name) : '?'
+      const isAutopilot = lead?.autopilot || false
+      const dispTag = lead?.disposition_tag_id ? allDispositionTags.find(t => t.id === lead.disposition_tag_id) : null
+      const bannerColor = conv.needs_agent_review && conv.handoff_reason ? (handoffLabels[conv.handoff_reason]?.color || 'gray') : null
+      const bannerText = conv.needs_agent_review && conv.handoff_reason ? handoffBannerText[conv.handoff_reason] : null
+      document.getElementById('conv-main').innerHTML = `
+        ${bannerText ? `<div class="handoff-banner ${bannerColor}">
+          <span>⚑ ${bannerText}</span>
+          <div class="handoff-banner-actions">
+            <button class="btn btn-sm" style="background:white;color:#374151;" onclick="takeOverConversation('${conv.id}', '${lead?.id}')">Take Over</button>
+            <button class="btn btn-sm" style="background:rgba(0,0,0,0.1);color:inherit;" onclick="markConvResolved('${conv.id}')">Mark Resolved</button>
+          </div>
+        </div>` : ''}
+        <div class="conv-header">
+          <div class="conv-header-info">
+            <div class="conv-avatar" style="width:38px;height:38px;font-size:13px;">${initials}</div>
+            <div>
+              <div class="conv-header-name">${name} ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color};font-size:11px;">${dispTag.name}</span>` : ''}</div>
+              <div class="conv-header-meta">${lead?.phone || ''} ${lead?.state ? '· ' + lead.state : ''} ${lead?.timezone ? '· ' + getLocalTime(lead.timezone) + ' local' : ''}</div>
+            </div>
+          </div>
+          <div class="conv-header-actions">
+            <span class="autopilot-status ${isAutopilot ? 'on' : 'off'}">${isAutopilot ? '⚡ Autopilot ON' : '✋ Manual'}</span>
+            <button class="btn btn-disposition btn-sm" onclick="openDispositionModal('${lead?.id}', '${name.replace(/'/g, "\\'")}')">🏷️ Disposition</button>
+            <button class="btn btn-call btn-sm" onclick="callLead('${lead?.phone}')">📞 Call</button>
+          </div>
+        </div>
+        <div class="conv-messages" id="conv-messages">
+          ${conv.messages?.length ? conv.messages.map(m => `
+            <div class="msg ${m.direction} ${m.is_ai ? 'ai' : ''}">
+              <div class="msg-bubble">${m.body}</div>
+              <div class="msg-time">${formatTime(m.sent_at)}</div>
+              ${m.is_ai ? '<div class="msg-label">AI response</div>' : ''}
+            </div>
+          `).join('') : '<div style="text-align:center;color:#d1d5db;font-size:13px;padding:32px;">No messages yet</div>'}
+        </div>
+        <div class="conv-input-area">
+          ${!isAutopilot ? `<div class="ai-suggestion" id="ai-suggestion-box" style="display:none;"><div class="ai-suggestion-label">⚡ AI suggestion</div><div id="ai-suggestion-text"></div></div>` : `<div class="autopilot-status on" style="margin-bottom:8px;display:inline-flex;">⚡ Autopilot is handling this conversation</div>`}
+          <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="template-pills"></div>
+          <div class="conv-input-row">
+            <textarea class="conv-textarea" id="conv-input" placeholder="${isAutopilot ? 'Autopilot active — type to override' : 'Type a message...'}" ${!isAutopilot ? `onfocus="loadAISuggestion('${conv.id}', '${conv.lead_id}')"` : ''}></textarea>
+            <button class="btn btn-primary" onclick="sendConvMessage('${conv.id}', '${conv.lead_id}')">Send</button>
+          </div>
+        </div>
+      `
+      const msgs = document.getElementById('conv-messages')
+      if (msgs) msgs.scrollTop = msgs.scrollHeight
+      renderTemplatePills(conv.lead_id)
+    } catch (err) { console.error(err) }
+  }
+
+  const takeOverConversation = async (convId, leadId) => {
+    await fetch(`/conversations/${convId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ needs_agent_review: false, handoff_reason: null }) })
+    if (leadId) await fetch(`/leads/${leadId}/autopilot`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autopilot: false }) })
+    await loadConversations()
+    openConversation(convId)
+  }
+
+  const markConvResolved = async (convId) => {
+    await fetch(`/conversations/${convId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ needs_agent_review: false, handoff_reason: null }) })
+    await loadConversations()
+    openConversation(convId)
+  }
+
+  const loadAISuggestion = async (convId, leadId) => {
+    const box = document.getElementById('ai-suggestion-box')
+    const text = document.getElementById('ai-suggestion-text')
+    if (!box || !text) return
+    box.style.display = 'block'
+    text.textContent = 'Generating suggestion...'
+    try {
+      const res = await fetch('/messages/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId }) })
+      const data = await res.json()
+      if (data.suggestion) { text.textContent = data.suggestion; const input = document.getElementById('conv-input'); if (input && !input.value) input.value = data.suggestion }
+    } catch (err) { if (text) text.textContent = 'Could not generate suggestion' }
+  }
+
+  const sendConvMessage = async (convId, leadId) => {
+    const input = document.getElementById('conv-input')
+    const body = input?.value.trim()
+    if (!body) return
+    try {
+      const res = await fetch('/messages/send-manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId, body }) })
+      const data = await res.json()
+      if (data.success) { input.value = ''; const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'; openConversation(convId) }
+      else alert(data.error || 'Failed to send')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  // CAMPAIGNS
+  const loadCampaigns = async () => {
+    try {
+      const res = await fetch('/campaigns')
+      const data = await res.json()
+      allCampaigns = data.campaigns || []
+      renderCampaignsTable(allCampaigns)
+    } catch (err) { console.error(err) }
+  }
+
+  const sortCampaigns = (key) => {
+    if (campaignSortKey === key) campaignSortDir *= -1
+    else { campaignSortKey = key; campaignSortDir = 1 }
+    renderCampaignsTable(allCampaigns)
+  }
+
+  const filterCampaigns = (search) => {
+    renderCampaignsTable(allCampaigns.filter(c => c.name.toLowerCase().includes(search.toLowerCase())))
+  }
+
+  const renderCampaignsTable = (campaigns) => {
+    const sorted = [...campaigns].sort((a, b) => {
+      const av = a[campaignSortKey] || '', bv = b[campaignSortKey] || ''
+      return av < bv ? -campaignSortDir : av > bv ? campaignSortDir : 0
+    })
+    const tbody = document.getElementById('campaigns-tbody')
+    if (!sorted.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#d1d5db;">No campaigns yet</td></tr>`; return }
+    tbody.innerHTML = sorted.map((c, idx) => {
+      const total = c.campaign_leads?.length || 0
+      const completed = c.campaign_leads?.filter(l => l.status === 'completed').length || 0
+      const steps = c.campaign_messages?.length || 0
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0
+      const isLast = idx >= sorted.length - 2
+      return `<tr>
+        <td><div class="campaign-name-cell">${c.name}</div>${c.description ? `<div class="campaign-desc">${c.description}</div>` : ''}</td>
+        <td><span class="type-label">Workflow</span><span class="drip-badge">Drip</span></td>
+        <td style="color:#6b7280;font-size:13px;">${formatDate(c.created_at)}</td>
+        <td style="color:#6b7280;font-size:13px;">${steps} msg${steps !== 1 ? 's' : ''}</td>
+        <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+        <td><div class="progress-wrap"><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%"></div></div><div class="progress-text">${completed}/${total}</div></div></td>
+        <td>
+          <div class="actions-menu">
+            <button class="actions-btn" onclick="toggleActionsMenu('menu-${c.id}', ${isLast})">⋯</button>
+            <div class="actions-dropdown ${isLast ? 'up' : 'down'}" id="menu-${c.id}">
+              ${c.status === 'draft' ? `<button onclick="startCampaign('${c.id}')">Activate</button>` : ''}
+              ${c.status === 'active' ? `<button onclick="pauseCampaign('${c.id}')">Pause</button>` : ''}
+              ${c.status === 'paused' ? `<button onclick="startCampaign('${c.id}')">Resume</button>` : ''}
+              <button onclick="editCampaign('${c.id}')">Edit</button>
+              <button class="danger" onclick="deleteCampaign('${c.id}')">Delete</button>
+            </div>
+          </div>
+        </td>
+      </tr>`
+    }).join('')
+  }
+
+  const toggleActionsMenu = (id, isLast) => {
+    document.querySelectorAll('.actions-dropdown').forEach(d => { if (d.id !== id) d.classList.remove('open') })
+    const menu = document.getElementById(id)
+    if (menu) { menu.className = `actions-dropdown ${isLast ? 'up' : 'down'} ${menu.classList.contains('open') ? '' : 'open'}` }
+  }
+  document.addEventListener('click', (e) => { if (!e.target.closest('.actions-menu')) document.querySelectorAll('.actions-dropdown').forEach(d => d.classList.remove('open')) })
+
+  const startCampaign = async (id) => { await fetch(`/campaigns/${id}/start`, { method: 'POST' }); loadCampaigns() }
+  const pauseCampaign = async (id) => { await fetch(`/campaigns/${id}/pause`, { method: 'POST' }); loadCampaigns() }
+  const deleteCampaign = async (id) => { if (!confirm('Delete this campaign?')) return; await fetch(`/campaigns/${id}`, { method: 'DELETE' }); loadCampaigns() }
+
+  const editCampaign = async (id) => {
+    const res = await fetch(`/campaigns/${id}`)
+    const data = await res.json()
+    const c = data.campaign
+    editingCampaignId = id
+    messageStepCount = 0
+    document.getElementById('campaign-name').value = c.name
+    document.getElementById('campaign-description').value = c.description || ''
+    document.getElementById('message-steps').innerHTML = ''
+    document.getElementById('campaign-modal-title').textContent = 'Edit Campaign'
+    c.campaign_messages.sort((a, b) => a.day_number - b.day_number).forEach(msg => {
+      messageStepCount++
+      const container = document.getElementById('message-steps')
+      const step = document.createElement('div')
+      step.className = 'message-step'
+      step.id = `step-${messageStepCount}`
+      step.innerHTML = `
+        <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
+        <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${msg.day_number}"><label>at</label><input type="time" class="step-time" value="${msg.send_time || '10:00'}"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
+        <textarea class="step-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
+        <div class="char-count">${msg.message_body.length} / 160</div>
+      `
+      container.appendChild(step)
+    })
+    document.getElementById('campaign-modal').classList.add('open')
+  }
+
+  const openCreateCampaignModal = () => {
+    editingCampaignId = null
+    messageStepCount = 0
+    document.getElementById('campaign-name').value = ''
+    document.getElementById('campaign-description').value = ''
+    document.getElementById('message-steps').innerHTML = ''
+    document.getElementById('campaign-modal-title').textContent = 'Create Campaign'
+    addMessageStep()
+    document.getElementById('campaign-modal').classList.add('open')
+  }
+  const closeCampaignModal = () => document.getElementById('campaign-modal').classList.remove('open')
+
+  const addMessageStep = () => {
+    messageStepCount++
+    const container = document.getElementById('message-steps')
+    const step = document.createElement('div')
+    step.className = 'message-step'
+    step.id = `step-${messageStepCount}`
+    step.innerHTML = `
+      <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
+      <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${messageStepCount === 1 ? 1 : messageStepCount * 3}"><label>at</label><input type="time" class="step-time" value="10:00"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
+      <textarea class="step-body" placeholder="Hi [First Name], this is Nick with Coverage by Kuhl..." rows="3" oninput="updateCharCount(this)"></textarea>
+      <div class="char-count">0 / 160</div>
+    `
+    container.appendChild(step)
+  }
+
+  const updateCharCount = (textarea) => {
+    const count = textarea.value.length
+    const div = textarea.nextElementSibling
+    div.textContent = `${count} / 160`
+    div.className = 'char-count' + (count > 160 ? ' danger' : count > 130 ? ' warning' : '')
+  }
+
+  const removeStep = (id) => document.getElementById(id)?.remove()
+
+  const saveCampaign = async () => {
+    const name = document.getElementById('campaign-name').value.trim()
+    const description = document.getElementById('campaign-description').value.trim()
+    if (!name) return alert('Please enter a campaign name')
+    const steps = document.querySelectorAll('.message-step')
+    const messages = []
+    let valid = true
+    steps.forEach(step => {
+      const day = parseInt(step.querySelector('.step-day').value)
+      const time = step.querySelector('.step-time').value || '10:00'
+      const body = step.querySelector('.step-body').value.trim()
+      if (!body) { valid = false; return }
+      messages.push({ day_number: day, send_time: time, message_body: body })
+    })
+    if (!valid) return alert('Please fill in all message bodies')
+    if (!messages.length) return alert('Please add at least one message')
+    messages.sort((a, b) => a.day_number - b.day_number)
+    try {
+      const url = editingCampaignId ? `/campaigns/${editingCampaignId}` : '/campaigns'
+      const method = editingCampaignId ? 'PUT' : 'POST'
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description, messages }) })
+      const data = await res.json()
+      if (data.success) { closeCampaignModal(); loadCampaigns() }
+      else alert(data.error || 'Failed to save')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const openEnrollModal = () => {
+    if (!allCampaigns.length) return alert('Please create a campaign first')
+    const select = document.getElementById('enroll-campaign-select')
+    select.innerHTML = allCampaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
+    const pad = n => String(n).padStart(2, '0')
+    document.getElementById('enroll-start-date').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
+    const leads = allLeads.filter(l => selectedLeads.has(l.id))
+    document.getElementById('enroll-leads-list').innerHTML = leads.map(l => `
+      <div class="checkbox-row">
+        <input type="checkbox" checked id="enroll-${l.id}" data-id="${l.id}">
+        <label for="enroll-${l.id}">${[l.first_name, l.last_name].filter(Boolean).join(' ') || l.phone}</label>
+        <span class="lead-info">${l.phone} · ${l.timezone || 'ET'}</span>
+      </div>
+    `).join('')
+    document.getElementById('enroll-modal').classList.add('open')
+  }
+  const closeEnrollModal = () => document.getElementById('enroll-modal').classList.remove('open')
+
+  const enrollSelectedLeads = async () => {
+    const campaignId = document.getElementById('enroll-campaign-select').value
+    const startDate = document.getElementById('enroll-start-date').value
+    const checkedLeads = Array.from(document.querySelectorAll('#enroll-leads-list input:checked')).map(cb => cb.dataset.id)
+    if (!campaignId) return alert('Please select a campaign')
+    if (!startDate) return alert('Please set a start date and time')
+    if (!checkedLeads.length) return alert('No leads selected')
+    try {
+      const res = await fetch(`/campaigns/${campaignId}/enroll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_ids: checkedLeads, start_date: new Date(startDate).toISOString() }) })
+      const data = await res.json()
+      if (data.success) { closeEnrollModal(); selectedLeads.clear(); updateBulkActions(); loadLeads(); alert(`${data.count} leads tagged!`) }
+      else alert(data.error || 'Tagging failed')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  // STATS
+  let currentStatsPeriod = 30
+
+  const setStatsPeriod = (days) => {
+    currentStatsPeriod = days
+    ;[7, 30, 90].forEach(d => {
+      const btn = document.getElementById(`period-btn-${d}`)
+      btn.className = d === days ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm'
+    })
+    loadDeliveryStats()
+  }
+
+  const loadDeliveryStats = async () => {
+    try {
+      const res = await fetch(`/stats/delivery?days=${currentStatsPeriod}`)
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+
+      const { total, totals, delivery_rate, total_failed, error_breakdown } = data
+
+      document.getElementById('stats-total').textContent = total
+      document.getElementById('stats-delivered').textContent = totals.delivered
+      document.getElementById('stats-failed').textContent = totals.failed
+      document.getElementById('stats-undelivered').textContent = totals.undelivered
+      document.getElementById('stats-pending').textContent = (totals.sent || 0) + (totals.queued || 0)
+
+      const rateEl = document.getElementById('stats-rate')
+      const rateSub = document.getElementById('stats-rate-sub')
+      if (delivery_rate !== null) {
+        rateEl.textContent = `${delivery_rate}%`
+        rateSub.textContent = `${totals.delivered} of ${total} messages confirmed delivered in the last ${currentStatsPeriod} days`
+      } else {
+        rateEl.textContent = '—'
+        rateSub.textContent = total > 0 ? `${total} messages sent — awaiting delivery confirmations` : `No messages sent in the last ${currentStatsPeriod} days`
+      }
+
+      const errorsWrap = document.getElementById('stats-errors-wrap')
+      if (error_breakdown && error_breakdown.length > 0) {
+        errorsWrap.style.display = 'block'
+        document.getElementById('stats-error-tbody').innerHTML = error_breakdown.map(e => `
+          <tr>
+            <td style="font-family:monospace;font-size:13px;color:#6b7280;">${e.code}</td>
+            <td style="font-size:13px;">${e.reason}</td>
+            <td style="text-align:right;font-size:13px;font-weight:600;">${e.count}</td>
+          </tr>
+        `).join('')
+      } else {
+        errorsWrap.style.display = 'none'
+      }
+
+      const noteEl = document.getElementById('stats-callback-note')
+      noteEl.style.display = (total > 0 && totals.delivered === 0 && total_failed === 0) ? 'block' : 'none'
+    } catch (err) {
+      console.error('Stats load error:', err)
+    }
+  }
+
+  const init = async () => {
+    const authed = await checkAuth()
+    if (!authed) return
+    await Promise.all([loadDispositionTags(), loadTemplates(), loadProfile()])
+    loadLeads()
+    loadAppointments()
+  }
+
+  // CALENDAR
+  let allAppointments = []
+  let calYear = new Date().getFullYear()
+  let calMonth = new Date().getMonth()
+  let selectedCalDate = null
+
+  const loadAppointments = async () => {
+    try {
+      const res = await fetch('/appointments')
+      const data = await res.json()
+      allAppointments = data.appointments || []
+      renderCalendar()
+      renderTodayAppts()
+      updateCalBadge()
+    } catch (err) { console.error(err) }
+  }
+
+  const updateCalBadge = () => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz })
+    const todayCount = allAppointments.filter(a => {
+      return a.scheduled_at?.slice(0, 10) === todayStr && a.status === 'scheduled'
+    }).length
+    const badge = document.getElementById('today-appt-badge')
+    if (todayCount > 0) { badge.textContent = todayCount; badge.style.display = 'inline'; }
+    else badge.style.display = 'none'
+  }
+
+  const renderTodayAppts = () => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz })
+    const todays = allAppointments.filter(a => {
+      const d = new Date(a.scheduled_at)
+      return d.toLocaleDateString('en-CA', { timeZone: tz }) === todayStr
+    })
+    document.getElementById('today-count').textContent = todays.length
+    const container = document.getElementById('today-appts')
+    if (!todays.length) { container.innerHTML = `<div style="color:#d1d5db;font-size:13px;">No calls scheduled for today</div>`; return }
+    container.innerHTML = todays.map(a => renderApptCard(a)).join('')
+  }
+
+  const renderCalendar = () => {
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`
+    const firstDay = new Date(calYear, calMonth, 1).getDay()
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
+    const daysInPrev = new Date(calYear, calMonth, 0).getDate()
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: tz })
+
+    const apptsByDate = {}
+    allAppointments.forEach(a => {
+      const d = new Date(a.scheduled_at).toLocaleDateString('en-CA', { timeZone: tz })
+      if (!apptsByDate[d]) apptsByDate[d] = []
+      apptsByDate[d].push(a)
+    })
+
+    let cells = ''
+    for (let i = 0; i < firstDay; i++) {
+      const d = daysInPrev - firstDay + i + 1
+      cells += `<div class="cal-cell other-month"><div class="cal-date" style="color:#d1d5db;">${d}</div></div>`
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+      const isToday = dateStr === todayStr
+      const isSelected = dateStr === selectedCalDate
+      const dayAppts = apptsByDate[dateStr] || []
+      const dots = dayAppts.slice(0, 3).map(a => `<div class="cal-dot cal-dot-${a.status}" title="${a.lead_name}"></div>`).join('')
+      cells += `<div class="cal-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="selectCalDate('${dateStr}')">
+        <div class="cal-date">${d}</div>
+        ${dots}
+      </div>`
+    }
+    const remaining = 42 - firstDay - daysInMonth
+    for (let i = 1; i <= remaining; i++) {
+      cells += `<div class="cal-cell other-month"><div class="cal-date" style="color:#d1d5db;">${i}</div></div>`
+    }
+    document.getElementById('cal-grid').innerHTML = cells
+  }
+
+  const selectCalDate = (dateStr) => {
+    selectedCalDate = dateStr
+    renderCalendar()
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const dayAppts = allAppointments.filter(a => {
+      return new Date(a.scheduled_at).toLocaleDateString('en-CA', { timeZone: tz }) === dateStr
+    })
+    const label = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+    document.getElementById('day-view-label').textContent = label
+    const container = document.getElementById('day-appts')
+    if (!dayAppts.length) { container.innerHTML = `<div style="color:#d1d5db;font-size:13px;">No appointments this day</div>`; return }
+    container.innerHTML = dayAppts.map(a => renderApptCard(a)).join('')
+  }
+
+  const renderApptCard = (a) => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const time = new Date(a.scheduled_at).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' })
+    const dateLabel = new Date(a.scheduled_at).toLocaleDateString('en-US', { timeZone: tz, month: 'short', day: 'numeric' })
+    const name = a.lead_name || (a.leads ? `${a.leads.first_name || ''} ${a.leads.last_name || ''}`.trim() : 'Unknown')
+    const phone = a.lead_phone || a.leads?.phone || ''
+    return `<div class="appt-card">
+      <div class="appt-card-header">
+        <div>
+          <div class="appt-name">${name}</div>
+          <div class="appt-phone">${phone}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="appt-time">${time}</div>
+          <div style="font-size:11px;color:#9ca3af;">${dateLabel}</div>
+        </div>
+      </div>
+      ${a.notes ? `<div class="appt-notes">${a.notes}</div>` : ''}
+      <div style="margin-bottom:8px;"><span class="status-badge status-${a.status}">${a.status}</span></div>
+      <div class="appt-actions">
+        ${phone ? `<a href="tel:${phone}" class="btn btn-call btn-sm">📞 Call</a>` : ''}
+        ${a.status === 'scheduled' ? `<button class="btn btn-success btn-sm" onclick="markApptComplete('${a.id}')">✓ Complete</button>` : ''}
+        ${a.status === 'scheduled' ? `<button class="btn btn-secondary btn-sm" onclick="openReschedule('${a.id}')">Reschedule</button>` : ''}
+        ${a.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="cancelAppt('${a.id}')">Cancel</button>` : ''}
+      </div>
+    </div>`
+  }
+
+  const calPrev = () => { calMonth--; if (calMonth < 0) { calMonth = 11; calYear-- } renderCalendar() }
+  const calNext = () => { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++ } renderCalendar() }
+
+  const markApptComplete = async (id) => {
+    await fetch(`/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'completed' }) })
+    await loadAppointments()
+    if (selectedCalDate) selectCalDate(selectedCalDate)
+  }
+
+  const cancelAppt = async (id) => {
+    if (!confirm('Cancel this appointment?')) return
+    await fetch(`/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) })
+    await loadAppointments()
+    if (selectedCalDate) selectCalDate(selectedCalDate)
+  }
+
+  const openReschedule = (id) => {
+    document.getElementById('reschedule-appt-id').value = id
+    document.getElementById('reschedule-datetime').value = ''
+    document.getElementById('reschedule-modal').classList.add('open')
+  }
+
+  const confirmReschedule = async () => {
+    const id = document.getElementById('reschedule-appt-id').value
+    const dt = document.getElementById('reschedule-datetime').value
+    if (!dt) return alert('Please select a date and time.')
+    await fetch(`/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scheduled_at: new Date(dt).toISOString(), status: 'scheduled' }) })
+    document.getElementById('reschedule-modal').classList.remove('open')
+    await loadAppointments()
+    if (selectedCalDate) selectCalDate(selectedCalDate)
+  }
+
+  const openCreateApptModal = () => {
+    const select = document.getElementById('appt-lead-id')
+    select.innerHTML = '<option value="">Select a lead...</option>' + allLeads.map(l => `<option value="${l.id}">${l.first_name} ${l.last_name} — ${l.phone}</option>`).join('')
+    document.getElementById('appt-notes').value = ''
+    document.getElementById('appt-datetime').value = ''
+    document.getElementById('create-appt-modal').classList.add('open')
+  }
+
+  const saveNewAppt = async () => {
+    const lead_id = document.getElementById('appt-lead-id').value
+    const scheduled_at = document.getElementById('appt-datetime').value
+    const notes = document.getElementById('appt-notes').value.trim()
+    if (!lead_id || !scheduled_at) return alert('Lead and date/time are required.')
+    const res = await fetch('/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_id, scheduled_at: new Date(scheduled_at).toISOString(), notes }) })
+    const data = await res.json()
+    if (data.success) { document.getElementById('create-appt-modal').classList.remove('open'); await loadAppointments() }
+    else alert(data.error || 'Failed to create appointment')
+  }
+
+  // PHONE NUMBERS
+  let allPhoneNumbers = []
+
+  const loadPhoneNumbers = async () => {
+    try {
+      const res = await fetch('/phone-numbers')
+      const data = await res.json()
+      allPhoneNumbers = data.phone_numbers || []
+      renderPhoneNumbers()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderPhoneNumbers = () => {
+    const container = document.getElementById('phone-numbers-list')
+    if (!container) return
+    if (!allPhoneNumbers.length) {
+      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet</div>`
+      return
+    }
+    const stateColors = { FL:'#3b82f6', TX:'#ef4444', CA:'#f97316', NY:'#8b5cf6', GA:'#22c55e', OH:'#eab308', PA:'#14b8a6', NC:'#ec4899', MI:'#6366f1', AZ:'#64748b' }
+    container.innerHTML = allPhoneNumbers.map(pn => {
+      const color = stateColors[pn.state] || '#6366f1'
+      return `
+        <div class="disp-tag-row">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;">${pn.friendly_name || pn.phone_number}</div>
+            <div style="font-size:12px;color:#9ca3af;">${pn.phone_number}</div>
+          </div>
+          ${pn.state ? `<span style="background:${color}22;color:${color};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${pn.state}</span>` : ''}
+          <span style="font-size:12px;color:${pn.is_active ? '#059669' : '#9ca3af'};">${pn.is_active ? 'Active' : 'Inactive'}</span>
+          <div class="disp-tag-actions">
+            <button class="btn btn-danger btn-sm" onclick="deletePhoneNumber('${pn.id}')">Delete</button>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  const openAddNumberModal = () => {
+    document.getElementById('pn-phone').value = ''
+    document.getElementById('pn-name').value = ''
+    document.getElementById('pn-state').value = ''
+    document.getElementById('pn-sid').value = ''
+    document.getElementById('pn-token').value = ''
+    document.getElementById('phone-number-modal').classList.add('open')
+  }
+
+  const closeAddNumberModal = () => document.getElementById('phone-number-modal').classList.remove('open')
+
+  const savePhoneNumber = async () => {
+    const phone_number = document.getElementById('pn-phone').value.trim()
+    const friendly_name = document.getElementById('pn-name').value.trim()
+    const state = document.getElementById('pn-state').value.trim().toUpperCase()
+    const twilio_account_sid = document.getElementById('pn-sid').value.trim()
+    const twilio_auth_token = document.getElementById('pn-token').value.trim()
+    if (!phone_number || !twilio_account_sid || !twilio_auth_token) return alert('Phone number, Account SID, and Auth Token are required.')
+    try {
+      const res = await fetch('/phone-numbers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone_number, friendly_name, twilio_account_sid, twilio_auth_token, state }) })
+      const data = await res.json()
+      if (data.success) { closeAddNumberModal(); loadPhoneNumbers() }
+      else alert(data.error || 'Failed to add number')
+    } catch (err) { console.error(err) }
+  }
+
+  const deletePhoneNumber = async (id) => {
+    if (!confirm('Remove this phone number?')) return
+    try {
+      await fetch(`/phone-numbers/${id}`, { method: 'DELETE' })
+      loadPhoneNumbers()
+    } catch (err) { console.error(err) }
+  }
+
+  // TEAM & INVITES
+  const loadInvites = async () => {
+    try {
+      const res = await fetch('/auth/invites')
+      const data = await res.json()
+      const container = document.getElementById('invites-list')
+      if (!container) return
+      const pending = (data.invites || []).filter(i => !i.used && new Date(i.expires_at) > new Date())
+      if (!pending.length) {
+        container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No pending invites</div>`
+        return
+      }
+      const appUrl = window.location.origin
+      container.innerHTML = pending.map(inv => {
+        const link = `${appUrl}/signup.html?token=${inv.token}`
+        const expires = new Date(inv.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        return `<div class="disp-tag-row">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;">${inv.email}</div>
+            <div style="font-size:12px;color:#9ca3af;">Expires ${expires}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="copyInviteLink('${link}')">Copy Link</button>
+          <button class="btn btn-secondary btn-sm" onclick="resendInvite('${inv.id}', '${inv.email}')">Resend</button>
+          <button class="btn btn-danger btn-sm" onclick="cancelInvite('${inv.id}')">Cancel</button>
+        </div>`
+      }).join('')
+    } catch (err) { console.error(err) }
+  }
+
+  const openInviteModal = () => {
+    document.getElementById('invite-email-input').value = ''
+    document.getElementById('invite-error').style.display = 'none'
+    document.getElementById('invite-form-body').innerHTML = `
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="invite-email-input" placeholder="agent@example.com">
+      </div>
+      <div id="invite-error" style="color:#dc2626;font-size:13px;margin-bottom:12px;display:none;"></div>`
+    document.getElementById('invite-submit-btn').style.display = ''
+    document.getElementById('invite-modal').classList.add('open')
+  }
+
+  const closeInviteModal = () => document.getElementById('invite-modal').classList.remove('open')
+
+  const sendInvite = async () => {
+    const email = document.getElementById('invite-email-input')?.value.trim()
+    const errEl = document.getElementById('invite-error')
+    const btn = document.getElementById('invite-submit-btn')
+    if (!email) { errEl.textContent = 'Email is required.'; errEl.style.display = 'block'; return }
+    btn.disabled = true
+    btn.textContent = 'Sending...'
+    errEl.style.display = 'none'
+    try {
+      const res = await fetch('/auth/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+      const data = await res.json()
+      if (data.success) {
+        const link = data.invite_link
+        document.getElementById('invite-form-body').innerHTML = `
+          <div style="text-align:center;padding:12px 0;">
+            <div style="font-size:28px;margin-bottom:8px;">✅</div>
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Invite sent to ${email}</div>
+            ${process.env.SMTP_HOST ? '' : `<div style="font-size:12px;color:#9ca3af;margin-bottom:12px;">Email not configured — share this link manually:</div>
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:12px;word-break:break-all;color:#374151;">${link}</div>
+            <button class="btn btn-secondary" style="margin-top:10px;width:auto;padding:8px 16px;" onclick="navigator.clipboard.writeText('${link}').then(()=>this.textContent='Copied!')">Copy Link</button>`}
+          </div>`
+        document.getElementById('invite-submit-btn').style.display = 'none'
+        loadInvites()
+      } else {
+        errEl.textContent = data.error || 'Failed to send invite.'
+        errEl.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = 'Send Invite'
+      }
+    } catch {
+      errEl.textContent = 'Something went wrong.'
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Send Invite'
+    }
+  }
+
+  const copyInviteLink = (link) => {
+    navigator.clipboard.writeText(link).then(() => alert('Invite link copied!'))
+  }
+
+  const resendInvite = async (id, email) => {
+    await fetch(`/auth/invites/${id}`, { method: 'DELETE' })
+    document.getElementById('invite-email-input') ? null : null
+    const res = await fetch('/auth/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+    const data = await res.json()
+    if (data.success) { alert(`Invite resent to ${email}`); loadInvites() }
+    else alert(data.error || 'Failed to resend')
+  }
+
+  const cancelInvite = async (id) => {
+    if (!confirm('Cancel this invite?')) return
+    await fetch(`/auth/invites/${id}`, { method: 'DELETE' })
+    loadInvites()
+  }
+
+  const checkAuth = async () => {
+    try {
+      const res = await fetch('/auth/me')
+      if (res.status === 401) {
+        window.location.href = '/login.html'
+        return false
+      }
+      return true
+    } catch {
+      window.location.href = '/login.html'
+      return false
+    }
+  }
+
+  const loadProfile = async () => {
+    try {
+      const res = await fetch('/auth/me')
+      if (!res.ok) return
+      const data = await res.json()
+      const p = data.user
+      document.getElementById('header-agent-name').textContent = p.agent_name || p.email || ''
+      document.getElementById('profile-agent-name').value = p.agent_name || ''
+      document.getElementById('profile-agency-name').value = p.agency_name || ''
+      document.getElementById('profile-calendly-url').value = p.calendly_url || ''
+      document.getElementById('profile-timezone').value = p.timezone || 'America/New_York'
+      document.getElementById('profile-email').value = p.email || ''
+      document.getElementById('profile-twilio-sid').value = p.twilio_account_sid || ''
+      document.getElementById('profile-twilio-token').value = p.twilio_auth_token || ''
+      document.getElementById('profile-twilio-phone').value = p.twilio_phone_number || ''
+    } catch (err) { console.error('Profile load error:', err) }
+  }
+
+  const saveProfile = async () => {
+    const statusEl = document.getElementById('profile-save-status')
+    statusEl.style.display = 'block'
+    statusEl.style.color = '#6366f1'
+    statusEl.textContent = 'Saving...'
+    try {
+      const body = {
+        agent_name: document.getElementById('profile-agent-name').value.trim(),
+        agency_name: document.getElementById('profile-agency-name').value.trim(),
+        calendly_url: document.getElementById('profile-calendly-url').value.trim(),
+        timezone: document.getElementById('profile-timezone').value,
+        twilio_account_sid: document.getElementById('profile-twilio-sid').value.trim(),
+        twilio_auth_token: document.getElementById('profile-twilio-token').value.trim(),
+        twilio_phone_number: document.getElementById('profile-twilio-phone').value.trim()
+      }
+      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (data.success) {
+        statusEl.style.color = '#059669'
+        statusEl.textContent = 'Saved!'
+        document.getElementById('header-agent-name').textContent = body.agent_name || body.agency_name || ''
+      } else {
+        statusEl.style.color = '#dc2626'
+        statusEl.textContent = data.error || 'Save failed'
+      }
+    } catch (err) {
+      statusEl.style.color = '#dc2626'
+      statusEl.textContent = 'Save failed'
+    }
+    setTimeout(() => { statusEl.style.display = 'none' }, 3000)
+  }
+
+  const logout = async () => {
+    await fetch('/auth/logout', { method: 'POST' })
+    window.location.href = '/login.html'
+  }
+ // TEMPLATES
+  let allTemplates = []
+
+  const loadTemplates = async () => {
+    try {
+      const res = await fetch('/templates')
+      const data = await res.json()
+      allTemplates = data.templates || []
+      renderTemplatesList()
+    } catch (err) { console.error(err) }
+  }
+
+  const renderTemplatesList = () => {
+    const container = document.getElementById('templates-list')
+    if (!container) return
+    if (!allTemplates.length) {
+      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No templates yet</div>`
+      return
+    }
+    container.innerHTML = allTemplates.map(t => `
+      <div class="disp-tag-row">
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;margin-bottom:2px;">${t.name}</div>
+          <div style="font-size:12px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">${t.body}</div>
+        </div>
+        <div class="disp-tag-actions">
+          <button class="btn btn-ghost btn-sm" onclick="editTemplate('${t.id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${t.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('')
+  }
+
+  const renderTemplatePills = (leadId) => {
+    const container = document.getElementById('template-pills')
+    if (!container) return
+    if (!allTemplates.length) { container.innerHTML = ''; return }
+    const lead = allLeads.find(l => l.id === leadId)
+    const firstName = lead?.first_name || 'there'
+    container.innerHTML = allTemplates.map(t => `
+      <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="useTemplate('${t.id}', '${firstName.replace(/'/g, "\\'")}')">📝 ${t.name}</button>
+    `).join('')
+  }
+
+  const useTemplate = (templateId, firstName) => {
+    const template = allTemplates.find(t => t.id === templateId)
+    if (!template) return
+    const input = document.getElementById('conv-input')
+    if (!input) return
+    input.value = template.body.replace(/\[First Name\]/g, firstName)
+    input.focus()
+    input.style.height = '84px'
+  }
+
+  let editingTemplateId = null
+
+  const openCreateTemplateModal = () => {
+    editingTemplateId = null
+    document.getElementById('template-modal-name').value = ''
+    document.getElementById('template-modal-body').value = ''
+    document.getElementById('template-modal-char').textContent = '0 / 160'
+    document.getElementById('template-modal-title').textContent = 'Create Template'
+    document.getElementById('template-modal').classList.add('open')
+  }
+
+  const closeTemplateModal = () => document.getElementById('template-modal').classList.remove('open')
+
+  const editTemplate = (id) => {
+    const t = allTemplates.find(t => t.id === id)
+    if (!t) return
+    editingTemplateId = id
+    document.getElementById('template-modal-name').value = t.name
+    document.getElementById('template-modal-body').value = t.body
+    document.getElementById('template-modal-char').textContent = `${t.body.length} / 160`
+    document.getElementById('template-modal-title').textContent = 'Edit Template'
+    document.getElementById('template-modal').classList.add('open')
+  }
+
+  const saveTemplate = async () => {
+    const name = document.getElementById('template-modal-name').value.trim()
+    const body = document.getElementById('template-modal-body').value.trim()
+    if (!name) return alert('Please enter a template name')
+    if (!body) return alert('Please enter a message')
+    try {
+      const url = editingTemplateId ? `/templates/${editingTemplateId}` : '/templates'
+      const method = editingTemplateId ? 'PUT' : 'POST'
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, body }) })
+      const data = await res.json()
+      if (data.success) { closeTemplateModal(); loadTemplates() }
+      else alert(data.error || 'Failed to save')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const deleteTemplate = async (id) => {
+    if (!confirm('Delete this template?')) return
+    await fetch(`/templates/${id}`, { method: 'DELETE' })
+    loadTemplates()
+  } 
+  let detailLeadId = null
+
+  const openLeadDetail = async (leadId) => {
+    detailLeadId = leadId
+    const lead = allLeads.find(l => l.id === leadId)
+    if (!lead) return
+
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown'
+    const initials = getInitials(lead.first_name, lead.last_name)
+    const dispTag = allDispositionTags.find(t => t.id === lead.disposition_tag_id)
+
+    document.getElementById('detail-avatar').textContent = initials
+    document.getElementById('detail-name').innerHTML = `
+      ${name}
+      ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
+      <span class="tag tag-${lead.status}">${lead.status}</span>
+      ${lead.is_sold ? '<span class="tag" style="background:#d1fae5;color:#065f46;">✓ Sold</span>' : ''}
+    `
+    document.getElementById('detail-meta').innerHTML = `
+      <span>📞 ${lead.phone}</span>
+      ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
+      ${lead.state ? `<span>📍 ${lead.state}${lead.zip_code ? ' ' + lead.zip_code : ''}</span>` : ''}
+      ${lead.timezone ? `<span>🕐 ${getLocalTime(lead.timezone)} local</span>` : ''}
+      ${lead.bucket ? `<span>📁 ${lead.bucket}</span>` : ''}
+    `
+
+    const tags = lead.campaign_tags || []
+    document.getElementById('detail-tags').innerHTML = tags.map(t => `<span class="tag tag-campaign">${t}</span>`).join('')
+
+    document.getElementById('detail-call-btn').onclick = () => callLead(lead.phone)
+    document.getElementById('detail-sms-btn').onclick = () => { document.getElementById('lead-detail-modal').classList.remove('open'); openSMSModal(leadId, name) }
+    document.getElementById('detail-disp-btn').onclick = () => { document.getElementById('lead-detail-modal').classList.remove('open'); openDispositionModal(leadId, name) }
+
+    const followupBar = document.getElementById('detail-followup-bar')
+    const followupBadge = document.getElementById('detail-followup-badge')
+    if (lead.next_followup_at) {
+      const due = new Date(lead.next_followup_at)
+      followupBar.style.display = 'block'
+      followupBadge.textContent = `📅 Next Follow Up: ${due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} ${due.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}${lead.next_followup_note ? ' — ' + lead.next_followup_note : ''}`
+    } else {
+      followupBar.style.display = 'none'
+    }
+
+    document.getElementById('detail-info-grid').innerHTML = [
+      { lbl: 'First Name', val: lead.first_name || '—' },
+      { lbl: 'Last Name', val: lead.last_name || '—' },
+      { lbl: 'Phone', val: lead.phone || '—' },
+      { lbl: 'Email', val: lead.email || '—' },
+      { lbl: 'State', val: lead.state || '—' },
+      { lbl: 'Zip Code', val: lead.zip_code || '—' },
+      { lbl: 'Date of Birth', val: lead.date_of_birth || '—' },
+      { lbl: 'Plan Type', val: lead.plan_type || '—' },
+      { lbl: 'Address', val: lead.address || '—' },
+      { lbl: 'Timezone', val: lead.timezone || '—' },
+      { lbl: 'Autopilot', val: lead.autopilot ? 'ON' : 'OFF' },
+      { lbl: 'Imported', val: lead.created_at ? formatDate(lead.created_at) : '—' }
+    ].map(item => `
+      <div class="detail-info-item">
+        <div class="lbl">${item.lbl}</div>
+        <div class="val">${item.val}</div>
+      </div>
+    `).join('')
+
+    switchDetailTab('info')
+    document.getElementById('lead-detail-modal').classList.add('open')
+
+    loadDetailSMS(leadId)
+    loadDetailTasks(leadId)
+    loadDetailDispositionHistory(leadId)
+  }
+
+  const switchDetailTab = (tab) => {
+    document.querySelectorAll('.lead-detail-tab').forEach((t, i) => {
+      const tabs = ['info', 'sms', 'tasks', 'dispositions']
+      t.classList.toggle('active', tabs[i] === tab)
+    })
+    document.querySelectorAll('.lead-detail-panel').forEach(p => p.classList.remove('active'))
+    document.getElementById(`detail-panel-${tab}`)?.classList.add('active')
+  }
+
+  const loadDetailSMS = async (leadId) => {
+    try {
+      const { data: conv } = await supabase_client_get_conversations(leadId)
+      const container = document.getElementById('detail-sms-list')
+      if (!conv || !conv.messages?.length) {
+        container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No messages yet</div>`
+        return
+      }
+      container.innerHTML = conv.messages.map(m => `
+        <div class="msg-history-item ${m.direction}">
+          <div class="direction">${m.direction === 'inbound' ? '← Received' : m.is_ai ? '→ AI Sent' : '→ Sent'}</div>
+          <div class="body">${m.body}</div>
+          <div class="time">${formatTime(m.sent_at)}</div>
+        </div>
+      `).join('')
+    } catch (err) { console.error(err) }
+  }
+
+  const supabase_client_get_conversations = async (leadId) => {
+    try {
+      const res = await fetch('/conversations')
+      const data = await res.json()
+      const conv = (data.conversations || []).find(c => c.lead_id === leadId)
+      if (!conv) return { data: null }
+      const res2 = await fetch(`/conversations/${conv.id}`)
+      const data2 = await res2.json()
+      return { data: data2.conversation }
+    } catch { return { data: null } }
+  }
+
+  const loadDetailTasks = async (leadId) => {
+    try {
+      const res = await fetch(`/tasks/${leadId}`)
+      const data = await res.json()
+      renderDetailTasks(data.tasks || [], leadId)
+    } catch (err) { console.error(err) }
+  }
+
+  const renderDetailTasks = (tasks, leadId) => {
+    const container = document.getElementById('detail-tasks-list')
+    if (!tasks.length) {
+      container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No tasks yet — click "+ Add Task" to create one</div>`
+      return
+    }
+    const now = new Date()
+    container.innerHTML = tasks.map(t => {
+      const due = new Date(t.due_date)
+      const isOverdue = !t.completed && due < now
+      const isToday = !t.completed && due.toDateString() === now.toDateString()
+      const dueStr = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + due.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      return `
+        <div class="task-row" id="task-row-${t.id}">
+          <input type="checkbox" class="task-check" ${t.completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked, '${leadId}')">
+          <div class="task-info">
+            <div class="task-title ${t.completed ? 'completed' : ''}">${t.title}</div>
+            <div class="task-due ${isOverdue ? 'overdue' : isToday ? 'today' : ''}">${isOverdue ? '⚠️ Overdue — ' : isToday ? '📅 Today — ' : ''}${dueStr}${t.notes ? ' · ' + t.notes : ''}</div>
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}', '${leadId}')">Delete</button>
+        </div>
+      `
+    }).join('')
+  }
+
+  const openAddTaskForm = () => {
+    const form = document.getElementById('add-task-form')
+    form.style.display = 'block'
+    document.getElementById('new-task-title').value = ''
+    document.getElementById('new-task-notes').value = ''
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(10, 0, 0, 0)
+    const pad = n => String(n).padStart(2, '0')
+    document.getElementById('new-task-due').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
+  }
+
+  const saveNewTask = async () => {
+    const title = document.getElementById('new-task-title').value.trim()
+    const due_date = document.getElementById('new-task-due').value
+    const notes = document.getElementById('new-task-notes').value.trim()
+    if (!title) return alert('Please enter a task title')
+    if (!due_date) return alert('Please set a due date')
+    try {
+      const res = await fetch('/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: detailLeadId, title, due_date: new Date(due_date).toISOString(), notes })
+      })
+      const data = await res.json()
+      if (data.success) {
+        document.getElementById('add-task-form').style.display = 'none'
+        loadDetailTasks(detailLeadId)
+        loadLeads()
+      } else alert(data.error || 'Failed to save task')
+    } catch (err) { alert('Something went wrong') }
+  }
+
+  const toggleTask = async (taskId, completed, leadId) => {
+    try {
+      await fetch(`/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed })
+      })
+      loadDetailTasks(leadId)
+      loadLeads()
+    } catch (err) { console.error(err) }
+  }
+
+  const deleteTask = async (taskId, leadId) => {
+    if (!confirm('Delete this task?')) return
+    try {
+      await fetch(`/tasks/${taskId}`, { method: 'DELETE' })
+      loadDetailTasks(leadId)
+      loadLeads()
+    } catch (err) { console.error(err) }
+  }
+
+  const loadDetailDispositionHistory = async (leadId) => {
+    try {
+      const res = await fetch(`/dispositions/history/${leadId}`)
+      const data = await res.json()
+      const container = document.getElementById('detail-disp-list')
+      if (!data.history?.length) {
+        container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No disposition history yet</div>`
+        return
+      }
+      container.innerHTML = data.history.map(h => `
+        <div class="disp-history-item">
+          <div class="dot" style="background:${h.disposition_tags?.color || '#6366f1'}"></div>
+          <div class="info">
+            <div class="tag-name">${h.disposition_tags?.name || 'Unknown'}</div>
+            <div class="applied">${formatTime(h.applied_at)}${h.notes ? ' · ' + h.notes : ''}</div>
+          </div>
+        </div>
+      `).join('')
+    } catch (err) { console.error(err) }
+  }
+  init()
+</script>
+<!-- INVITE MODAL -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>Invite Agent</h2>
+      <button class="modal-close" onclick="closeInviteModal()">×</button>
+    </div>
+    <div id="invite-form-body">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="invite-email-input" placeholder="agent@example.com">
+      </div>
+      <div id="invite-error" style="color:#dc2626;font-size:13px;margin-bottom:12px;display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeInviteModal()">Cancel</button>
+      <button class="btn btn-primary" id="invite-submit-btn" onclick="sendInvite()">Send Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHONE NUMBER MODAL -->
+<div class="modal-overlay" id="phone-number-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Add Phone Number</h2>
+      <button class="modal-close" onclick="closeAddNumberModal()">×</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" id="pn-phone" placeholder="+15551234567">
+      </div>
+      <div class="form-group">
+        <label>Friendly Name</label>
+        <input type="text" id="pn-name" placeholder="Florida Line">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>State</label>
+      <input type="text" id="pn-state" placeholder="FL">
+    </div>
+    <div class="form-group">
+      <label>Twilio Account SID</label>
+      <input type="text" id="pn-sid" placeholder="ACxxxxxxxx">
+    </div>
+    <div class="form-group">
+      <label>Twilio Auth Token</label>
+      <input type="password" id="pn-token" placeholder="Your auth token">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAddNumberModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePhoneNumber()">Add Number</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE APPOINTMENT MODAL -->
+<div class="modal-overlay" id="create-appt-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>New Appointment</h2>
+      <button class="modal-close" onclick="document.getElementById('create-appt-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Lead</label>
+      <select id="appt-lead-id"><option value="">Select a lead...</option></select>
+    </div>
+    <div class="form-group">
+      <label>Date & Time</label>
+      <input type="datetime-local" id="appt-datetime">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="appt-notes" placeholder="Any notes from the conversation..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('create-appt-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewAppt()">Save Appointment</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESCHEDULE MODAL -->
+<div class="modal-overlay" id="reschedule-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h2>Reschedule</h2>
+      <button class="modal-close" onclick="document.getElementById('reschedule-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="form-group">
+      <label>New Date & Time</label>
+      <input type="datetime-local" id="reschedule-datetime">
+    </div>
+    <input type="hidden" id="reschedule-appt-id">
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('reschedule-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmReschedule()">Reschedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATE MODAL -->
+<div class="modal-overlay" id="template-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="template-modal-title">Create Template</h2>
+      <button class="modal-close" onclick="closeTemplateModal()">×</button>
+    </div>
+    <div class="tip">Use <strong>[First Name]</strong> for personalization. Use <strong>{Hi|Hey|Hello}</strong> to randomize phrasing on each send.</div>
+    <div class="form-group">
+      <label>Template Name</label>
+      <input type="text" id="template-modal-name" placeholder="e.g. Initial Follow Up, Booking Nudge, Re-engagement">
+    </div>
+    <div class="form-group">
+      <label>Message</label>
+      <textarea id="template-modal-body" rows="4" placeholder="Hi [First Name], just following up..." oninput="document.getElementById('template-modal-char').textContent = this.value.length + ' / 160'"></textarea>
+      <div class="char-count" id="template-modal-char">0 / 160</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeTemplateModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTemplate()">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- LEAD DETAIL MODAL -->
+<div class="modal-overlay" id="lead-detail-modal">
+  <div class="modal lead-detail-modal">
+    <div class="modal-header">
+      <h2>Lead Profile</h2>
+      <button class="modal-close" onclick="document.getElementById('lead-detail-modal').classList.remove('open')">×</button>
+    </div>
+
+    <div class="lead-detail-header">
+      <div class="lead-detail-avatar" id="detail-avatar"></div>
+      <div class="lead-detail-info">
+        <div class="lead-detail-name" id="detail-name"></div>
+        <div class="lead-detail-meta" id="detail-meta"></div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;" id="detail-tags"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <button class="btn btn-call btn-sm" id="detail-call-btn">📞 Call</button>
+        <button class="btn btn-sms btn-sm" id="detail-sms-btn">💬 SMS</button>
+        <button class="btn btn-disposition btn-sm" id="detail-disp-btn">🏷️ Disposition</button>
+      </div>
+    </div>
+
+    <div id="detail-followup-bar" style="margin-bottom:16px;display:none;">
+      <div class="followup-badge" onclick="switchDetailTab('tasks')" id="detail-followup-badge"></div>
+    </div>
+
+    <div class="lead-detail-tabs">
+      <button class="lead-detail-tab active" onclick="switchDetailTab('info')">Info</button>
+      <button class="lead-detail-tab" onclick="switchDetailTab('sms')">SMS History</button>
+      <button class="lead-detail-tab" onclick="switchDetailTab('tasks')">Tasks</button>
+      <button class="lead-detail-tab" onclick="switchDetailTab('dispositions')">Disposition History</button>
+    </div>
+
+    <!-- INFO TAB -->
+    <div class="lead-detail-panel active" id="detail-panel-info">
+      <div class="detail-info-grid" id="detail-info-grid"></div>
+    </div>
+
+    <!-- SMS HISTORY TAB -->
+    <div class="lead-detail-panel" id="detail-panel-sms">
+      <div id="detail-sms-list" style="max-height:400px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- TASKS TAB -->
+    <div class="lead-detail-panel" id="detail-panel-tasks">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:600;">Follow-up Tasks</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTaskForm()">+ Add Task</button>
+      </div>
+      <div id="add-task-form" style="display:none;background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #e5e7eb;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Task</label>
+            <input type="text" id="new-task-title" placeholder="e.g. Follow up call, Send quote">
+          </div>
+          <div class="form-group">
+            <label>Due Date & Time</label>
+            <input type="datetime-local" id="new-task-due">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notes (optional)</label>
+          <input type="text" id="new-task-notes" placeholder="Additional context...">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('add-task-form').style.display='none'">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveNewTask()">Save Task</button>
+        </div>
+      </div>
+      <div id="detail-tasks-list"></div>
+    </div>
+
+    <!-- DISPOSITION HISTORY TAB -->
+    <div class="lead-detail-panel" id="detail-panel-dispositions">
+      <div id="detail-disp-list" style="max-height:400px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
