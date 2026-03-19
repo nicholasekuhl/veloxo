@@ -206,9 +206,14 @@ const handleIncomingMessage = async (req, res) => {
       return res.send('<Response></Response>')
     }
 
-    await supabase.from('campaign_leads')
+    const { data: pausedRows } = await supabase.from('campaign_leads')
       .update({ status: 'paused', paused_at: new Date().toISOString() })
-      .eq('lead_id', lead.id).eq('status', 'pending')
+      .eq('lead_id', lead.id)
+      .in('status', ['pending', 'active'])
+      .select('id')
+    if (pausedRows && pausedRows.length > 0) {
+      console.log(`Campaign paused for lead: ${lead.id} (${pausedRows.length} enrollment(s))`)
+    }
 
     let { data: conversation } = await supabase
       .from('conversations').select('*').eq('lead_id', lead.id).eq('user_id', userId).single()

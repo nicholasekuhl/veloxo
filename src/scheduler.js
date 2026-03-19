@@ -74,6 +74,12 @@ const processScheduledMessages = async () => {
       if (!enrollment.leads || !enrollment.campaigns) continue
       if (enrollment.campaigns.status !== 'active') continue
 
+      // Secondary guard — skip if enrollment was paused/completed/cancelled since query ran
+      if (!['pending', 'active'].includes(enrollment.status)) {
+        console.log(`Skipping enrollment ${enrollment.id} — status is '${enrollment.status}'`)
+        continue
+      }
+
       if (enrollment.leads.status === 'opted_out') {
         await supabase
           .from('campaign_leads')

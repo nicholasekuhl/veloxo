@@ -1999,6 +1999,7 @@ const collectActions = () => {
           </div>
           <div class="conv-header-actions">
             <span class="autopilot-status ${isAutopilot ? 'on' : 'off'}">${isAutopilot ? '⚡ Autopilot ON' : '✋ Manual'}</span>
+            <button class="btn btn-secondary btn-sm" onclick="resumeLeadCampaigns('${lead?.id}', this)" title="Resume any paused campaign drip sequences for this lead">▶ Resume Campaign</button>
             <button class="btn btn-disposition btn-sm" onclick="openDispositionModal('${lead?.id}', '${name.replace(/'/g, "\\'")}')">🏷️ Disposition</button>
             <button class="btn btn-call btn-sm" onclick="callLead('${lead?.phone}')">📞 Call</button>
           </div>
@@ -2099,6 +2100,25 @@ const collectActions = () => {
     if (leadId) await fetch(`/leads/${leadId}/autopilot`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autopilot: false }) })
     await loadConversations()
     openConversation(convId)
+  }
+
+  const resumeLeadCampaigns = async (leadId, btn) => {
+    const orig = btn.textContent
+    btn.disabled = true
+    btn.textContent = 'Resuming...'
+    try {
+      const res = await fetch(`/leads/${leadId}/resume-campaigns`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        btn.textContent = data.resumed > 0 ? `✓ Resumed ${data.resumed}` : 'Nothing paused'
+        btn.style.color = data.resumed > 0 ? '#059669' : '#9ca3af'
+      } else {
+        btn.textContent = 'Error'
+      }
+    } catch {
+      btn.textContent = 'Error'
+    }
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.disabled = false }, 3000)
   }
 
   const markConvResolved = async (convId) => {

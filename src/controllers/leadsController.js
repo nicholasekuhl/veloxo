@@ -514,4 +514,32 @@ const createLead = async (req, res) => {
   }
 }
 
-module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead }
+const resumeCampaigns = async (req, res) => {
+  try {
+    const { data: paused, error: fetchError } = await supabase
+      .from('campaign_leads')
+      .select('id')
+      .eq('lead_id', req.params.id)
+      .eq('user_id', req.user.id)
+      .eq('status', 'paused')
+    if (fetchError) throw fetchError
+
+    if (!paused || paused.length === 0) {
+      return res.json({ success: true, resumed: 0, message: 'No paused campaigns for this lead' })
+    }
+
+    const ids = paused.map(r => r.id)
+    const { error: updateError } = await supabase
+      .from('campaign_leads')
+      .update({ status: 'pending', next_send_at: new Date().toISOString(), paused_at: null })
+      .in('id', ids)
+    if (updateError) throw updateError
+
+    console.log(`Campaigns resumed for lead ${req.params.id} (${ids.length} enrollment(s))`)
+    res.json({ success: true, resumed: ids.length, message: `Resumed ${ids.length} campaign${ids.length !== 1 ? 's' : ''}` })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead, resumeCampaigns }
