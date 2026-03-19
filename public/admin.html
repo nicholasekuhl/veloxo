@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — TextApp</title>
+  <script src="/toast.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
@@ -288,6 +289,7 @@
       if (!data.success) { errEl.textContent = data.error || 'Failed to suspend.'; errEl.style.display = 'block'; return }
       closeSuspendModal()
       loadUsers()
+      toast.warning('Account suspended', 'User has been logged out and access revoked')
     } catch (err) {
       errEl.textContent = 'Something went wrong.'
       errEl.style.display = 'block'
@@ -296,14 +298,14 @@
 
   // UNSUSPEND
   const openUnsuspend = async (id, name) => {
-    if (!confirm(`Unsuspend ${name}? They will regain access to the app immediately.`)) return
+    if (!await confirmModal(`Unsuspend ${name}?`, 'They will regain access to the app immediately.', 'Unsuspend', false)) return
     try {
       const res = await fetch(`/admin/users/${id}/unsuspend`, { method: 'POST' })
       const data = await res.json()
-      if (data.success) loadUsers()
-      else alert(data.error || 'Failed to unsuspend.')
+      if (data.success) { loadUsers(); toast.success('Account unsuspended', `${name} can now access the app`) }
+      else toast.error('Error', data.error || 'Failed to unsuspend')
     } catch {
-      alert('Something went wrong.')
+      toast.error('Error', 'Something went wrong')
     }
   }
 
@@ -335,6 +337,7 @@
       if (!data.success) { errEl.textContent = data.error || 'Failed to delete.'; errEl.style.display = 'block'; return }
       closeDeleteModal()
       loadUsers()
+      toast.info('Account deleted', 'User and all associated data have been removed')
     } catch {
       errEl.textContent = 'Something went wrong.'
       errEl.style.display = 'block'

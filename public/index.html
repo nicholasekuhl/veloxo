@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TextApp</title>
+  <script src="/toast.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
@@ -67,7 +68,7 @@
     select.filter { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; outline: none; background: white; }
 
     .leads-grid { display: flex; flex-direction: column; gap: 10px; }
-    .lead-card { background: white; border-radius: 14px; padding: 18px 22px; border: 1px solid #f0f0f0; transition: box-shadow 0.2s; }
+    .lead-card { background: white; border-radius: 14px; padding: 18px 22px; border: 1px solid #f0f0f0; transition: box-shadow 0.2s; position: relative; }
     .lead-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
     .lead-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
     .lead-card-left { display: flex; align-items: flex-start; gap: 14px; flex: 1; }
@@ -485,6 +486,25 @@
     .checklist-step .step-action { font-size: 11px; color: #6366f1; }
     .checklist-step.done .step-action { display: none; }
 
+    /* SKELETON LOADERS */
+    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skel-shimmer 1.4s ease-in-out infinite; border-radius: 6px; display: inline-block; }
+    @keyframes skel-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    .skel-card { background: white; border-radius: 14px; padding: 18px 22px; border: 1px solid #f0f0f0; margin-bottom: 10px; }
+    .skel-conv-item { padding: 11px 14px; border-bottom: 1px solid #f9fafb; display: flex; gap: 10px; align-items: flex-start; }
+
+    /* LEAD CARD HOVER QUICK ACTIONS */
+    .lead-hover-actions { position: absolute; top: 12px; right: 14px; display: flex; gap: 5px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 2; }
+    .lead-card:hover .lead-hover-actions { opacity: 1; pointer-events: all; }
+    .lead-card:hover .autopilot-wrap { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+    .lead-hover-btn { padding: 5px 9px; border-radius: 7px; font-size: 12px; border: 1px solid #e5e7eb; cursor: pointer; font-weight: 500; white-space: nowrap; background: white; color: #374151; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .lead-hover-btn:hover { background: #f3f4f6; }
+    .lead-hover-btn.call { border-color: #a7f3d0; background: #ecfdf5; color: #059669; }
+    .lead-hover-btn.call:hover { background: #d1fae5; }
+    .lead-hover-btn.sms { border-color: #bfdbfe; background: #eff6ff; color: #3b82f6; }
+    .lead-hover-btn.sms:hover { background: #dbeafe; }
+    .lead-hover-btn.disp { border-color: #ddd6fe; background: #f5f3ff; color: #7c3aed; }
+    .lead-hover-btn.disp:hover { background: #ede9fe; }
+
     /* PROFILE DROPDOWN */
     .profile-menu { position: relative; }
     .profile-trigger { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; cursor: pointer; border: none; background: none; font-family: inherit; font-size: 13px; color: #374151; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
@@ -603,6 +623,8 @@
       #campaign-quick-input { width: 100% !important; }
 
       /* Lead card actions */
+      .lead-hover-actions { display: none; }
+      .lead-card:hover .autopilot-wrap { opacity: 1; pointer-events: all; }
       .lead-card-bottom { flex-direction: column; align-items: stretch; }
       .notes-input { width: 100%; }
       .card-actions { flex-wrap: wrap; }
@@ -1763,6 +1785,12 @@
       const dispTag = allDispositionTags.find(t => t.id === lead.disposition_tag_id)
       return `
         <div class="lead-card" style="${lead.disposition_color ? `border-left: 4px solid ${lead.disposition_color};` : ''}">
+          <div class="lead-hover-actions">
+            <button class="lead-hover-btn call" onclick="event.stopPropagation();callLead('${lead.phone}')">📞 Call</button>
+            <button class="lead-hover-btn sms" onclick="event.stopPropagation();openSMSModal('${lead.id}', '${name.replace(/'/g, "\\'")}')">💬 Text</button>
+            <button class="lead-hover-btn disp" onclick="event.stopPropagation();openDispositionModal('${lead.id}', '${name.replace(/'/g, "\\'")}')">🏷️ Dispose</button>
+            <button class="lead-hover-btn" onclick="event.stopPropagation();viewConversation('${lead.id}')">💬 Convo</button>
+          </div>
           <div class="lead-card-top">
             <div style="display:flex;align-items:flex-start;gap:6px;margin-top:3px;">
               <input type="checkbox" class="lead-select-cb" data-id="${lead.id}" onchange="toggleLead(this)" ${selectedLeads.has(lead.id) ? 'checked' : ''} style="accent-color:#6366f1;margin-top:2px;">
@@ -1822,6 +1850,20 @@
   }
 
   const loadLeads = async () => {
+    const grid = document.getElementById('leads-grid')
+    if (grid && !allLeads.length) {
+      grid.innerHTML = Array(4).fill(0).map(() => `
+        <div class="skel-card">
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div class="skeleton" style="width:42px;height:42px;border-radius:50%;flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div class="skeleton" style="height:14px;width:40%;margin-bottom:8px;"></div>
+              <div class="skeleton" style="height:11px;width:65%;margin-bottom:6px;"></div>
+              <div class="skeleton" style="height:11px;width:30%;"></div>
+            </div>
+          </div>
+        </div>`).join('')
+    }
     try {
       const [leadsRes, bucketsRes] = await Promise.all([fetch('/leads'), fetch('/leads/buckets')])
       const leadsData = await leadsRes.json()
@@ -1877,7 +1919,10 @@
     const lead = allLeads.find(l => l.id === leadId)
     if (lead) lead.autopilot = value
     updateStats(allLeads)
-    try { await fetch(`/leads/${leadId}/autopilot`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autopilot: value }) }) } catch (err) { console.error(err) }
+    try {
+      await fetch(`/leads/${leadId}/autopilot`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autopilot: value }) })
+      toast.info(value ? 'Autopilot on' : 'Autopilot off', value ? 'AI will respond to this lead' : 'AI responses paused for this lead')
+    } catch (err) { console.error(err) }
   }
 
   const saveNotes = async (leadId, notes) => {
@@ -1902,13 +1947,13 @@
 
   const sendManualSMS = async () => {
     const body = document.getElementById('sms-body').value.trim()
-    if (!body) return alert('Please enter a message')
+    if (!body) return toast.error('Required', 'Please enter a message')
     try {
       const res = await fetch(`/messages/send/${smsTargetLeadId}`, { method: 'POST' })
       const data = await res.json()
-      if (data.success) { document.getElementById('sms-modal').classList.remove('open'); loadLeads() }
-      else alert(data.error || 'Failed to send')
-    } catch (err) { alert('Something went wrong') }
+      if (data.success) { document.getElementById('sms-modal').classList.remove('open'); loadLeads(); toast.success('Message sent', 'SMS delivered successfully') }
+      else toast.error('Send failed', data.error || 'Could not send message')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   // DISPOSITION MODAL
@@ -1939,8 +1984,8 @@
       if (data.success) {
         document.getElementById('disposition-modal').classList.remove('open')
         loadLeads()
-      } else { alert(data.error || 'Failed to apply disposition') }
-    } catch (err) { alert('Something went wrong') }
+      } else { toast.error('Error', data.error || 'Failed to apply disposition') }
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   // DISPOSITION TAG MANAGEMENT
@@ -2214,7 +2259,7 @@ const collectActions = () => {
 
   const saveDispositionTag = async () => {
     const name = document.getElementById('disp-tag-name').value.trim()
-    if (!name) return alert('Please enter a tag name')
+    if (!name) return toast.error('Required', 'Please enter a tag name')
     const description = document.getElementById('disp-tag-description').value.trim()
     const actions = collectActions()
     const steps = document.querySelectorAll('.message-step')
@@ -2238,12 +2283,12 @@ const collectActions = () => {
       })
       const data = await res.json()
       if (data.success) { closeDispTagModal(); loadDispositionTags() }
-      else alert(data.error || 'Failed to save')
-    } catch (err) { alert('Something went wrong') }
+      else toast.error('Save failed', data.error || 'Could not save disposition tag')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   const deleteDispositionTag = async (id) => {
-    if (!confirm('Delete this disposition tag?')) return
+    if (!await confirmModal('Delete disposition tag?', 'This will remove the tag from all leads. This cannot be undone.', 'Delete', true)) return
     await fetch(`/dispositions/${id}`, { method: 'DELETE' })
     loadDispositionTags()
   }
@@ -2399,6 +2444,17 @@ const collectActions = () => {
   }
 
   const loadConversations = async () => {
+    const list = document.getElementById('conv3-list')
+    if (list && !allConversations.length) {
+      list.innerHTML = Array(5).fill(0).map(() => `
+        <div class="skel-conv-item">
+          <div class="skeleton" style="width:38px;height:38px;border-radius:50%;flex-shrink:0;"></div>
+          <div style="flex:1;">
+            <div class="skeleton" style="height:13px;width:55%;margin-bottom:7px;"></div>
+            <div class="skeleton" style="height:11px;width:80%;"></div>
+          </div>
+        </div>`).join('')
+    }
     try {
       const showBlocked = document.getElementById('conv3-show-blocked')?.checked ? 'true' : 'false'
       const res = await fetch(`/conversations?show_blocked=${showBlocked}`)
@@ -2585,7 +2641,7 @@ const collectActions = () => {
           <div style="font-size:12px;color:#9ca3af;">Use the Schedule button below to schedule a message.</div>
         </div>`
       }
-    } catch (err) { alert('Could not cancel scheduled message') }
+    } catch (err) { toast.error('Error', 'Could not cancel scheduled message') }
   }
 
   const toggleSchedulePicker = () => {
@@ -2602,8 +2658,8 @@ const collectActions = () => {
     const body = input?.value.trim()
     const dateInput = document.getElementById('conv3-schedule-date')
     const timeInput = document.getElementById('conv3-schedule-time')
-    if (!body) return alert('Type a message first')
-    if (!dateInput?.value || !timeInput?.value) return alert('Pick a date and time')
+    if (!body) return toast.error('Required', 'Type a message first')
+    if (!dateInput?.value || !timeInput?.value) return toast.error('Required', 'Pick a date and time')
     const send_at = new Date(`${dateInput.value}T${timeInput.value}`).toISOString()
     try {
       const res = await fetch(`/conversations/${convId}/scheduled`, {
@@ -2617,25 +2673,26 @@ const collectActions = () => {
         document.getElementById('conv3-schedule-picker')?.classList.remove('open')
         document.getElementById('conv3-schedule-btn')?.classList.remove('active')
         setConvSubTab('scheduled')
-      } else alert(data.error || 'Failed to schedule')
-    } catch (err) { alert('Something went wrong') }
+        toast.success('Scheduled', 'Message scheduled successfully')
+      } else toast.error('Schedule failed', data.error || 'Could not schedule message')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   const blockConvLead = async (leadId, convId) => {
-    if (!confirm('Block this lead? They will no longer receive automated messages or AI responses.')) return
+    if (!await confirmModal('Block this lead?', 'They will no longer receive automated messages or AI responses.', 'Block lead', true)) return
     try {
       const res = await fetch(`/leads/${leadId}/block`, { method: 'PATCH' })
       const data = await res.json()
-      if (data.success) { await loadConversations(); openConversation(convId) }
-    } catch (err) { alert('Failed to block lead') }
+      if (data.success) { await loadConversations(); openConversation(convId); toast.info('Lead blocked', 'Automated messages and AI responses paused') }
+    } catch (err) { toast.error('Error', 'Failed to block lead') }
   }
 
   const unblockConvLead = async (leadId, convId) => {
     try {
       const res = await fetch(`/leads/${leadId}/unblock`, { method: 'PATCH' })
       const data = await res.json()
-      if (data.success) { await loadConversations(); openConversation(convId) }
-    } catch (err) { alert('Failed to unblock lead') }
+      if (data.success) { await loadConversations(); openConversation(convId); toast.success('Lead unblocked', 'Automated messages resumed') }
+    } catch (err) { toast.error('Error', 'Failed to unblock lead') }
   }
 
   const saveConvNotes = async (leadId, value) => {
@@ -2933,12 +2990,25 @@ const collectActions = () => {
       const res = await fetch('/messages/send-manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId, body }) })
       const data = await res.json()
       if (data.success) { input.value = ''; updateConvCharCount(input); const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'; openConversation(convId) }
-      else alert(data.error || 'Failed to send')
-    } catch (err) { alert('Something went wrong') }
+      else toast.error('Send failed', data.error || 'Could not send message')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   // CAMPAIGNS
   const loadCampaigns = async () => {
+    const tbody = document.getElementById('campaigns-tbody')
+    if (tbody && !allCampaigns.length) {
+      tbody.innerHTML = Array(3).fill(0).map(() => `
+        <tr>
+          <td><div class="skeleton" style="height:14px;width:60%;margin-bottom:5px;"></div><div class="skeleton" style="height:11px;width:40%;"></div></td>
+          <td><div class="skeleton" style="height:20px;width:50px;border-radius:6px;"></div></td>
+          <td><div class="skeleton" style="height:13px;width:70px;"></div></td>
+          <td><div class="skeleton" style="height:13px;width:40px;"></div></td>
+          <td><div class="skeleton" style="height:22px;width:60px;border-radius:20px;"></div></td>
+          <td><div class="skeleton" style="height:8px;width:100%;border-radius:4px;margin-bottom:4px;"></div><div class="skeleton" style="height:11px;width:40px;"></div></td>
+          <td><div class="skeleton" style="height:22px;width:30px;border-radius:6px;"></div></td>
+        </tr>`).join('')
+    }
     try {
       const res = await fetch('/campaigns')
       const data = await res.json()
@@ -3010,9 +3080,9 @@ const collectActions = () => {
   }
   document.addEventListener('click', (e) => { if (!e.target.closest('.actions-menu')) document.querySelectorAll('.actions-dropdown').forEach(d => d.classList.remove('open')) })
 
-  const startCampaign = async (id) => { await fetch(`/campaigns/${id}/start`, { method: 'POST' }); loadCampaigns() }
-  const pauseCampaign = async (id) => { await fetch(`/campaigns/${id}/pause`, { method: 'POST' }); loadCampaigns() }
-  const deleteCampaign = async (id) => { if (!confirm('Delete this campaign?')) return; await fetch(`/campaigns/${id}`, { method: 'DELETE' }); loadCampaigns() }
+  const startCampaign = async (id) => { await fetch(`/campaigns/${id}/start`, { method: 'POST' }); loadCampaigns(); toast.success('Campaign active', 'Campaign is now running') }
+  const pauseCampaign = async (id) => { await fetch(`/campaigns/${id}/pause`, { method: 'POST' }); loadCampaigns(); toast.info('Campaign paused', 'No new messages will be sent') }
+  const deleteCampaign = async (id) => { if (!await confirmModal('Delete campaign?', 'All campaign data will be removed. Enrolled leads already contacted will not be affected.', 'Delete', true)) return; await fetch(`/campaigns/${id}`, { method: 'DELETE' }); loadCampaigns(); toast.info('Campaign deleted', 'Campaign removed') }
 
   const editCampaign = async (id) => {
     const res = await fetch(`/campaigns/${id}`)
@@ -3080,7 +3150,7 @@ const collectActions = () => {
   const saveCampaign = async () => {
     const name = document.getElementById('campaign-name').value.trim()
     const description = document.getElementById('campaign-description').value.trim()
-    if (!name) return alert('Please enter a campaign name')
+    if (!name) return toast.error('Required', 'Please enter a campaign name')
     const steps = document.querySelectorAll('.message-step')
     const messages = []
     let valid = true
@@ -3091,21 +3161,21 @@ const collectActions = () => {
       if (!body) { valid = false; return }
       messages.push({ day_number: day, send_time: time, message_body: body })
     })
-    if (!valid) return alert('Please fill in all message bodies')
-    if (!messages.length) return alert('Please add at least one message')
+    if (!valid) return toast.error('Incomplete', 'Please fill in all message bodies')
+    if (!messages.length) return toast.error('Required', 'Add at least one message step')
     messages.sort((a, b) => a.day_number - b.day_number)
     try {
       const url = editingCampaignId ? `/campaigns/${editingCampaignId}` : '/campaigns'
       const method = editingCampaignId ? 'PUT' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, description, messages }) })
       const data = await res.json()
-      if (data.success) { closeCampaignModal(); loadCampaigns() }
-      else alert(data.error || 'Failed to save')
-    } catch (err) { alert('Something went wrong') }
+      if (data.success) { closeCampaignModal(); loadCampaigns(); toast.success('Campaign saved', editingCampaignId ? 'Campaign updated successfully' : 'New campaign created') }
+      else toast.error('Save failed', data.error || 'Could not save campaign')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   const openEnrollModal = () => {
-    if (!allCampaigns.length) return alert('Please create a campaign first')
+    if (!allCampaigns.length) return toast.error('No campaigns', 'Create a campaign first')
     const select = document.getElementById('enroll-campaign-select')
     select.innerHTML = allCampaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
@@ -3127,15 +3197,15 @@ const collectActions = () => {
     const campaignId = document.getElementById('enroll-campaign-select').value
     const startDate = document.getElementById('enroll-start-date').value
     const checkedLeads = Array.from(document.querySelectorAll('#enroll-leads-list input:checked')).map(cb => cb.dataset.id)
-    if (!campaignId) return alert('Please select a campaign')
-    if (!startDate) return alert('Please set a start date and time')
-    if (!checkedLeads.length) return alert('No leads selected')
+    if (!campaignId) return toast.error('Required', 'Please select a campaign')
+    if (!startDate) return toast.error('Required', 'Please set a start date and time')
+    if (!checkedLeads.length) return toast.error('Required', 'No leads selected')
     try {
       const res = await fetch(`/campaigns/${campaignId}/enroll`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_ids: checkedLeads, start_date: new Date(startDate).toISOString() }) })
       const data = await res.json()
-      if (data.success) { closeEnrollModal(); selectedLeads.clear(); updateBulkActions(); loadLeads(); alert(`${data.count} leads tagged!`) }
-      else alert(data.error || 'Tagging failed')
-    } catch (err) { alert('Something went wrong') }
+      if (data.success) { closeEnrollModal(); selectedLeads.clear(); updateBulkActions(); loadLeads(); toast.success('Enrolled', `${data.count} lead${data.count !== 1 ? 's' : ''} added to campaign`) }
+      else toast.error('Enrollment failed', data.error || 'Could not enroll leads')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   // STATS
@@ -3392,7 +3462,7 @@ const collectActions = () => {
   }
 
   const cancelAppt = async (id) => {
-    if (!confirm('Cancel this appointment?')) return
+    if (!await confirmModal('Cancel appointment?', 'This will mark the appointment as cancelled.', 'Cancel appointment', true)) return
     await fetch(`/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'cancelled' }) })
     await loadAppointments()
     if (selectedCalDate) selectCalDate(selectedCalDate)
@@ -3407,7 +3477,7 @@ const collectActions = () => {
   const confirmReschedule = async () => {
     const id = document.getElementById('reschedule-appt-id').value
     const dt = document.getElementById('reschedule-datetime').value
-    if (!dt) return alert('Please select a date and time.')
+    if (!dt) return toast.error('Required', 'Please select a date and time')
     await fetch(`/appointments/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ scheduled_at: new Date(dt).toISOString(), status: 'scheduled' }) })
     document.getElementById('reschedule-modal').classList.remove('open')
     await loadAppointments()
@@ -3426,11 +3496,11 @@ const collectActions = () => {
     const lead_id = document.getElementById('appt-lead-id').value
     const scheduled_at = document.getElementById('appt-datetime').value
     const notes = document.getElementById('appt-notes').value.trim()
-    if (!lead_id || !scheduled_at) return alert('Lead and date/time are required.')
+    if (!lead_id || !scheduled_at) return toast.error('Required', 'Lead and date/time are required')
     const res = await fetch('/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_id, scheduled_at: new Date(scheduled_at).toISOString(), notes }) })
     const data = await res.json()
-    if (data.success) { document.getElementById('create-appt-modal').classList.remove('open'); await loadAppointments() }
-    else alert(data.error || 'Failed to create appointment')
+    if (data.success) { document.getElementById('create-appt-modal').classList.remove('open'); await loadAppointments(); toast.success('Appointment created', 'Appointment added to calendar') }
+    else toast.error('Error', data.error || 'Failed to create appointment')
   }
 
   // PHONE NUMBERS
@@ -3479,7 +3549,7 @@ const collectActions = () => {
   const searchNumbers = async () => {
     const state = selectedStateAbbr
     const areaCode = document.getElementById('pn-search-areacode').value.trim()
-    if (!state && !areaCode) return alert('Choose a state or enter an area code.')
+    if (!state && !areaCode) return toast.error('Required', 'Choose a state or enter an area code')
     const resultsEl = document.getElementById('pn-search-results')
     const btn = document.getElementById('pn-search-btn')
     resultsEl.innerHTML = `<div style="color:#9ca3af;font-size:13px;">Searching...</div>`
@@ -3543,6 +3613,7 @@ const collectActions = () => {
       closeBuyNumberModal()
       document.getElementById('pn-search-results').innerHTML = ''
       await loadPhoneNumbers()
+      toast.success('Number purchased', `${pendingPurchase?.phone_number || 'Phone number'} is now active`)
     } catch (err) {
       status.textContent = err.message
       status.style.color = '#ef4444'
@@ -3553,13 +3624,14 @@ const collectActions = () => {
   }
 
   const releasePhoneNumber = async (id, phoneNumber) => {
-    if (!confirm(`Release ${phoneNumber}? This will remove it from your Twilio account and cannot be undone.`)) return
+    if (!await confirmModal(`Release ${phoneNumber}?`, 'This will permanently remove this number from your Twilio account. This cannot be undone.', 'Release number', true)) return
     try {
       const res = await fetch(`/phone-numbers/${id}`, { method: 'DELETE' })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Release failed')
       loadPhoneNumbers()
-    } catch (err) { alert(err.message) }
+      toast.warning('Number released', `${phoneNumber} has been removed from your account`)
+    } catch (err) { toast.error('Release failed', err.message) }
   }
 
   // STATE TYPEAHEAD (Phone Numbers panel)
@@ -3795,7 +3867,7 @@ const collectActions = () => {
   }
 
   const copyInviteLink = (link) => {
-    navigator.clipboard.writeText(link).then(() => alert('Invite link copied!'))
+    navigator.clipboard.writeText(link).then(() => toast.success('Copied', 'Invite link copied to clipboard'))
   }
 
   const resendInvite = async (id, email) => {
@@ -3803,14 +3875,15 @@ const collectActions = () => {
     document.getElementById('invite-email-input') ? null : null
     const res = await fetch('/auth/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
     const data = await res.json()
-    if (data.success) { alert(`Invite resent to ${email}`); loadInvites() }
-    else alert(data.error || 'Failed to resend')
+    if (data.success) { toast.success('Invite resent', `Invite sent to ${email}`); loadInvites() }
+    else toast.error('Error', data.error || 'Failed to resend invite')
   }
 
   const cancelInvite = async (id) => {
-    if (!confirm('Cancel this invite?')) return
+    if (!await confirmModal('Cancel invite?', 'The invite link will be deactivated and the recipient will not be able to use it.', 'Cancel invite', true)) return
     await fetch(`/auth/invites/${id}`, { method: 'DELETE' })
     loadInvites()
+    toast.info('Invite cancelled', 'The invite link has been deactivated')
   }
 
   const checkAuth = async () => {
@@ -3916,10 +3989,6 @@ const collectActions = () => {
   }
 
   const saveProfile = async () => {
-    const statusEl = document.getElementById('profile-save-status')
-    statusEl.style.display = 'block'
-    statusEl.style.color = '#6366f1'
-    statusEl.textContent = 'Saving...'
     try {
       const body = {
         agent_name: document.getElementById('profile-agent-name').value.trim(),
@@ -3930,25 +3999,17 @@ const collectActions = () => {
       const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
-        statusEl.style.color = '#059669'
-        statusEl.textContent = 'Saved!'
         document.getElementById('header-agent-name').textContent = body.agent_name || body.agency_name || ''
+        toast.success('Profile saved', 'Your profile has been updated')
       } else {
-        statusEl.style.color = '#dc2626'
-        statusEl.textContent = data.error || 'Save failed'
+        toast.error('Save failed', data.error || 'Could not save profile')
       }
     } catch (err) {
-      statusEl.style.color = '#dc2626'
-      statusEl.textContent = 'Save failed'
+      toast.error('Error', 'Could not save profile')
     }
-    setTimeout(() => { statusEl.style.display = 'none' }, 3000)
   }
 
   const saveNotifSettings = async () => {
-    const statusEl = document.getElementById('notif-settings-status')
-    statusEl.style.display = 'block'
-    statusEl.style.color = '#6366f1'
-    statusEl.textContent = 'Saving...'
     try {
       const body = {
         personal_phone: document.getElementById('profile-personal-phone').value.trim() || null,
@@ -3957,10 +4018,9 @@ const collectActions = () => {
       }
       const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
-      if (data.success) { statusEl.style.color = '#059669'; statusEl.textContent = 'Saved!' }
-      else { statusEl.style.color = '#dc2626'; statusEl.textContent = data.error || 'Save failed' }
-    } catch { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Save failed' }
-    setTimeout(() => { statusEl.style.display = 'none' }, 3000)
+      if (data.success) toast.success('Settings saved', 'Notification preferences updated')
+      else toast.error('Save failed', data.error || 'Could not save settings')
+    } catch { toast.error('Error', 'Could not save settings') }
   }
 
   // NOTIFICATIONS
@@ -4188,22 +4248,23 @@ const collectActions = () => {
   const saveTemplate = async () => {
     const name = document.getElementById('template-modal-name').value.trim()
     const body = document.getElementById('template-modal-body').value.trim()
-    if (!name) return alert('Please enter a template name')
-    if (!body) return alert('Please enter a message')
+    if (!name) return toast.error('Required', 'Please enter a template name')
+    if (!body) return toast.error('Required', 'Please enter a message body')
     try {
       const url = editingTemplateId ? `/templates/${editingTemplateId}` : '/templates'
       const method = editingTemplateId ? 'PUT' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, body }) })
       const data = await res.json()
-      if (data.success) { closeTemplateModal(); loadTemplates() }
-      else alert(data.error || 'Failed to save')
-    } catch (err) { alert('Something went wrong') }
+      if (data.success) { closeTemplateModal(); loadTemplates(); toast.success('Template saved', editingTemplateId ? 'Template updated' : 'New template created') }
+      else toast.error('Save failed', data.error || 'Could not save template')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   const deleteTemplate = async (id) => {
-    if (!confirm('Delete this template?')) return
+    if (!await confirmModal('Delete template?', 'This template will be permanently removed.', 'Delete', true)) return
     await fetch(`/templates/${id}`, { method: 'DELETE' })
     loadTemplates()
+    toast.info('Template deleted', 'Template removed')
   } 
   let detailLeadId = null
 
@@ -4364,8 +4425,8 @@ const collectActions = () => {
     const title = document.getElementById('new-task-title').value.trim()
     const due_date = document.getElementById('new-task-due').value
     const notes = document.getElementById('new-task-notes').value.trim()
-    if (!title) return alert('Please enter a task title')
-    if (!due_date) return alert('Please set a due date')
+    if (!title) return toast.error('Required', 'Please enter a task title')
+    if (!due_date) return toast.error('Required', 'Please set a due date')
     try {
       const res = await fetch('/tasks', {
         method: 'POST',
@@ -4377,8 +4438,9 @@ const collectActions = () => {
         document.getElementById('add-task-form').style.display = 'none'
         loadDetailTasks(detailLeadId)
         loadLeads()
-      } else alert(data.error || 'Failed to save task')
-    } catch (err) { alert('Something went wrong') }
+        toast.success('Task created', title)
+      } else toast.error('Save failed', data.error || 'Could not save task')
+    } catch (err) { toast.error('Error', 'Something went wrong') }
   }
 
   const toggleTask = async (taskId, completed, leadId) => {
@@ -4394,7 +4456,7 @@ const collectActions = () => {
   }
 
   const deleteTask = async (taskId, leadId) => {
-    if (!confirm('Delete this task?')) return
+    if (!await confirmModal('Delete task?', 'This task will be permanently removed.', 'Delete', true)) return
     try {
       await fetch(`/tasks/${taskId}`, { method: 'DELETE' })
       loadDetailTasks(leadId)
@@ -4755,5 +4817,6 @@ const collectActions = () => {
     <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="logout()">Log out</button>
   </div>
 </div>
+
 </body>
 </html>
