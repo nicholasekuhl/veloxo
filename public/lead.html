@@ -40,6 +40,9 @@
     .lead-name { font-size: 24px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .lead-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #6b7280; margin-bottom: 10px; }
     .lead-meta span { display: flex; align-items: center; gap: 4px; }
+    .copy-btn { background: none; border: none; cursor: pointer; padding: 2px 3px; color: #d1d5db; border-radius: 4px; line-height: 1; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0; transition: color 0.15s; }
+    .copy-btn:hover { color: #6b7280; }
+    .copy-btn.copied { color: #10b981; }
     .lead-tags { display: flex; flex-wrap: wrap; gap: 6px; }
     .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
     .tag-new { background: #e0e7ff; color: #4338ca; }
@@ -199,6 +202,28 @@
   let dispositionHistory = []
   let callLog = []
 
+  const COPY_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><rect x="9" y="2" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`
+  const CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="20 6 9 17 4 12"/></svg>`
+
+  const copyToClipboard = async (text, btn) => {
+    if (!text) return
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'
+        document.body.appendChild(ta); ta.select()
+        if (!document.execCommand('copy')) throw new Error()
+        document.body.removeChild(ta)
+      }
+      btn.innerHTML = CHECK_SVG
+      btn.classList.add('copied')
+      btn.title = 'Copied!'
+      setTimeout(() => { btn.innerHTML = COPY_SVG; btn.classList.remove('copied'); btn.title = 'Copy' }, 2000)
+    } catch (e) { toast.error('Could not copy', 'Please copy manually') }
+  }
+
   const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
   const formatDateTime = (iso) => {
     if (!iso) return '—'
@@ -269,6 +294,7 @@
 
   const renderPage = () => {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Unknown'
+    const safeName = name.replace(/'/g, "\\'")
     const initials = getInitials(lead.first_name, lead.last_name)
     const dispTag = allDispositionTags.find(t => t.id === lead.disposition_tag_id)
     const tags = lead.campaign_tags || []
@@ -284,6 +310,7 @@
           <div style="flex:1;">
             <div class="lead-name">
               ${name}
+              <button class="copy-btn" onclick="copyToClipboard('${safeName}', this)" title="Copy name">${COPY_SVG}</button>
               <span class="tag tag-${lead.status}">${lead.status}</span>
               ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
               ${lead.is_sold ? `<span class="tag" style="background:#d1fae5;color:#065f46;font-weight:700;">✓ SOLD</span>` : ''}
@@ -295,8 +322,8 @@
                 <button onclick="removeSoldStatus()" style="font-size:12px;color:#9ca3af;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">Remove sold status</button>
               </div>` : ''}
             <div class="lead-meta">
-              <span>📞 ${lead.phone}</span>
-              ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
+              <span>📞 ${lead.phone} <button class="copy-btn" onclick="copyToClipboard('${lead.phone}', this)" title="Copy phone">${COPY_SVG}</button></span>
+              ${lead.email ? `<span>✉️ ${lead.email} <button class="copy-btn" onclick="copyToClipboard('${lead.email}', this)" title="Copy email">${COPY_SVG}</button></span>` : ''}
               ${lead.state ? `<span>📍 ${lead.state}${lead.zip_code ? ' ' + lead.zip_code : ''}</span>` : ''}
               ${localTime ? `<span>🕐 ${localTime} local</span>` : ''}
               ${lead.bucket ? `<span>📁 ${lead.bucket}</span>` : ''}
