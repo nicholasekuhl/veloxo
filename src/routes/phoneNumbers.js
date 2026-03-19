@@ -1,9 +1,10 @@
 const express = require('express')
 const router = express.Router()
-const { getPhoneNumbers, addPhoneNumber, updatePhoneNumber, deletePhoneNumber } = require('../controllers/phoneNumbersController')
+const { getPhoneNumbers, searchPhoneNumbers, purchasePhoneNumber, updatePhoneNumber, deletePhoneNumber } = require('../controllers/phoneNumbersController')
 
 router.get('/', getPhoneNumbers)
-router.post('/', addPhoneNumber)
+router.get('/search', searchPhoneNumbers)
+router.post('/purchase', purchasePhoneNumber)
 router.put('/:id', updatePhoneNumber)
 router.delete('/:id', deletePhoneNumber)
 

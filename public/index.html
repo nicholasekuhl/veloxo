@@ -713,9 +713,39 @@
         <div class="settings-panel" id="panel-phone-numbers">
           <div class="settings-card">
             <h2>Phone Numbers</h2>
-            <p>Add one number per state or region. Incoming messages route to you based on which number was texted.</p>
-            <button class="btn btn-primary" onclick="openAddNumberModal()">+ Add Number</button>
-            <div class="settings-section-title" style="margin-top:24px;">Your Numbers</div>
+            <p>Search and purchase Twilio numbers. Incoming messages route to you based on which number was texted.</p>
+
+            <div class="settings-section-title">Search Available Numbers</div>
+            <div class="form-row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;">
+              <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+                <label>State</label>
+                <select id="pn-search-state">
+                  <option value="">— any —</option>
+                  <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+                  <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+                  <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+                  <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+                  <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+                  <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+                  <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+                  <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+                  <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+                  <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+                  <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+                  <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+                  <option>WI</option><option>WY</option>
+                </select>
+              </div>
+              <div style="font-size:13px;color:#9ca3af;padding-bottom:8px;">or</div>
+              <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
+                <label>Area Code</label>
+                <input type="text" id="pn-search-areacode" placeholder="561" maxlength="3" style="width:100%;">
+              </div>
+              <button class="btn btn-primary" onclick="searchNumbers()" id="pn-search-btn" style="margin-bottom:0;white-space:nowrap;">Search</button>
+            </div>
+            <div id="pn-search-results" style="margin-top:16px;"></div>
+
+            <div class="settings-section-title" style="margin-top:28px;">My Numbers</div>
             <div id="phone-numbers-list">
               <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet</div>
             </div>
@@ -1026,6 +1056,7 @@
     document.getElementById(`panel-${panel}`).classList.add('active')
     el.classList.add('active')
     if (panel === 'team') loadInvites()
+    if (panel === 'phone-numbers') loadPhoneNumbers()
   }
 
   const getInitials = (first, last) => ((first?.[0] || '') + (last?.[0] || '')).toUpperCase() || '?'
@@ -2369,6 +2400,7 @@ const collectActions = () => {
 
   // PHONE NUMBERS
   let allPhoneNumbers = []
+  let pendingPurchase = null
 
   const loadPhoneNumbers = async () => {
     try {
@@ -2383,59 +2415,110 @@ const collectActions = () => {
     const container = document.getElementById('phone-numbers-list')
     if (!container) return
     if (!allPhoneNumbers.length) {
-      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet</div>`
+      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet. Search above to purchase one.</div>`
       return
     }
     const stateColors = { FL:'#3b82f6', TX:'#ef4444', CA:'#f97316', NY:'#8b5cf6', GA:'#22c55e', OH:'#eab308', PA:'#14b8a6', NC:'#ec4899', MI:'#6366f1', AZ:'#64748b' }
     container.innerHTML = allPhoneNumbers.map(pn => {
       const color = stateColors[pn.state] || '#6366f1'
+      const purchased = pn.created_at ? new Date(pn.created_at).toLocaleDateString() : ''
       return `
         <div class="disp-tag-row">
           <div style="flex:1;">
             <div style="font-size:14px;font-weight:600;">${pn.friendly_name || pn.phone_number}</div>
-            <div style="font-size:12px;color:#9ca3af;">${pn.phone_number}</div>
+            <div style="font-size:12px;color:#9ca3af;">${pn.phone_number}${purchased ? ' · Purchased ' + purchased : ''}</div>
           </div>
           ${pn.state ? `<span style="background:${color}22;color:${color};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">${pn.state}</span>` : ''}
-          <span style="font-size:12px;color:${pn.is_active ? '#059669' : '#9ca3af'};">${pn.is_active ? 'Active' : 'Inactive'}</span>
           <div class="disp-tag-actions">
-            <button class="btn btn-danger btn-sm" onclick="deletePhoneNumber('${pn.id}')">Delete</button>
+            <button class="btn btn-danger btn-sm" onclick="releasePhoneNumber('${pn.id}', '${pn.phone_number}')">Release</button>
           </div>
         </div>`
     }).join('')
   }
 
-  const openAddNumberModal = () => {
-    document.getElementById('pn-phone').value = ''
-    document.getElementById('pn-name').value = ''
-    document.getElementById('pn-state').value = ''
-    document.getElementById('pn-sid').value = ''
-    document.getElementById('pn-token').value = ''
-    document.getElementById('phone-number-modal').classList.add('open')
-  }
-
-  const closeAddNumberModal = () => document.getElementById('phone-number-modal').classList.remove('open')
-
-  const savePhoneNumber = async () => {
-    const phone_number = document.getElementById('pn-phone').value.trim()
-    const friendly_name = document.getElementById('pn-name').value.trim()
-    const state = document.getElementById('pn-state').value.trim().toUpperCase()
-    const twilio_account_sid = document.getElementById('pn-sid').value.trim()
-    const twilio_auth_token = document.getElementById('pn-token').value.trim()
-    if (!phone_number || !twilio_account_sid || !twilio_auth_token) return alert('Phone number, Account SID, and Auth Token are required.')
+  const searchNumbers = async () => {
+    const state = document.getElementById('pn-search-state').value
+    const areaCode = document.getElementById('pn-search-areacode').value.trim()
+    if (!state && !areaCode) return alert('Choose a state or enter an area code.')
+    const resultsEl = document.getElementById('pn-search-results')
+    const btn = document.getElementById('pn-search-btn')
+    resultsEl.innerHTML = `<div style="color:#9ca3af;font-size:13px;">Searching...</div>`
+    btn.disabled = true
     try {
-      const res = await fetch('/phone-numbers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone_number, friendly_name, twilio_account_sid, twilio_auth_token, state }) })
+      const params = areaCode ? `area_code=${encodeURIComponent(areaCode)}` : `state=${encodeURIComponent(state)}`
+      const res = await fetch(`/phone-numbers/search?${params}`)
       const data = await res.json()
-      if (data.success) { closeAddNumberModal(); loadPhoneNumbers() }
-      else alert(data.error || 'Failed to add number')
-    } catch (err) { console.error(err) }
+      if (!res.ok) throw new Error(data.error || 'Search failed')
+      if (!data.numbers || !data.numbers.length) {
+        resultsEl.innerHTML = `<div style="color:#9ca3af;font-size:13px;">No numbers found. Try a different state or area code.</div>`
+        return
+      }
+      resultsEl.innerHTML = data.numbers.map(n => `
+        <div class="disp-tag-row" style="padding:10px 0;">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;">${n.phone_number}</div>
+            <div style="font-size:12px;color:#9ca3af;">${[n.locality, n.region].filter(Boolean).join(', ')}</div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openBuyNumberModal('${n.phone_number}', '${n.region}')">Buy</button>
+        </div>`).join('')
+    } catch (err) {
+      resultsEl.innerHTML = `<div style="color:#ef4444;font-size:13px;">${err.message}</div>`
+    } finally {
+      btn.disabled = false
+    }
   }
 
-  const deletePhoneNumber = async (id) => {
-    if (!confirm('Remove this phone number?')) return
+  const openBuyNumberModal = (phoneNumber, region) => {
+    pendingPurchase = { phone_number: phoneNumber, state: region }
+    document.getElementById('buy-number-display').textContent = phoneNumber
+    document.getElementById('buy-number-name').value = region ? `${region} Line` : ''
+    const status = document.getElementById('buy-number-status')
+    status.style.display = 'none'
+    document.getElementById('buy-number-confirm-btn').disabled = false
+    document.getElementById('buy-number-modal').classList.add('open')
+  }
+
+  const closeBuyNumberModal = () => {
+    document.getElementById('buy-number-modal').classList.remove('open')
+    pendingPurchase = null
+  }
+
+  const confirmPurchaseNumber = async () => {
+    if (!pendingPurchase) return
+    const friendly_name = document.getElementById('buy-number-name').value.trim()
+    const btn = document.getElementById('buy-number-confirm-btn')
+    const status = document.getElementById('buy-number-status')
+    btn.disabled = true
+    btn.textContent = 'Purchasing...'
+    status.style.display = 'none'
     try {
-      await fetch(`/phone-numbers/${id}`, { method: 'DELETE' })
+      const res = await fetch('/phone-numbers/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: pendingPurchase.phone_number, friendly_name, state: pendingPurchase.state })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Purchase failed')
+      closeBuyNumberModal()
+      document.getElementById('pn-search-results').innerHTML = ''
+      await loadPhoneNumbers()
+    } catch (err) {
+      status.textContent = err.message
+      status.style.color = '#ef4444'
+      status.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Buy Number'
+    }
+  }
+
+  const releasePhoneNumber = async (id, phoneNumber) => {
+    if (!confirm(`Release ${phoneNumber}? This will remove it from your Twilio account and cannot be undone.`)) return
+    try {
+      const res = await fetch(`/phone-numbers/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Release failed')
       loadPhoneNumbers()
-    } catch (err) { console.error(err) }
+    } catch (err) { alert(err.message) }
   }
 
   // TEAM & INVITES
@@ -2944,38 +3027,22 @@ const collectActions = () => {
   </div>
 </div>
 
-<!-- PHONE NUMBER MODAL -->
-<div class="modal-overlay" id="phone-number-modal">
+<!-- BUY NUMBER MODAL -->
+<div class="modal-overlay" id="buy-number-modal">
   <div class="modal">
     <div class="modal-header">
-      <h2>Add Phone Number</h2>
-      <button class="modal-close" onclick="closeAddNumberModal()">×</button>
+      <h2>Purchase Number</h2>
+      <button class="modal-close" onclick="closeBuyNumberModal()">×</button>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="text" id="pn-phone" placeholder="+15551234567">
-      </div>
-      <div class="form-group">
-        <label>Friendly Name</label>
-        <input type="text" id="pn-name" placeholder="Florida Line">
-      </div>
-    </div>
+    <p id="buy-number-display" style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 16px;"></p>
     <div class="form-group">
-      <label>State</label>
-      <input type="text" id="pn-state" placeholder="FL">
+      <label>Friendly Name</label>
+      <input type="text" id="buy-number-name" placeholder="e.g. Florida Line">
     </div>
-    <div class="form-group">
-      <label>Twilio Account SID</label>
-      <input type="text" id="pn-sid" placeholder="ACxxxxxxxx">
-    </div>
-    <div class="form-group">
-      <label>Twilio Auth Token</label>
-      <input type="password" id="pn-token" placeholder="Your auth token">
-    </div>
+    <div id="buy-number-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeAddNumberModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="savePhoneNumber()">Add Number</button>
+      <button class="btn btn-secondary" onclick="closeBuyNumberModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPurchaseNumber()" id="buy-number-confirm-btn">Buy Number</button>
     </div>
   </div>
 </div>
