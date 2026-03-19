@@ -338,7 +338,7 @@
         </div>
 
         <div class="info-grid">
-          <div class="info-item"><div class="lbl">Plan Type</div><div class="val">${lead.plan_type || '—'}</div></div>
+          <div class="info-item"><div class="lbl">Product</div><div class="val" style="cursor:pointer;" onclick="editProduct()" title="Click to edit">${lead.product || '—'}</div></div>
           <div class="info-item"><div class="lbl">Date of Birth</div><div class="val">${lead.date_of_birth || '—'}</div></div>
           <div class="info-item"><div class="lbl">Address</div><div class="val">${lead.address || '—'}</div></div>
           <div class="info-item"><div class="lbl">Timezone</div><div class="val">${lead.timezone?.replace('America/', '') || '—'}</div></div>
@@ -494,7 +494,7 @@
             <div class="quick-stat"><span class="lbl">Autopilot</span><span class="val">${lead.autopilot ? 'ON' : 'OFF'}</span></div>
             <div class="quick-stat"><span class="lbl">Bucket</span><span class="val">${lead.bucket || '—'}</span></div>
             <div class="quick-stat"><span class="lbl">Added</span><span class="val">${formatDate(lead.created_at)}</span></div>
-            <div class="quick-stat"><span class="lbl">Plan Type</span><span class="val">${lead.plan_type || '—'}</span></div>
+            <div class="quick-stat"><span class="lbl">Product</span><span class="val">${lead.product || '—'}</span></div>
             <div class="quick-stat"><span class="lbl">Timezone</span><span class="val">${lead.timezone?.replace('America/', '') || '—'}</span></div>
           </div>
 
@@ -1037,6 +1037,16 @@
 
   init()
 
+  const editProduct = async () => {
+    const val = prompt('Product:', lead.product || '')
+    if (val === null) return
+    try {
+      const res = await fetch(`/leads/${leadId}/product`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product: val.trim() || null }) })
+      const data = await res.json()
+      if (data.success) { lead = data.lead; renderPage() }
+    } catch (e) { toast.error('Error', 'Could not update product') }
+  }
+
   const openMarkSoldModal = () => {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Lead'
     document.getElementById('lp-sold-modal-title').textContent = `Mark ${name} as Sold 🎉`
@@ -1096,8 +1106,8 @@
       <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Plan Type</label>
-      <input type="text" id="lp-sold-plan-type" placeholder="e.g. UnitedHealthcare PPO" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Product Sold</label>
+      <input type="text" id="lp-sold-plan-type" placeholder="e.g. UHC PPO $245/mo, Term Life $500k, 6kW Solar System..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
     </div>
     <div style="margin-bottom:12px;">
       <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Monthly Premium</label>

@@ -612,7 +612,7 @@ RESPONSE STYLE RULES:
 - Read the full conversation history before responding — never repeat a question already answered
 - If you are unsure what they mean, ask one simple clarifying question
 
-Lead info: Name: ${lead.first_name || ''} ${lead.last_name || ''}, State: ${lead.state || 'unknown'}, Plan interest: ${lead.plan_type || 'unknown'}`
+Lead info: Name: ${lead.first_name || ''} ${lead.last_name || ''}, State: ${lead.state || 'unknown'}, Product interest: ${lead.product || 'unknown'}`
 
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',

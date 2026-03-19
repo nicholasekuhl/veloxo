@@ -134,7 +134,7 @@ const parseRow = (row, bucket, autopilot, importedAt, userId) => {
     zip_code: keys['zip'] || keys['zip code'] || keys['zipcode'] || keys['postal code'] || null,
     date_of_birth: normalizeDOB(keys['dob'] || keys['date of birth'] || keys['birthdate'] || keys['birthday'] || keys['birth date'] || null),
     address: keys['address'] || keys['street address'] || keys['street'] || null,
-    plan_type: keys['plan'] || keys['plan type'] || keys['plan_type'] || null,
+    product: keys['product'] || keys['plan'] || keys['plan type'] || keys['plan_type'] || null,
     timezone: getTimezone(state),
     status: 'new',
     bucket: bucket || null,
@@ -367,7 +367,7 @@ const getBuckets = async (req, res) => {
 const exportLeads = async (req, res) => {
   try {
     const {
-      status, bucket, state, plan_type, timezone,
+      status, bucket, state, timezone,
       disposition_tag_id, campaign_tag, is_sold,
       is_cold, autopilot, search
     } = req.query
@@ -379,7 +379,6 @@ const exportLeads = async (req, res) => {
     if (status) query = query.eq('status', status)
     if (bucket) query = query.eq('bucket', bucket)
     if (state) query = query.eq('state', state)
-    if (plan_type) query = query.eq('plan_type', plan_type)
     if (timezone) query = query.eq('timezone', timezone)
     if (disposition_tag_id) query = query.eq('disposition_tag_id', disposition_tag_id)
     if (is_sold === 'true') query = query.eq('is_sold', true)
@@ -401,7 +400,7 @@ const exportLeads = async (req, res) => {
 
     const headers = [
       'First Name', 'Last Name', 'Phone', 'Email', 'State',
-      'Zip Code', 'Date of Birth', 'Plan Type', 'Status',
+      'Zip Code', 'Date of Birth', 'Product', 'Status',
       'Bucket', 'Timezone', 'Notes', 'Autopilot',
       'Is Sold', 'Is Cold', 'Created At'
     ]
@@ -409,7 +408,7 @@ const exportLeads = async (req, res) => {
     const rows = leads.map(l => [
       l.first_name || '', l.last_name || '', l.phone || '',
       l.email || '', l.state || '', l.zip_code || '',
-      l.date_of_birth || '', l.plan_type || '', l.status || '',
+      l.date_of_birth || '', l.product || '', l.status || '',
       l.bucket || '', l.timezone || '', l.notes || '',
       l.autopilot ? 'Yes' : 'No',
       l.is_sold ? 'Yes' : 'No',
@@ -480,7 +479,7 @@ const getLeadById = async (req, res) => {
 
 const createLead = async (req, res) => {
   try {
-    const { first_name, last_name, phone, email, date_of_birth, state, zip_code, plan_type, address, notes, autopilot } = req.body
+    const { first_name, last_name, phone, email, date_of_birth, state, zip_code, product, address, notes, autopilot } = req.body
     if (!phone) return res.status(400).json({ error: 'Phone is required' })
     const normalizedPhone = normalizePhone(phone)
     if (!normalizedPhone) return res.status(400).json({ error: 'Invalid phone number format' })
@@ -497,7 +496,7 @@ const createLead = async (req, res) => {
         date_of_birth: date_of_birth ? normalizeDOB(date_of_birth) : null,
         state: normalizedState,
         zip_code: zip_code || null,
-        plan_type: plan_type || null,
+        product: product || null,
         address: address || null,
         notes: notes || null,
         autopilot: autopilot === true || autopilot === 'true',
@@ -648,4 +647,19 @@ const unmarkSold = async (req, res) => {
   }
 }
 
-module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold }
+const updateProduct = async (req, res) => {
+  try {
+    const { product } = req.body
+    const { data, error } = await supabase
+      .from('leads')
+      .update({ product: product || null, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id).eq('user_id', req.user.id)
+      .select().single()
+    if (error) throw error
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold }

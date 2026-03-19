@@ -1484,8 +1484,8 @@
       <button class="modal-close" onclick="document.getElementById('sold-modal').classList.remove('open')">×</button>
     </div>
     <div class="form-group">
-      <label>Plan Type</label>
-      <input type="text" id="sold-plan-type" placeholder="e.g. UnitedHealthcare PPO">
+      <label>Product Sold</label>
+      <input type="text" id="sold-plan-type" placeholder="e.g. UHC PPO $245/mo, Term Life $500k, 6kW Solar System...">
     </div>
     <div class="form-group">
       <label>Monthly Premium</label>
@@ -1948,13 +1948,12 @@
                   ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
                   ${lead.state ? `<span>📍 ${lead.state}</span>` : ''}
                   ${lead.date_of_birth ? `<span>🎂 ${lead.date_of_birth}</span>` : ''}
-                  ${lead.plan_type ? `<span>🏥 ${lead.plan_type}</span>` : ''}
                   ${localTime ? `<span>🕐 ${localTime} local</span>` : ''}
                   ${lastContactHtml(lead)}
                 </div>
                 <div class="lead-tags">
                   <span class="tag tag-${lead.status}">${lead.status}</span>
-                  ${lead.plan_type ? `<span class="tag tag-plan">${lead.plan_type}</span>` : ''}
+                  ${lead.product ? `<span class="tag tag-plan" style="cursor:pointer;" onclick="editLeadProduct('${lead.id}', this)" title="Click to edit">${lead.product}</span>` : ''}
                   ${campProgress}
                   ${tags.length && !campProgress ? tags.map(t => `<span class="tag tag-campaign">${t}</span>`).join('') : ''}
                 </div>
@@ -2273,6 +2272,21 @@
       toast.info('Sold status removed', `${leadName} moved back to ${data.lead.status}`)
       filterLeads()
     } catch (err) { toast.error('Error', err.message || 'Could not remove sold status') }
+  }
+
+  const editLeadProduct = async (leadId, el) => {
+    const lead = allLeads.find(l => l.id === leadId)
+    const current = lead?.product || ''
+    const val = prompt('Product:', current)
+    if (val === null) return
+    try {
+      const res = await fetch(`/leads/${leadId}/product`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product: val.trim() || null }) })
+      const data = await res.json()
+      if (data.success) {
+        if (lead) lead.product = val.trim() || null
+        filterLeads()
+      }
+    } catch (e) { toast.error('Error', 'Could not update product') }
   }
 
   const fireConfetti = () => {
@@ -3053,7 +3067,7 @@ const collectActions = () => {
         ${lead?.email ? contactRow('Email', lead.email) : ''}
         ${lead?.state ? contactRow('State', lead.state + (lead.zip ? ' ' + lead.zip : '')) : ''}
         ${lead?.date_of_birth ? contactRow('DOB', lead.date_of_birth) : ''}
-        ${lead?.plan_type ? contactRow('Plan', lead.plan_type) : ''}
+        ${lead?.product ? contactRow('Product', lead.product) : ''}
         ${lead?.address ? contactRow('Address', lead.address) : ''}
         ${localTime ? contactRow('Local time', localTime) : ''}
         ${lead?.timezone ? contactRow('Timezone', lead.timezone.replace('America/', '').replace(/_/g, ' ')) : ''}
@@ -3619,7 +3633,7 @@ const collectActions = () => {
         <div style="width:32px;height:32px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${(name[0] || '?').toUpperCase()}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;font-weight:600;color:#1a1a2e;">${name}</div>
-          <div style="font-size:11px;color:#9ca3af;">${s.sold_plan_type || 'No plan type'}</div>
+          <div style="font-size:11px;color:#9ca3af;">${s.sold_plan_type || 'No product'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:13px;font-weight:700;color:#059669;">${s.sold_premium ? '$' + parseFloat(s.sold_premium).toFixed(0) + '/mo' : '—'}</div>
@@ -4303,7 +4317,7 @@ const collectActions = () => {
       date_of_birth: document.getElementById('cl-dob').value.trim(),
       state: document.getElementById('cl-state').value,
       zip_code: document.getElementById('cl-zip').value.trim(),
-      plan_type: document.getElementById('cl-plan').value,
+      product: document.getElementById('cl-product').value.trim(),
       address: document.getElementById('cl-address').value.trim(),
       notes: document.getElementById('cl-notes').value.trim(),
       autopilot: document.getElementById('cl-autopilot').checked
@@ -4861,7 +4875,7 @@ const collectActions = () => {
       { lbl: 'State', val: lead.state || '—' },
       { lbl: 'Zip Code', val: lead.zip_code || '—' },
       { lbl: 'Date of Birth', val: lead.date_of_birth || '—' },
-      { lbl: 'Plan Type', val: lead.plan_type || '—' },
+      { lbl: 'Product', val: lead.product || '—' },
       { lbl: 'Address', val: lead.address || '—' },
       { lbl: 'Timezone', val: lead.timezone || '—' },
       { lbl: 'Autopilot', val: lead.autopilot ? 'ON' : 'OFF' },
@@ -5134,14 +5148,8 @@ const collectActions = () => {
     <div class="form-row">
       <div class="form-group"><label>ZIP Code</label><input type="text" id="cl-zip" placeholder="33101"></div>
       <div class="form-group">
-        <label>Plan Type</label>
-        <select id="cl-plan">
-          <option value="">Select plan</option>
-          <option value="ACA">ACA</option>
-          <option value="Medicare">Medicare</option>
-          <option value="Medicaid">Medicaid</option>
-          <option value="Private">Private</option>
-        </select>
+        <label>Product</label>
+        <input type="text" id="cl-product" placeholder="e.g. UHC PPO, Term Life, Solar...">
       </div>
     </div>
     <div class="form-group"><label>Address</label><input type="text" id="cl-address" placeholder="123 Main St"></div>

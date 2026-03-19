@@ -10,7 +10,7 @@ const getConversations = async (req, res) => {
       .select(`
         *,
         messages (id, direction, body, sent_at, is_ai, status, error_message),
-        leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip, date_of_birth, plan_type, address, bucket, is_blocked, is_cold, created_at, source)
+        leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip, date_of_birth, product, address, bucket, is_blocked, is_cold, created_at, source)
       `)
       .eq('user_id', req.user.id)
       .order('updated_at', { ascending: false })
@@ -52,7 +52,7 @@ const getConversation = async (req, res) => {
       .select(`
         *,
         messages (id, direction, body, sent_at, is_ai, status, error_message),
-        leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip, date_of_birth, plan_type, address, bucket, is_blocked, is_cold, created_at, source)
+        leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip, date_of_birth, product, address, bucket, is_blocked, is_cold, created_at, source)
       `)
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
