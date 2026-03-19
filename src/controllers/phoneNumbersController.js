@@ -28,11 +28,19 @@ const searchPhoneNumbers = async (req, res) => {
     if (!state && !area_code) return res.status(400).json({ error: 'Provide state or area_code' })
 
     const client = getMasterClient()
-    const params = { limit: 10, smsEnabled: true, voiceEnabled: false }
+    const params = { limit: 10, smsEnabled: true }
     if (area_code) params.areaCode = area_code
     else params.inRegion = state
 
+    console.log('Searching with params:', params)
     const numbers = await client.availablePhoneNumbers('US').local.list(params)
+    console.log('Twilio returned:', numbers.length, 'numbers')
+
+    if (numbers.length === 0) {
+      const fallback = await client.availablePhoneNumbers('US').local.list({ limit: 5 })
+      console.log('Fallback (no filter) returned:', fallback.length, 'numbers')
+    }
+
     res.json({
       numbers: numbers.map(n => ({
         phone_number: n.phoneNumber,
@@ -42,7 +50,8 @@ const searchPhoneNumbers = async (req, res) => {
       }))
     })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    console.log('Twilio error:', err)
+    res.status(500).json({ error: err.message, code: err.code, status: err.status })
   }
 }
 
