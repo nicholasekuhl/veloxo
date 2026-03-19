@@ -486,11 +486,7 @@
     .checklist-step .step-action { font-size: 11px; color: #6366f1; }
     .checklist-step.done .step-action { display: none; }
 
-    /* SKELETON LOADERS */
-    .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skel-shimmer 1.4s ease-in-out infinite; border-radius: 6px; display: inline-block; }
-    @keyframes skel-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .skel-card { background: white; border-radius: 14px; padding: 18px 22px; border: 1px solid #f0f0f0; margin-bottom: 10px; }
-    .skel-conv-item { padding: 11px 14px; border-bottom: 1px solid #f9fafb; display: flex; gap: 10px; align-items: flex-start; }
+    /* SKELETON LOADERS — shared CSS lives in toast.js */
 
     /* LEAD CARD HOVER QUICK ACTIONS */
     .lead-hover-actions { position: absolute; top: 12px; right: 14px; display: flex; gap: 5px; opacity: 0; transition: opacity 0.15s; pointer-events: none; z-index: 2; }
@@ -1852,15 +1848,30 @@
   const loadLeads = async () => {
     const grid = document.getElementById('leads-grid')
     if (grid && !allLeads.length) {
-      grid.innerHTML = Array(4).fill(0).map(() => `
+      grid.innerHTML = Array(6).fill(0).map(() => `
         <div class="skel-card">
           <div style="display:flex;gap:14px;align-items:flex-start;">
             <div class="skeleton" style="width:42px;height:42px;border-radius:50%;flex-shrink:0;"></div>
             <div style="flex:1;">
-              <div class="skeleton" style="height:14px;width:40%;margin-bottom:8px;"></div>
-              <div class="skeleton" style="height:11px;width:65%;margin-bottom:6px;"></div>
-              <div class="skeleton" style="height:11px;width:30%;"></div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                <div class="skeleton" style="height:15px;width:38%;"></div>
+                <div class="skeleton" style="width:38px;height:20px;border-radius:10px;"></div>
+              </div>
+              <div style="display:flex;gap:12px;margin-bottom:8px;">
+                <div class="skeleton" style="height:11px;width:28%;"></div>
+                <div class="skeleton" style="height:11px;width:22%;"></div>
+                <div class="skeleton" style="height:11px;width:18%;"></div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <div class="skeleton" style="height:20px;width:64px;border-radius:20px;"></div>
+                <div class="skeleton" style="height:20px;width:52px;border-radius:20px;"></div>
+              </div>
             </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid #f9fafb;">
+            <div class="skeleton" style="height:28px;width:60px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:28px;width:60px;border-radius:8px;"></div>
+            <div class="skeleton" style="height:28px;width:80px;border-radius:8px;"></div>
           </div>
         </div>`).join('')
     }
@@ -1876,7 +1887,11 @@
       if (bucketsData.buckets) allBuckets = bucketsData.buckets
       renderBucketTabs()
       filterLeads()
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load leads', 'Please refresh the page and try again')
+      if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#9ca3af;font-size:14px;">Could not load leads.</div>'
+    }
   }
 
   const updateCampaignFilter = () => {
@@ -2461,7 +2476,11 @@ const collectActions = () => {
       const data = await res.json()
       allConversations = data.conversations || []
       filterConversations(document.getElementById('conv3-search')?.value || '')
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load conversations', 'Please try again')
+      if (list) list.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Could not load conversations.</div>'
+    }
   }
 
   const renderConversationList = (convs) => {
@@ -3014,7 +3033,11 @@ const collectActions = () => {
       const data = await res.json()
       allCampaigns = data.campaigns || []
       renderCampaignsTable(allCampaigns)
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load campaigns', 'Please try again')
+      if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Could not load campaigns.</td></tr>`
+    }
   }
 
   const sortCampaigns = (key) => {
@@ -3221,6 +3244,14 @@ const collectActions = () => {
   }
 
   const loadDeliveryStats = async () => {
+    const statsContent = document.getElementById('stats-content')
+    const statsEmpty = document.getElementById('stats-empty')
+    if (statsContent) {
+      statsEmpty.style.display = 'none'
+      statsContent.style.display = 'block'
+      // Skeleton placeholders for stat numbers
+      statsContent.querySelectorAll('.num[id]').forEach(el => { el.innerHTML = `<span class="skeleton" style="display:inline-block;width:48px;height:28px;border-radius:6px;"></span>` })
+    }
     try {
       const res = await fetch(`/stats/delivery?days=${currentStatsPeriod}`)
       const data = await res.json()
@@ -3228,8 +3259,6 @@ const collectActions = () => {
 
       const { total, totals, delivery_rate, total_failed, error_breakdown, today } = data
 
-      const statsEmpty = document.getElementById('stats-empty')
-      const statsContent = document.getElementById('stats-content')
       if (total === 0 && (!today || today.total === 0)) {
         statsEmpty.style.display = 'block'
         statsContent.style.display = 'none'
@@ -3305,6 +3334,10 @@ const collectActions = () => {
       }
     } catch (err) {
       console.error('Stats load error:', err)
+      toast.error('Failed to load stats', 'Could not fetch delivery statistics')
+      if (statsContent) {
+        statsContent.querySelectorAll('.num[id]').forEach(el => { el.textContent = '—' })
+      }
     }
   }
 
@@ -3326,6 +3359,12 @@ const collectActions = () => {
   let selectedCalDate = null
 
   const loadAppointments = async () => {
+    const calGrid = document.getElementById('cal-grid')
+    if (calGrid && !allAppointments.length) {
+      calGrid.innerHTML = Array(35).fill(0).map(() =>
+        `<div class="cal-cell"><div class="skeleton" style="width:22px;height:14px;margin-bottom:6px;border-radius:4px;"></div><div class="skeleton" style="width:90%;height:10px;border-radius:4px;"></div></div>`
+      ).join('')
+    }
     try {
       const res = await fetch('/appointments')
       const data = await res.json()
@@ -3333,7 +3372,11 @@ const collectActions = () => {
       renderCalendar()
       renderTodayAppts()
       updateCalBadge()
-    } catch (err) { console.error(err) }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load calendar', 'Could not fetch appointments')
+      if (calGrid) calGrid.innerHTML = ''
+    }
   }
 
   const updateCalBadge = () => {
