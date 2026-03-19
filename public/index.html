@@ -419,6 +419,156 @@
     .checklist-step .step-label { flex: 1; }
     .checklist-step .step-action { font-size: 11px; color: #6366f1; }
     .checklist-step.done .step-action { display: none; }
+
+    /* =============================================
+       RESPONSIVE — Mobile & Tablet
+       ============================================= */
+
+    /* Prevent iOS auto-zoom on input focus */
+    input, select, textarea { font-size: 16px; }
+
+    /* Mobile nav drawer */
+    .hamburger-btn { display: none; background: none; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0 10px; cursor: pointer; font-size: 20px; color: #374151; line-height: 1; height: 36px; align-items: center; justify-content: center; }
+    .nav-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; }
+    .nav-overlay.open { display: block; }
+    .nav-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: 280px; background: white; z-index: 201; transform: translateX(-100%); transition: transform 0.25s ease; box-shadow: 4px 0 24px rgba(0,0,0,0.12); display: flex; flex-direction: column; overflow: hidden; }
+    .nav-drawer.open { transform: translateX(0); }
+    .nav-drawer-header { padding: 18px 20px 14px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
+    .nav-drawer-logo { font-size: 20px; font-weight: 700; color: #1a1a2e; letter-spacing: -0.5px; }
+    .nav-drawer-logo span { color: #6366f1; }
+    .nav-drawer-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #9ca3af; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .nav-drawer-close:hover { background: #f3f4f6; }
+    .nav-drawer-items { flex: 1; padding: 10px; overflow-y: auto; }
+    .nav-drawer-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border: none; background: none; border-radius: 10px; font-size: 15px; font-weight: 500; color: #374151; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-align: left; min-height: 48px; }
+    .nav-drawer-btn:hover { background: #f9fafb; }
+    .nav-drawer-btn.active { background: #f0f0ff; color: #6366f1; }
+    .nav-drawer-icon { font-size: 20px; width: 26px; text-align: center; flex-shrink: 0; }
+    .nav-drawer-footer { padding: 14px 16px; border-top: 1px solid #f0f0f0; }
+    .nav-drawer-agent { font-size: 13px; color: #6b7280; margin-bottom: 10px; font-weight: 500; }
+
+    /* Mobile filter toggle */
+    .filters-toggle-btn { display: none; }
+
+    /* Mobile settings select */
+    .settings-nav-mobile { display: none; }
+
+    /* Conv back button */
+    .conv-back-btn { display: none; }
+
+    /* ---- Tablet (768–1023px) ---- */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      header { padding: 0 20px; }
+      .container { padding: 20px; }
+      .nav-btn { padding: 8px 11px; font-size: 13px; }
+      .stats { grid-template-columns: repeat(3, 1fr) !important; }
+      .settings-layout { grid-template-columns: 180px 1fr; gap: 16px; }
+      .cal-layout { grid-template-columns: 1fr 260px; }
+      .conv-sidebar { width: 250px; }
+      .search-panel-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .notif-panel { width: 320px; }
+    }
+
+    /* ---- Mobile (≤767px) ---- */
+    @media (max-width: 767px) {
+      /* Header */
+      header { padding: 0 16px; height: 56px; }
+      .nav { display: none; }
+      .hamburger-btn { display: inline-flex; }
+      #header-agent-name { display: none; }
+
+      /* Container */
+      .container { padding: 14px; max-width: 100%; overflow-x: hidden; }
+      body { overflow-x: hidden; }
+
+      /* Buttons — 44px touch targets */
+      .btn { min-height: 44px; padding: 10px 16px; font-size: 14px; }
+      .btn-sm { min-height: 36px; padding: 8px 12px; font-size: 13px; }
+      .modal-close { width: 44px; height: 44px; font-size: 26px; }
+      .nav-btn { min-height: 44px; }
+
+      /* Inputs — 16px prevents iOS zoom */
+      input, select, textarea { font-size: 16px !important; min-height: 44px; }
+      .form-group input, .form-group select, .form-group textarea { min-height: 44px; font-size: 16px !important; }
+      .conv-textarea { min-height: 44px; font-size: 16px !important; }
+      .conv-search { min-height: 44px; font-size: 16px !important; }
+      .notes-input { font-size: 16px !important; height: auto; min-height: 44px; }
+      .search-input { font-size: 16px !important; width: 100% !important; }
+      .campaigns-search { font-size: 16px !important; }
+      .day-input input[type="number"], .day-input input[type="time"] { font-size: 16px !important; min-height: 44px; }
+
+      /* Leads stats grid — 2 columns */
+      .stats { grid-template-columns: repeat(2, 1fr) !important; }
+
+      /* Bucket tabs — horizontal scroll */
+      .bucket-tabs { flex-wrap: nowrap !important; overflow-x: auto; padding-bottom: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      .bucket-tabs::-webkit-scrollbar { display: none; }
+
+      /* Filter panel — behind toggle */
+      .filters-toggle-btn { display: flex; width: 100%; justify-content: space-between; align-items: center; margin-bottom: 12px; min-height: 44px; }
+      .search-panel { display: none; }
+      .search-panel.mobile-open { display: block; }
+      .search-panel-grid { grid-template-columns: 1fr 1fr !important; }
+
+      /* Leads toolbar */
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left { flex-direction: column; }
+      #bucket-search { width: 100% !important; }
+      #campaign-quick-input { width: 100% !important; }
+
+      /* Lead card actions */
+      .lead-card-bottom { flex-direction: column; align-items: stretch; }
+      .notes-input { width: 100%; }
+      .card-actions { flex-wrap: wrap; }
+
+      /* Conversations — single panel view */
+      .conv-layout { height: calc(100vh - 56px); position: relative; overflow: hidden; }
+      .conv-sidebar { width: 100%; border-right: none; }
+      .conv-main { display: none; position: absolute; inset: 0; background: white; z-index: 10; }
+      .conv-layout.conv-open .conv-sidebar { display: none; }
+      .conv-layout.conv-open .conv-main { display: flex; }
+      .conv-back-btn { display: inline-flex; }
+      .conv-header { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+      .conv-header-actions { flex-wrap: wrap; gap: 6px; width: 100%; }
+      .conv-messages { padding: 12px; }
+      .conv-input-area { padding: 10px 12px; }
+      .msg { max-width: 88%; }
+
+      /* Campaigns table — horizontal scroll */
+      .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table-card table { min-width: 640px; }
+
+      /* Calendar */
+      .cal-layout { grid-template-columns: 1fr !important; }
+      .cal-cell { min-height: 60px; padding: 5px; }
+      .cal-dot { width: 10px; height: 10px; }
+      .cal-appt-label { font-size: 9px; }
+      #day-view { margin-top: 14px; }
+
+      /* Settings — tab select on mobile */
+      .settings-layout { grid-template-columns: 1fr !important; gap: 14px; }
+      .settings-nav { display: none !important; }
+      .settings-nav-mobile { display: block; margin-bottom: 4px; }
+      .settings-nav-mobile select { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 10px; font-size: 16px !important; background: white; outline: none; min-height: 48px; color: #374151; font-weight: 500; }
+      .form-row { flex-direction: column; gap: 0; }
+      .form-row .form-group { width: 100%; }
+
+      /* Modals — slide up from bottom */
+      .modal-overlay { align-items: flex-end; padding: 0; }
+      .modal { border-radius: 20px 20px 0 0; width: 100% !important; max-width: 100% !important; max-height: 92vh; padding: 24px 18px; }
+      .lead-detail-modal { max-width: 100% !important; }
+      .modal-footer { flex-direction: column; gap: 8px; }
+      .modal-footer .btn { width: 100%; justify-content: center; }
+      .detail-info-grid { grid-template-columns: repeat(2, 1fr); }
+
+      /* Stats */
+      #page-stats .stats { grid-template-columns: repeat(2, 1fr) !important; }
+
+      /* Notification panel */
+      .notif-panel { width: calc(100vw - 28px); right: -4px; max-height: 70vh; }
+
+      /* Search panel grid */
+      .search-panel-grid .form-group[style*="span 2"] { grid-column: span 2; }
+    }
   </style>
 </head>
 <body>
@@ -433,7 +583,7 @@
     <button class="nav-btn" onclick="showPage('calendar', this)" id="nav-calendar">Calendar <span id="today-appt-badge" style="display:none;background:#ef4444;color:white;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:2px;"></span></button>
     <button class="nav-btn" onclick="showPage('settings', this)">Settings</button>
   </nav>
-  <div class="header-right" style="display:flex;align-items:center;gap:12px;">
+  <div class="header-right" style="display:flex;align-items:center;gap:10px;">
     <span id="header-agent-name" style="font-size:13px;color:#888;"></span>
     <div class="notif-wrap" id="notif-wrap">
       <button class="btn btn-ghost btn-sm notif-btn" onclick="toggleNotifPanel(event)" title="Notifications">
@@ -448,7 +598,8 @@
         <div class="notif-footer">Showing last 30 notifications</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
+    <button class="btn btn-ghost btn-sm" id="desktop-logout" onclick="logout()">Log out</button>
+    <button class="hamburger-btn" onclick="openNavDrawer()" aria-label="Open menu">☰</button>
   </div>
 </header>
 
@@ -494,6 +645,9 @@
       </div>
       <button class="btn btn-primary btn-sm" onclick="openCreateLeadModal()" style="margin-left:auto;">+ Create Lead</button>
     </div>
+    <button class="btn btn-ghost filters-toggle-btn" id="filters-toggle-btn" onclick="toggleMobileFilters()">
+      <span>🔍 Filters</span><span id="filters-arrow" style="font-size:11px;margin-left:4px;">▼</span>
+    </button>
     <div class="search-panel" id="search-panel">
       <div class="search-panel-header">
         <h3>Search & Filter</h3>
@@ -611,13 +765,6 @@
     <label for="select-all" style="font-size:13px;color:#6b7280;cursor:pointer;">Select all</label>
   </div>
 </div>
-
-<div class="leads-grid" id="leads-grid"></div>
-<div class="bulk-bar" id="bulk-actions">
-  <span id="selected-count"></span>
-  <button class="btn btn-primary btn-sm" onclick="openEnrollModal()">Tag with Campaign</button>
-</div>
-
 
     <div class="leads-grid" id="leads-grid"></div>
     <div class="bulk-bar" id="bulk-actions">
@@ -815,6 +962,15 @@
         <div class="settings-nav-item" onclick="showSettingsPanel('account', this)">Account</div>
       </div>
       <div>
+        <div class="settings-nav-mobile">
+          <select id="settings-nav-select" onchange="showSettingsPanelMobile(this.value)">
+            <option value="dispositions">Disposition Tags</option>
+            <option value="templates">Preset Templates</option>
+            <option value="phone-numbers">Phone Numbers</option>
+            <option value="team">Team &amp; Invites</option>
+            <option value="account">Account</option>
+          </select>
+        </div>
         <!-- TEMPLATES PANEL -->
         <div class="settings-panel" id="panel-templates">
           <div class="settings-card">
@@ -1262,7 +1418,11 @@
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
     document.getElementById(`page-${page}`).classList.add('active')
-    btn.classList.add('active')
+    if (btn) btn.classList.add('active')
+    // Sync mobile drawer active state
+    document.querySelectorAll('.nav-drawer-btn').forEach(b => b.classList.remove('active'))
+    const drawerBtn = document.getElementById(`drawer-btn-${page}`)
+    if (drawerBtn) drawerBtn.classList.add('active')
     if (page === 'campaigns') loadCampaigns()
     if (page === 'conversations') loadConversations()
     if (page === 'settings') { loadDispositionTags(); loadProfile(); loadPhoneNumbers() }
@@ -1274,9 +1434,16 @@
     document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'))
     document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'))
     document.getElementById(`panel-${panel}`).classList.add('active')
-    el.classList.add('active')
+    if (el) el.classList.add('active')
+    const mobileSelect = document.getElementById('settings-nav-select')
+    if (mobileSelect) mobileSelect.value = panel
     if (panel === 'team') loadInvites()
     if (panel === 'phone-numbers') loadPhoneNumbers()
+  }
+
+  const showSettingsPanelMobile = (panel) => {
+    const item = document.querySelector(`.settings-nav-item[onclick*="'${panel}'"]`)
+    showSettingsPanel(panel, item)
   }
 
   const getInitials = (first, last) => ((first?.[0] || '') + (last?.[0] || '')).toUpperCase() || '?'
@@ -2121,9 +2288,19 @@ const collectActions = () => {
     return `<span class="msg-si sent" title="Sent">✓</span>`
   }
 
+  const backToConversations = () => {
+    activeConvId = null
+    document.querySelector('.conv-layout')?.classList.remove('conv-open')
+    renderConversationList(allConversations)
+  }
+
   const openConversation = async (convId) => {
     activeConvId = convId
     renderConversationList(allConversations)
+    // On mobile, switch to conversation view
+    if (window.innerWidth < 768) {
+      document.querySelector('.conv-layout')?.classList.add('conv-open')
+    }
     try {
       const res = await fetch(`/conversations/${convId}`)
       const data = await res.json()
@@ -2145,6 +2322,7 @@ const collectActions = () => {
         </div>` : ''}
         <div class="conv-header">
           <div class="conv-header-info">
+            <button class="conv-back-btn btn btn-ghost btn-sm" onclick="backToConversations()" style="margin-right:4px;min-height:36px;">← Back</button>
             <div class="conv-avatar" style="width:38px;height:38px;font-size:13px;">${initials}</div>
             <div>
               <div class="conv-header-name">${name} ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color};font-size:11px;">${dispTag.name}</span>` : ''}</div>
@@ -2823,7 +3001,7 @@ const collectActions = () => {
         <div style="font-size:36px;margin-bottom:12px;">📱</div>
         <div style="font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">No phone numbers yet</div>
         <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;">Search for and purchase a number to start sending texts.</div>
-        <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('pn-area-code').focus()">Search Numbers</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('pn-search-areacode').focus()">Search Numbers</button>
       </div>`
       return
     }
@@ -3208,6 +3386,8 @@ const collectActions = () => {
       const data = await res.json()
       const p = data.user
       document.getElementById('header-agent-name').textContent = p.agent_name || p.email || ''
+      const drawerName = document.getElementById('drawer-agent-name')
+      if (drawerName) drawerName.textContent = p.agent_name || p.email || ''
       document.getElementById('profile-agent-name').value = p.agent_name || ''
       document.getElementById('profile-agency-name').value = p.agency_name || ''
       document.getElementById('profile-calendly-url').value = p.calendly_url || ''
@@ -3776,6 +3956,26 @@ const collectActions = () => {
     } catch (err) { console.error(err) }
   }
   init()
+
+  // MOBILE NAV DRAWER
+  const openNavDrawer = () => {
+    document.getElementById('nav-drawer').classList.add('open')
+    document.getElementById('nav-overlay').classList.add('open')
+  }
+  const closeNavDrawer = () => {
+    document.getElementById('nav-drawer').classList.remove('open')
+    document.getElementById('nav-overlay').classList.remove('open')
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNavDrawer() })
+
+  // MOBILE FILTER TOGGLE
+  const toggleMobileFilters = () => {
+    const panel = document.getElementById('search-panel')
+    const arrow = document.getElementById('filters-arrow')
+    const open = panel.classList.toggle('mobile-open')
+    arrow.textContent = open ? '▲' : '▼'
+  }
+
 </script>
 <!-- INVITE MODAL -->
 <div class="modal-overlay" id="invite-modal">
@@ -4027,6 +4227,39 @@ const collectActions = () => {
     <div class="lead-detail-panel" id="detail-panel-dispositions">
       <div id="detail-disp-list" style="max-height:400px;overflow-y:auto;"></div>
     </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV OVERLAY + DRAWER -->
+<div class="nav-overlay" id="nav-overlay" onclick="closeNavDrawer()"></div>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-header">
+    <div class="nav-drawer-logo">Text<span>App</span></div>
+    <button class="nav-drawer-close" onclick="closeNavDrawer()">×</button>
+  </div>
+  <div class="nav-drawer-items">
+    <button class="nav-drawer-btn active" id="drawer-btn-leads" onclick="showPage('leads', document.querySelectorAll('.nav-btn')[0]); closeNavDrawer()">
+      <span class="nav-drawer-icon">👥</span> Leads
+    </button>
+    <button class="nav-drawer-btn" id="drawer-btn-conversations" onclick="showPage('conversations', document.querySelectorAll('.nav-btn')[1]); closeNavDrawer()">
+      <span class="nav-drawer-icon">💬</span> Conversations
+    </button>
+    <button class="nav-drawer-btn" id="drawer-btn-campaigns" onclick="showPage('campaigns', document.querySelectorAll('.nav-btn')[2]); closeNavDrawer()">
+      <span class="nav-drawer-icon">📋</span> Campaigns
+    </button>
+    <button class="nav-drawer-btn" id="drawer-btn-stats" onclick="showPage('stats', document.querySelectorAll('.nav-btn')[3]); closeNavDrawer()">
+      <span class="nav-drawer-icon">📊</span> Stats
+    </button>
+    <button class="nav-drawer-btn" id="drawer-btn-calendar" onclick="showPage('calendar', document.querySelectorAll('.nav-btn')[4]); closeNavDrawer()">
+      <span class="nav-drawer-icon">📅</span> Calendar
+    </button>
+    <button class="nav-drawer-btn" id="drawer-btn-settings" onclick="showPage('settings', document.querySelectorAll('.nav-btn')[5]); closeNavDrawer()">
+      <span class="nav-drawer-icon">⚙️</span> Settings
+    </button>
+  </div>
+  <div class="nav-drawer-footer">
+    <div class="nav-drawer-agent" id="drawer-agent-name"></div>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="logout()">Log out</button>
   </div>
 </div>
 </body>
