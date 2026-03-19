@@ -618,12 +618,21 @@ const suggestReply = async (req, res) => {
   }
 }
 
+const STATUS_MAP = {
+  queued: 'sending',
+  sending: 'sending',
+  sent: 'sent',
+  delivered: 'delivered',
+  undelivered: 'failed',
+  failed: 'failed'
+}
+
 const handleStatusCallback = async (req, res) => {
   try {
     const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = req.body
     if (!MessageSid) return res.sendStatus(200)
 
-    const update = { status: MessageStatus }
+    const update = { status: STATUS_MAP[MessageStatus] || MessageStatus }
     if (ErrorCode) update.error_code = ErrorCode
     if (ErrorMessage) update.error_message = ErrorMessage
 

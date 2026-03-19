@@ -1,5 +1,7 @@
 const supabase = require('../db')
 
+const STATUS_MAP = { queued: 'sending', sending: 'sending', sent: 'sent', delivered: 'delivered', undelivered: 'failed', failed: 'failed' }
+
 const ERROR_DESCRIPTIONS = {
   '30001': 'Queue overflow',
   '30002': 'Account suspended',
@@ -56,13 +58,34 @@ const getDeliveryStats = async (req, res) => {
       ? parseFloat(((totals.delivered / total) * 100).toFixed(1))
       : null
 
+    // Today's numbers
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    const { data: todayData } = await supabase
+      .from('messages')
+      .select('status')
+      .eq('direction', 'outbound')
+      .gte('sent_at', todayStart.toISOString())
+
+    const today = { total: todayData?.length || 0, delivered: 0, failed: 0, pending: 0 }
+    for (const m of todayData || []) {
+      const s = STATUS_MAP[m.status] || m.status || 'sent'
+      if (s === 'delivered') today.delivered++
+      else if (s === 'failed') today.failed++
+      else today.pending++
+    }
+    today.rate = today.total > 0 && today.delivered > 0
+      ? parseFloat(((today.delivered / today.total) * 100).toFixed(1))
+      : null
+
     res.json({
       period_days: parseInt(days),
       total,
       totals,
       total_failed: totalFailed,
       delivery_rate,
-      error_breakdown: Object.values(errorMap).sort((a, b) => b.count - a.count)
+      error_breakdown: Object.values(errorMap).sort((a, b) => b.count - a.count),
+      today
     })
   } catch (err) {
     res.status(500).json({ error: err.message })

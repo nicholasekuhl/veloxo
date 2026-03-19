@@ -6,6 +6,7 @@ const { authMiddleware } = require('../middleware/auth')
 // Public Twilio webhooks — no auth
 router.post('/incoming', handleIncomingMessage)
 router.post('/status-callback', handleStatusCallback)
+router.post('/status', handleStatusCallback)
 
 // Protected routes
 router.post('/send/:leadId', authMiddleware, sendInitialOutreach)

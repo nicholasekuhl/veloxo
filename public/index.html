@@ -127,6 +127,11 @@
     .conv-header-actions { display: flex; align-items: center; gap: 8px; }
     .conv-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
     .conv-updated { font-size: 11px; color: #d1d5db; text-align: right; padding: 3px 18px; }
+    .msg-si { font-size: 10px; margin-left: 3px; vertical-align: middle; }
+    .msg-si.sending { color: #c4b5fd; }
+    .msg-si.sent { color: #c4b5fd; }
+    .msg-si.delivered { color: white; font-weight: 700; }
+    .msg-si.failed { color: #fca5a5; cursor: help; }
     .msg { display: flex; flex-direction: column; max-width: 68%; }
     .msg.inbound { align-self: flex-start; }
     .msg.outbound { align-self: flex-end; }
@@ -697,6 +702,16 @@
         <div class="num" style="color:#9ca3af;" id="stats-pending">—</div>
         <div class="lbl">Pending</div>
       </div>
+    </div>
+
+    <div style="background:white;border-radius:16px;padding:16px 20px;border:1px solid #f0f0f0;margin-bottom:16px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">Today</div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;font-weight:700;color:#1a1a2e;" id="today-total">—</span><span style="font-size:12px;color:#9ca3af;">sent</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;font-weight:700;color:#059669;" id="today-delivered">—</span><span style="font-size:12px;color:#9ca3af;">delivered</span></div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:18px;font-weight:700;color:#dc2626;" id="today-failed">—</span><span style="font-size:12px;color:#9ca3af;">failed</span></div>
+      <div style="width:1px;height:28px;background:#f0f0f0;"></div>
+      <div style="font-size:22px;font-weight:800;color:#6366f1;" id="today-rate">—</div>
+      <div style="font-size:12px;color:#9ca3af;" id="today-rate-sub">delivery rate today</div>
     </div>
 
     <div style="background:white;border-radius:16px;padding:24px 28px;border:1px solid #f0f0f0;margin-bottom:20px;display:flex;align-items:center;gap:20px;">
@@ -2063,6 +2078,13 @@ const collectActions = () => {
     renderConversationList(filtered)
   }
 
+  const msgStatusIcon = (status, errorMsg) => {
+    if (status === 'delivered') return `<span class="msg-si delivered" title="Delivered">✓✓</span>`
+    if (status === 'failed') return `<span class="msg-si failed" title="${(errorMsg || 'Delivery failed').replace(/"/g, '&quot;')}">✗</span>`
+    if (status === 'sending' || status === 'queued') return `<span class="msg-si sending" title="Sending…">⏱</span>`
+    return `<span class="msg-si sent" title="Sent">✓</span>`
+  }
+
   const openConversation = async (convId) => {
     activeConvId = convId
     renderConversationList(allConversations)
@@ -2105,7 +2127,7 @@ const collectActions = () => {
           ${conv.messages?.length ? conv.messages.map(m => `
             <div class="msg ${m.direction} ${m.is_ai ? 'ai' : ''}">
               <div class="msg-bubble">${m.body}</div>
-              <div class="msg-time">${formatTime(m.sent_at)}</div>
+              <div class="msg-time">${formatTime(m.sent_at)}${m.direction === 'outbound' ? msgStatusIcon(m.status, m.error_message) : ''}</div>
               ${m.is_ai ? '<div class="msg-label">AI response</div>' : ''}
             </div>
           `).join('') : '<div style="text-align:center;color:#d1d5db;font-size:13px;padding:32px;">No messages yet</div>'}
@@ -2158,7 +2180,7 @@ const collectActions = () => {
           incoming.forEach(m => {
             const div = document.createElement('div')
             div.className = `msg ${m.direction}${m.is_ai ? ' ai' : ''}`
-            div.innerHTML = `<div class="msg-bubble">${m.body}</div><div class="msg-time">${formatTime(m.sent_at)}</div>${m.is_ai ? '<div class="msg-label">AI response</div>' : ''}`
+            div.innerHTML = `<div class="msg-bubble">${m.body}</div><div class="msg-time">${formatTime(m.sent_at)}${m.direction === 'outbound' ? msgStatusIcon(m.status, m.error_message) : ''}</div>${m.is_ai ? '<div class="msg-label">AI response</div>' : ''}`
             container.appendChild(div)
           })
           if (wasAtBottom) container.scrollTop = container.scrollHeight
@@ -2457,7 +2479,15 @@ const collectActions = () => {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      const { total, totals, delivery_rate, total_failed, error_breakdown } = data
+      const { total, totals, delivery_rate, total_failed, error_breakdown, today } = data
+
+      if (today) {
+        document.getElementById('today-total').textContent = today.total
+        document.getElementById('today-delivered').textContent = today.delivered
+        document.getElementById('today-failed').textContent = today.failed
+        document.getElementById('today-rate').textContent = today.rate !== null ? `${today.rate}%` : '—'
+        document.getElementById('today-rate-sub').textContent = today.total === 0 ? 'no messages sent today' : today.rate !== null ? 'delivery rate today' : `${today.pending} pending confirmation`
+      }
 
       document.getElementById('stats-total').textContent = total
       document.getElementById('stats-delivered').textContent = totals.delivered

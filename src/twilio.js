@@ -14,8 +14,9 @@ const sendSMS = async (to, body, fromNumber) => {
 
     const client = getMasterClient()
     const params = { body, from, to }
-    if (process.env.STATUS_CALLBACK_URL) {
-      params.statusCallback = process.env.STATUS_CALLBACK_URL
+    const appUrl = process.env.APP_URL
+    if (appUrl) {
+      params.statusCallback = `${appUrl}/messages/status`
     }
 
     const message = await client.messages.create(params)
