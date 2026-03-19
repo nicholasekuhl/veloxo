@@ -1850,7 +1850,7 @@ const collectActions = () => {
   modalDropZone.addEventListener('dragleave', () => modalDropZone.classList.remove('dragover'))
   modalDropZone.addEventListener('drop', (e) => { e.preventDefault(); modalDropZone.classList.remove('dragover'); if (e.dataTransfer.files[0]) { importFile = e.dataTransfer.files[0]; document.getElementById('modal-file-name').textContent = importFile.name } })
 
-  const showImportStatus = (msg, type) => { const bar = document.getElementById('import-status-bar'); bar.textContent = msg; bar.className = `status-bar ${type}` }
+  const showImportStatus = (msg, type, html) => { const bar = document.getElementById('import-status-bar'); if (html) bar.innerHTML = msg; else bar.textContent = msg; bar.className = `status-bar ${type}` }
 
   const submitImport = async () => {
     if (!importFile) return showImportStatus('Please select a file first', 'error')
@@ -1873,7 +1873,12 @@ const collectActions = () => {
     try {
       const res = await fetch('/leads/upload', { method: 'POST', body: formData })
       const data = await res.json()
-      if (data.success) { showImportStatus(data.message, 'success'); setTimeout(() => { closeUploadModal(); loadLeads() }, 1500) }
+      if (data.success) {
+        let html = `<span style="color:#059669;font-weight:600;">✓ Imported ${data.imported} lead${data.imported !== 1 ? 's' : ''}</span>`
+        if (data.skipped > 0) html += `<span style="color:#6b7280;"> &nbsp;·&nbsp; </span><span style="color:#d97706;">${data.skipped} duplicate${data.skipped !== 1 ? 's' : ''} skipped</span>`
+        showImportStatus(html, 'success', true)
+        setTimeout(() => { closeUploadModal(); loadLeads() }, 2000)
+      }
       else showImportStatus(data.error || 'Import failed', 'error')
     } catch (err) { showImportStatus('Something went wrong', 'error') }
     finally { document.querySelector('#upload-modal .btn-primary').disabled = false }

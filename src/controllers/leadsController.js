@@ -191,7 +191,28 @@ const uploadLeads = async (req, res) => {
       return res.status(400).json({ error: 'No valid leads found. Make sure your file has a phone column.' })
     }
 
-    const { data, error } = await supabase.from('leads').insert(leads).select()
+    // Deduplication — check all phone numbers against existing leads for this user
+    const phoneNumbers = leads.map(l => l.phone)
+    const { data: existingLeads } = await supabase
+      .from('leads')
+      .select('phone')
+      .eq('user_id', userId)
+      .in('phone', phoneNumbers)
+
+    const existingPhones = new Set((existingLeads || []).map(l => l.phone))
+    const newLeads = leads.filter(l => !existingPhones.has(l.phone))
+    const skippedCount = leads.length - newLeads.length
+
+    if (newLeads.length === 0) {
+      return res.json({
+        success: true,
+        imported: 0,
+        skipped: skippedCount,
+        message: `Skipped all ${skippedCount} leads — all already exist in your system`
+      })
+    }
+
+    const { data, error } = await supabase.from('leads').insert(newLeads).select()
     if (error) throw error
 
     if (campaignId && campaignStartDate && data.length > 0) {
@@ -288,10 +309,16 @@ const uploadLeads = async (req, res) => {
       }
     }
 
+    const importedCount = data.length
+    const parts = [`Imported ${importedCount} new lead${importedCount !== 1 ? 's' : ''}`]
+    if (skippedCount > 0) parts.push(`skipped ${skippedCount} duplicate${skippedCount !== 1 ? 's' : ''} already in your system`)
+    if (bucket) parts.push(`into bucket "${bucket}"`)
+
     res.json({
       success: true,
-      message: `Successfully imported ${data.length} leads${bucket ? ` into bucket "${bucket}"` : ''}`,
-      count: data.length,
+      imported: importedCount,
+      skipped: skippedCount,
+      message: parts.join(', '),
       leads: data
     })
   } catch (err) {
