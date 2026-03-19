@@ -399,7 +399,6 @@
       <h3>Upload Lead Sheet</h3>
       <p>Click to configure and import, or drag and drop a file here</p>
       <button class="btn btn-primary" onclick="event.stopPropagation(); openUploadModal()">Import Leads</button>
-      <button class="btn btn-secondary" onclick="event.stopPropagation(); openCreateLeadModal()" style="margin-left:8px;">+ Create Lead</button>
       <div class="status-bar" id="status-bar"></div>
     </div>
     <div class="stats">
@@ -419,6 +418,7 @@
         <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</button>
         <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
       </div>
+      <button class="btn btn-primary btn-sm" onclick="openCreateLeadModal()" style="margin-left:auto;">+ Create Lead</button>
     </div>
     <div class="search-panel" id="search-panel">
       <div class="search-panel-header">
