@@ -372,6 +372,48 @@
     .today-section { background: white; border-radius: 16px; border: 1px solid #f0f0f0; padding: 20px; }
     .today-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
     .today-count { background: #6366f1; color: white; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 2px 8px; }
+    /* NOTIFICATION BELL */
+    .notif-wrap { position: relative; }
+    .notif-btn { position: relative; font-size: 16px; padding: 4px 8px; line-height: 1; }
+    .notif-badge { position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 20px; font-size: 10px; font-weight: 700; padding: 1px 5px; min-width: 16px; text-align: center; pointer-events: none; }
+    .notif-panel { position: absolute; top: calc(100% + 8px); right: 0; width: 360px; background: white; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 8px 32px rgba(0,0,0,0.12); z-index: 1000; overflow: hidden; }
+    .notif-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; border-bottom: 1px solid #f0f0f0; }
+    .notif-panel-header span { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+    .notif-panel-header a { font-size: 12px; color: #6366f1; cursor: pointer; text-decoration: none; }
+    .notif-panel-header a:hover { text-decoration: underline; }
+    .notif-list { max-height: 400px; overflow-y: auto; }
+    .notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.1s; }
+    .notif-item:hover { background: #f9fafb; }
+    .notif-item.unread { border-left-color: #6366f1; background: #f5f3ff; }
+    .notif-item.unread:hover { background: #ede9fe; }
+    .notif-item.read { opacity: 0.7; }
+    .notif-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .notif-content { flex: 1; min-width: 0; }
+    .notif-name { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+    .notif-preview { font-size: 12px; color: #6b7280; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .notif-time { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+    .notif-empty { padding: 32px 16px; text-align: center; color: #9ca3af; }
+    .notif-empty .notif-empty-icon { font-size: 28px; margin-bottom: 8px; }
+    .notif-empty p { font-size: 13px; font-weight: 500; color: #6b7280; margin-bottom: 4px; }
+    .notif-empty span { font-size: 12px; }
+    .notif-footer { padding: 8px 16px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #d1d5db; text-align: center; }
+    /* ONBOARDING CHECKLIST */
+    .checklist-card { background: white; border-radius: 16px; border: 1px solid #e0e7ff; padding: 20px 24px; margin-bottom: 16px; }
+    .checklist-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .checklist-header h3 { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+    .checklist-dismiss { font-size: 12px; color: #9ca3af; cursor: pointer; background: none; border: none; padding: 0; }
+    .checklist-dismiss:hover { color: #6b7280; }
+    .checklist-progress { height: 4px; background: #e5e7eb; border-radius: 4px; margin-bottom: 16px; }
+    .checklist-progress-bar { height: 100%; background: #6366f1; border-radius: 4px; transition: width 0.4s ease; }
+    .checklist-steps { display: flex; flex-direction: column; gap: 8px; }
+    .checklist-step { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: #374151; cursor: pointer; transition: background 0.1s; }
+    .checklist-step:hover { background: #f9fafb; }
+    .checklist-step.done { color: #9ca3af; }
+    .checklist-step .step-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #d1d5db; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; }
+    .checklist-step.done .step-check { background: #6366f1; border-color: #6366f1; color: white; }
+    .checklist-step .step-label { flex: 1; }
+    .checklist-step .step-action { font-size: 11px; color: #6366f1; }
+    .checklist-step.done .step-action { display: none; }
   </style>
 </head>
 <body>
@@ -388,6 +430,19 @@
   </nav>
   <div class="header-right" style="display:flex;align-items:center;gap:12px;">
     <span id="header-agent-name" style="font-size:13px;color:#888;"></span>
+    <div class="notif-wrap" id="notif-wrap">
+      <button class="btn btn-ghost btn-sm notif-btn" onclick="toggleNotifPanel(event)" title="Notifications">
+        🔔<span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+      </button>
+      <div class="notif-panel" id="notif-panel" style="display:none;">
+        <div class="notif-panel-header">
+          <span>Notifications</span>
+          <a onclick="markAllNotifRead()">Mark all read</a>
+        </div>
+        <div class="notif-list" id="notif-list"></div>
+        <div class="notif-footer">Showing last 30 notifications</div>
+      </div>
+    </div>
     <button class="btn btn-ghost btn-sm" onclick="logout()">Log out</button>
   </div>
 </header>
@@ -396,6 +451,16 @@
 
   <!-- LEADS PAGE -->
   <div class="page active" id="page-leads">
+    <div id="onboarding-checklist" style="display:none;">
+      <div class="checklist-card">
+        <div class="checklist-header">
+          <h3>🚀 Get started — complete your setup</h3>
+          <button class="checklist-dismiss" onclick="dismissChecklist()">Dismiss</button>
+        </div>
+        <div class="checklist-progress"><div class="checklist-progress-bar" id="checklist-bar" style="width:0%"></div></div>
+        <div class="checklist-steps" id="checklist-steps"></div>
+      </div>
+    </div>
     <div class="upload-zone" id="drop-zone" onclick="openUploadModal()">
       <h3>Upload Lead Sheet</h3>
       <p>Click to configure and import, or drag and drop a file here</p>
@@ -845,6 +910,37 @@
             </div>
             <div id="compliance-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
             <button class="btn btn-primary" onclick="saveCompliance()">Save Compliance Settings</button>
+          </div>
+          <div class="settings-card">
+            <h2>Notifications</h2>
+            <p>How you want to be alerted when leads reply to your messages.</p>
+            <div class="form-group">
+              <label>Your personal cell for SMS alerts</label>
+              <input type="text" id="profile-personal-phone" placeholder="+15615550100">
+              <div style="font-size:12px;color:#9ca3af;margin-top:4px;">We'll forward lead replies to this number as a text so you never miss a message. This is your personal phone, not a TextApp number.</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
+              <label class="toggle" style="margin-top:2px;">
+                <input type="checkbox" id="sms-notif-enabled" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#374151;">Text me when a lead replies</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Forwards lead messages to your personal cell from +1 (561) 652-6496. Save that number as TextApp Alerts.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
+              <label class="toggle" style="margin-top:2px;">
+                <input type="checkbox" id="inapp-notif-enabled" checked>
+                <span class="toggle-slider"></span>
+              </label>
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#374151;">Show notification bell in the app</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Red badge on the bell icon when leads reply.</div>
+              </div>
+            </div>
+            <div id="notif-settings-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
+            <button class="btn btn-primary" onclick="saveNotifSettings()">Save Notification Settings</button>
           </div>
         </div>
       </div>
@@ -2407,6 +2503,8 @@ const collectActions = () => {
     loadLeads()
     loadAppointments()
     startPolling()
+    loadNotifBadge()
+    setInterval(loadNotifBadge, 30000)
   }
 
   // CALENDAR
@@ -2992,6 +3090,11 @@ const collectActions = () => {
       updateCompliancePreview()
       const note = document.getElementById('campaign-footer-note')
       if (note) note.style.display = complianceFooterEnabled ? 'block' : 'none'
+      // Notifications
+      document.getElementById('profile-personal-phone').value = p.personal_phone || ''
+      document.getElementById('sms-notif-enabled').checked = p.sms_notifications_enabled !== false
+      document.getElementById('inapp-notif-enabled').checked = p.inapp_notifications_enabled !== false
+      loadChecklist(p)
     } catch (err) { console.error('Profile load error:', err) }
   }
 
@@ -3062,6 +3165,167 @@ const collectActions = () => {
       statusEl.textContent = 'Save failed'
     }
     setTimeout(() => { statusEl.style.display = 'none' }, 3000)
+  }
+
+  const saveNotifSettings = async () => {
+    const statusEl = document.getElementById('notif-settings-status')
+    statusEl.style.display = 'block'
+    statusEl.style.color = '#6366f1'
+    statusEl.textContent = 'Saving...'
+    try {
+      const body = {
+        personal_phone: document.getElementById('profile-personal-phone').value.trim() || null,
+        sms_notifications_enabled: document.getElementById('sms-notif-enabled').checked,
+        inapp_notifications_enabled: document.getElementById('inapp-notif-enabled').checked
+      }
+      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (data.success) { statusEl.style.color = '#059669'; statusEl.textContent = 'Saved!' }
+      else { statusEl.style.color = '#dc2626'; statusEl.textContent = data.error || 'Save failed' }
+    } catch { statusEl.style.color = '#dc2626'; statusEl.textContent = 'Save failed' }
+    setTimeout(() => { statusEl.style.display = 'none' }, 3000)
+  }
+
+  // NOTIFICATIONS
+  let notifPanelOpen = false
+
+  const toggleNotifPanel = (e) => {
+    e.stopPropagation()
+    notifPanelOpen = !notifPanelOpen
+    document.getElementById('notif-panel').style.display = notifPanelOpen ? 'block' : 'none'
+    if (notifPanelOpen) loadNotifications()
+  }
+
+  const loadNotifications = async () => {
+    try {
+      const res = await fetch('/notifications')
+      const data = await res.json()
+      renderNotifications(data.notifications || [])
+      updateNotifBadge(data.unread_count || 0)
+    } catch (err) { console.error('Notifications load error:', err) }
+  }
+
+  const renderNotifications = (notifs) => {
+    const list = document.getElementById('notif-list')
+    if (!notifs.length) {
+      list.innerHTML = `<div class="notif-empty"><div class="notif-empty-icon">🔔</div><p>No new notifications</p><span>Lead replies will appear here</span></div>`
+      return
+    }
+    list.innerHTML = notifs.map(n => {
+      const lead = allLeads.find(l => l.id === n.lead_id)
+      const initials = lead ? getInitials(lead.first_name, lead.last_name) : '?'
+      const preview = (n.body || '').slice(0, 60) + ((n.body || '').length > 60 ? '…' : '')
+      return `<div class="notif-item ${n.is_read ? 'read' : 'unread'}" onclick="handleNotifClick('${n.id}','${n.lead_id || ''}','${n.conversation_id || ''}')">
+        <div class="notif-avatar">${initials}</div>
+        <div class="notif-content">
+          <div class="notif-name">${n.title}</div>
+          <div class="notif-preview">${preview}</div>
+          <div class="notif-time">${timeAgo(n.created_at)}</div>
+        </div>
+      </div>`
+    }).join('')
+  }
+
+  const handleNotifClick = async (notifId, leadId, convId) => {
+    document.getElementById('notif-panel').style.display = 'none'
+    notifPanelOpen = false
+    if (notifId) fetch(`/notifications/read/${notifId}`, { method: 'POST' }).catch(() => {})
+    if (convId) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'))
+      document.querySelectorAll('.nav-btn')[1].classList.add('active')
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+      document.getElementById('page-conversations').classList.add('active')
+      await loadConversations()
+      openConversation(convId)
+    } else if (leadId) {
+      await viewConversation(leadId)
+    }
+    loadNotifBadge()
+  }
+
+  const markAllNotifRead = async () => {
+    await fetch('/notifications/read', { method: 'POST' }).catch(() => {})
+    loadNotifications()
+    updateNotifBadge(0)
+  }
+
+  const updateNotifBadge = (count) => {
+    const badge = document.getElementById('notif-badge')
+    if (count <= 0) { badge.style.display = 'none'; return }
+    badge.style.display = 'inline'
+    badge.textContent = count > 9 ? '9+' : count
+  }
+
+  const loadNotifBadge = async () => {
+    if (document.hidden) return
+    try {
+      const res = await fetch('/notifications/unread-count')
+      const data = await res.json()
+      updateNotifBadge(data.count || 0)
+    } catch {}
+  }
+
+  const timeAgo = (isoStr) => {
+    const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000)
+    if (diff < 60) return 'just now'
+    if (diff < 3600) return `${Math.floor(diff / 60)} min ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hr ago`
+    if (diff < 172800) return 'Yesterday'
+    return new Date(isoStr).toLocaleDateString()
+  }
+
+  // Close notif panel when clicking outside
+  document.addEventListener('click', (e) => {
+    if (notifPanelOpen && !document.getElementById('notif-wrap').contains(e.target)) {
+      document.getElementById('notif-panel').style.display = 'none'
+      notifPanelOpen = false
+    }
+  })
+
+  // ONBOARDING CHECKLIST
+  const CHECKLIST_KEY = 'checklist_dismissed'
+
+  const loadChecklist = async (profile) => {
+    if (localStorage.getItem(CHECKLIST_KEY)) return
+    try {
+      const [pnRes, campRes] = await Promise.all([fetch('/phone-numbers'), fetch('/campaigns')])
+      const pnData = await pnRes.json()
+      const campData = await campRes.json()
+      const checks = {
+        profile: !!(profile.agent_name && profile.agency_name),
+        phone: (pnData.phone_numbers || []).length > 0,
+        campaign: (campData.campaigns || []).length > 0,
+        leads: allLeads.length > 0,
+        notifications: !!profile.personal_phone
+      }
+      const done = Object.values(checks).filter(Boolean).length
+      if (done === 5) return  // All complete — hide permanently
+      renderChecklist(checks, done)
+    } catch (err) { console.error('Checklist error:', err) }
+  }
+
+  const renderChecklist = (checks, done) => {
+    const steps = [
+      { key: 'profile', label: 'Complete your profile', sub: 'Agent name and agency name filled in', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
+      { key: 'phone', label: 'Add a phone number', sub: 'Purchase a Twilio number to send messages', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
+      { key: 'campaign', label: 'Create your first campaign', sub: 'Set up an automated drip sequence', action: () => showPage('campaigns', document.querySelectorAll('.nav-btn')[2]), actionText: 'Go to Campaigns →' },
+      { key: 'leads', label: 'Import your first leads', sub: 'Upload a CSV or Excel file', action: () => document.getElementById('drop-zone').click(), actionText: 'Import now →' },
+      { key: 'notifications', label: 'Set up notifications', sub: 'Add your personal phone to receive SMS alerts when leads reply', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' }
+    ]
+    const pct = Math.round((done / 5) * 100)
+    document.getElementById('checklist-bar').style.width = `${pct}%`
+    document.getElementById('checklist-steps').innerHTML = steps.map(s => `
+      <div class="checklist-step ${checks[s.key] ? 'done' : ''}" onclick="${checks[s.key] ? '' : `(${s.action.toString()})()`}">
+        <div class="step-check">${checks[s.key] ? '✓' : ''}</div>
+        <div class="step-label"><strong>${s.label}</strong><br><span style="font-size:12px;color:#9ca3af;">${s.sub}</span></div>
+        ${!checks[s.key] ? `<span class="step-action">${s.actionText}</span>` : ''}
+      </div>`).join('')
+    document.getElementById('onboarding-checklist').style.display = 'block'
+  }
+
+  const dismissChecklist = () => {
+    localStorage.setItem(CHECKLIST_KEY, '1')
+    document.getElementById('onboarding-checklist').style.display = 'none'
   }
 
   const logout = async () => {

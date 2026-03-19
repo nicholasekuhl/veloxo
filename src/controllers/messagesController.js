@@ -1,5 +1,6 @@
 const supabase = require('../db')
-const { sendSMS, buildMessageBody } = require('../twilio')
+const { sendSMS, buildMessageBody, getMasterClient } = require('../twilio')
+const { createNotification } = require('../notifications')
 const { spintext } = require('../spintext')
 
 const getInitialMessage = (lead) => {
@@ -192,7 +193,7 @@ const handleIncomingMessage = async (req, res) => {
       return res.send('<Response></Response>')
     }
 
-    if (Body.trim().toUpperCase() === 'STOP') {
+    if (['STOP', 'UNSUBSCRIBE'].includes(Body.trim().toUpperCase())) {
       await supabase.from('leads')
         .update({ status: 'opted_out', updated_at: new Date().toISOString() })
         .eq('phone', From).eq('user_id', userId)
@@ -244,6 +245,24 @@ const handleIncomingMessage = async (req, res) => {
     await supabase.from('conversations')
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversation.id)
+
+    // In-app notification
+    if (profile?.inapp_notifications_enabled !== false) {
+      const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.phone
+      createNotification(userId, 'inbound_message', `${leadName} replied`, Body.slice(0, 100), lead.id, conversation.id)
+    }
+
+    // SMS forwarding — non-blocking, never delays main flow
+    if (profile?.sms_notifications_enabled !== false && profile?.personal_phone && lead.status !== 'opted_out') {
+      const forwardingNumber = process.env.FORWARDING_NUMBER
+      if (forwardingNumber) {
+        const agencyName = profile.agency_name || 'TextApp'
+        const msgBody = Body.length > 100 ? Body.slice(0, 100) + '...' : Body
+        const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || ''
+        const forwardText = `${agencyName}: msg from ${leadName} ${lead.phone}: ${msgBody}`.trim()
+        sendSMS(profile.personal_phone, forwardText, forwardingNumber)
+      }
+    }
 
     // Stop AI if already handed off
     if (conversation.needs_agent_review) {

@@ -15,6 +15,7 @@ const statsRouter = require('./routes/stats')
 const authRouter = require('./routes/auth')
 const phoneNumbersRouter = require('./routes/phoneNumbers')
 const appointmentsRouter = require('./routes/appointments')
+const notificationsRouter = require('./routes/notifications')
 const { authMiddleware } = require('./middleware/auth')
 const { startScheduler } = require('./scheduler')
 
@@ -39,6 +40,7 @@ app.use('/tasks', authMiddleware, tasksRouter)
 app.use('/stats', authMiddleware, statsRouter)
 app.use('/phone-numbers', authMiddleware, phoneNumbersRouter)
 app.use('/appointments', authMiddleware, appointmentsRouter)
+app.use('/notifications', authMiddleware, notificationsRouter)
 
 app.get('/health', (req, res) => {
   res.json({ status: 'server is running' })
