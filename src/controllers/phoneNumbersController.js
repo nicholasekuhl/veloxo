@@ -56,9 +56,14 @@ const purchasePhoneNumber = async (req, res) => {
     const client = getMasterClient()
     const appUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`
 
+    const agentName = req.user.profile?.agent_name
+    const twilioFriendlyName = agentName && state
+      ? `${agentName} - ${state}`
+      : agentName || state || phone_number
+
     const purchased = await client.incomingPhoneNumbers.create({
       phoneNumber: phone_number,
-      friendlyName: friendly_name || phone_number,
+      friendlyName: twilioFriendlyName,
       smsUrl: `${appUrl}/messages/incoming`,
       smsMethod: 'POST'
     })
@@ -68,7 +73,7 @@ const purchasePhoneNumber = async (req, res) => {
       .insert({
         user_id: req.user.id,
         phone_number: purchased.phoneNumber,
-        friendly_name: friendly_name || purchased.friendlyName,
+        friendly_name: friendly_name || twilioFriendlyName,
         state: state || null,
         is_active: true
       })
