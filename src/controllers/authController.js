@@ -54,15 +54,12 @@ const getMe = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { agent_name, agency_name, calendly_url, twilio_account_sid, twilio_auth_token, twilio_phone_number, timezone } = req.body
+    const { agent_name, agency_name, calendly_url, timezone } = req.body
 
     const updates = { updated_at: new Date().toISOString() }
     if (agent_name !== undefined) updates.agent_name = agent_name
     if (agency_name !== undefined) updates.agency_name = agency_name
     if (calendly_url !== undefined) updates.calendly_url = calendly_url
-    if (twilio_account_sid !== undefined) updates.twilio_account_sid = twilio_account_sid
-    if (twilio_auth_token !== undefined) updates.twilio_auth_token = twilio_auth_token
-    if (twilio_phone_number !== undefined) updates.twilio_phone_number = twilio_phone_number
     if (timezone !== undefined) updates.timezone = timezone
 
     const { data, error } = await supabase

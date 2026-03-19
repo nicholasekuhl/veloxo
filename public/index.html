@@ -799,19 +799,6 @@
               <label>Email</label>
               <input type="text" id="profile-email" readonly style="background:#f9fafb;">
             </div>
-            <div class="settings-section-title">Twilio Credentials</div>
-            <div class="form-group">
-              <label>Account SID</label>
-              <input type="text" id="profile-twilio-sid" placeholder="ACxxxxxxxx">
-            </div>
-            <div class="form-group">
-              <label>Auth Token</label>
-              <input type="password" id="profile-twilio-token" placeholder="Your Twilio auth token">
-            </div>
-            <div class="form-group">
-              <label>Phone Number</label>
-              <input type="text" id="profile-twilio-phone" placeholder="+15551234567">
-            </div>
             <div id="profile-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
             <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
           </div>
@@ -2647,9 +2634,6 @@ const collectActions = () => {
       document.getElementById('profile-calendly-url').value = p.calendly_url || ''
       document.getElementById('profile-timezone').value = p.timezone || 'America/New_York'
       document.getElementById('profile-email').value = p.email || ''
-      document.getElementById('profile-twilio-sid').value = p.twilio_account_sid || ''
-      document.getElementById('profile-twilio-token').value = p.twilio_auth_token || ''
-      document.getElementById('profile-twilio-phone').value = p.twilio_phone_number || ''
     } catch (err) { console.error('Profile load error:', err) }
   }
 
@@ -2663,10 +2647,7 @@ const collectActions = () => {
         agent_name: document.getElementById('profile-agent-name').value.trim(),
         agency_name: document.getElementById('profile-agency-name').value.trim(),
         calendly_url: document.getElementById('profile-calendly-url').value.trim(),
-        timezone: document.getElementById('profile-timezone').value,
-        twilio_account_sid: document.getElementById('profile-twilio-sid').value.trim(),
-        twilio_auth_token: document.getElementById('profile-twilio-token').value.trim(),
-        twilio_phone_number: document.getElementById('profile-twilio-phone').value.trim()
+        timezone: document.getElementById('profile-timezone').value
       }
       const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()

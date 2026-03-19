@@ -51,16 +51,21 @@ const processScheduledMessages = async () => {
     if (error) throw error
     if (!dueCampaignLeads || dueCampaignLeads.length === 0) return
 
-    // Batch-load user profiles for all unique user_ids in this batch
+    // Batch-load active phone numbers for all unique user_ids in this batch
     const userIds = [...new Set(dueCampaignLeads.map(e => e.user_id).filter(Boolean))]
-    let profileMap = {}
+    let phoneNumberMap = {}
     if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .in('id', userIds)
-      if (profiles) {
-        profileMap = Object.fromEntries(profiles.map(p => [p.id, p]))
+      const { data: phoneNumbers } = await supabase
+        .from('phone_numbers')
+        .select('user_id, phone_number')
+        .in('user_id', userIds)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true })
+      if (phoneNumbers) {
+        // Keep first active number per user
+        for (const pn of phoneNumbers) {
+          if (!phoneNumberMap[pn.user_id]) phoneNumberMap[pn.user_id] = pn.phone_number
+        }
       }
     }
 
@@ -102,9 +107,8 @@ const processScheduledMessages = async () => {
       const firstName = enrollment.leads.first_name || 'there'
       const messageBody = spintext(currentMessage.message_body).replace('[First Name]', firstName)
 
-      // Use this enrollment's user's Twilio credentials (falls back to .env if not set)
-      const profile = enrollment.user_id ? profileMap[enrollment.user_id] || null : null
-      const result = await sendSMS(enrollment.leads.phone, messageBody, profile)
+      const fromNumber = (enrollment.user_id ? phoneNumberMap[enrollment.user_id] : null) || process.env.TWILIO_PHONE_NUMBER
+      const result = await sendSMS(enrollment.leads.phone, messageBody, fromNumber)
 
       if (result.success) {
         let { data: conversation } = await supabase
@@ -168,7 +172,7 @@ const processScheduledMessages = async () => {
 }
 
 const startScheduler = () => {
-  console.log('Campaign scheduler started — per-user Twilio credentials active')
+  console.log('Campaign scheduler started — master Twilio account active')
   setInterval(processScheduledMessages, 60000)
   processScheduledMessages()
 }

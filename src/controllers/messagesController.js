@@ -7,6 +7,18 @@ const getInitialMessage = (lead) => {
   return `Hi ${firstName}! This is Nick with Coverage by Kuhl. I saw you were exploring health insurance options and I'd love to help you find the right plan for your needs and budget. Do you have a few minutes to connect? Reply STOP to opt out.`
 }
 
+const getUserFromNumber = async (userId) => {
+  const { data } = await supabase
+    .from('phone_numbers')
+    .select('phone_number')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single()
+  return data?.phone_number || process.env.TWILIO_PHONE_NUMBER || null
+}
+
 const sendInitialOutreach = async (req, res) => {
   try {
     const { leadId } = req.params
@@ -24,8 +36,9 @@ const sendInitialOutreach = async (req, res) => {
       conversation = newConv
     }
 
+    const fromNumber = await getUserFromNumber(req.user.id)
     const messageBody = getInitialMessage(lead)
-    const result = await sendSMS(lead.phone, messageBody, req.user.profile)
+    const result = await sendSMS(lead.phone, messageBody, fromNumber)
     if (!result.success) return res.status(500).json({ error: result.error })
 
     await supabase.from('messages').insert({
@@ -115,7 +128,7 @@ const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile
   return { triggered: false }
 }
 
-const executeHandoff = async (lead, conversation, handoff, replyCredentials) => {
+const executeHandoff = async (lead, conversation, handoff, fromNumber) => {
   try {
     await supabase.from('conversations').update({
       needs_agent_review: true,
@@ -129,7 +142,7 @@ const executeHandoff = async (lead, conversation, handoff, replyCredentials) => 
     }).eq('id', lead.id)
 
     if (handoff.message) {
-      const result = await sendSMS(lead.phone, handoff.message, replyCredentials)
+      const result = await sendSMS(lead.phone, handoff.message, fromNumber)
       if (result.success) {
         await supabase.from('messages').insert({
           conversation_id: conversation.id,
@@ -153,30 +166,22 @@ const handleIncomingMessage = async (req, res) => {
   try {
     const { From, Body, To } = req.body
 
-    // Look up which user owns this number — check phone_numbers table first, then user_profiles
+    // Look up which user owns this number via phone_numbers table
     let userId = null
     let profile = null
-    let replyCredentials = null
+    const fromNumber = To
 
     const { data: phoneRecord } = await supabase
       .from('phone_numbers')
-      .select('*')
+      .select('user_id')
       .eq('phone_number', To)
       .eq('is_active', true)
       .single()
 
     if (phoneRecord) {
       userId = phoneRecord.user_id
-      replyCredentials = phoneRecord
       const { data: userProfile } = await supabase.from('user_profiles').select('*').eq('id', userId).single()
       profile = userProfile
-    } else {
-      const { data: userProfile } = await supabase.from('user_profiles').select('*').eq('twilio_phone_number', To).single()
-      if (userProfile) {
-        userId = userProfile.id
-        profile = userProfile
-        replyCredentials = userProfile
-      }
     }
 
     if (!userId) {
@@ -254,12 +259,12 @@ const handleIncomingMessage = async (req, res) => {
       const handoff = checkHandoffTriggers(conversation, Body, history, profile)
 
       if (handoff.triggered) {
-        await executeHandoff(lead, conversation, handoff, replyCredentials)
+        await executeHandoff(lead, conversation, handoff, fromNumber)
       } else {
         const aiResponse = await generateAIResponse(lead, history, profile)
 
         if (aiResponse) {
-          const result = await sendSMS(lead.phone, aiResponse, replyCredentials)
+          const result = await sendSMS(lead.phone, aiResponse, fromNumber)
           if (result.success) {
             await supabase.from('messages').insert({
               conversation_id: conversation.id,
@@ -279,7 +284,7 @@ const handleIncomingMessage = async (req, res) => {
             if (!conv?.appointment_confirmed) {
               const apptData = await detectAppointment(history, aiResponse)
               if (apptData.confirmed) {
-                await bookAppointment(lead, conversation.id, apptData, profile, replyCredentials)
+                await bookAppointment(lead, conversation.id, apptData, profile, fromNumber)
               }
             }
           }
@@ -305,8 +310,9 @@ const sendManualMessage = async (req, res) => {
       .from('leads').select('*').eq('id', lead_id).eq('user_id', req.user.id).single()
     if (!lead) return res.status(404).json({ error: 'Lead not found' })
 
+    const fromNumber = await getUserFromNumber(req.user.id)
     const processedBody = spintext(body).replace(/\[First Name\]/g, lead.first_name || 'there')
-    const result = await sendSMS(lead.phone, processedBody, req.user.profile)
+    const result = await sendSMS(lead.phone, processedBody, fromNumber)
     if (!result.success) return res.status(500).json({ error: result.error })
 
     await supabase.from('messages').insert({
@@ -356,7 +362,7 @@ Today is ${today}. Only return confirmed=true if a specific date+time was mutual
   }
 }
 
-const bookAppointment = async (lead, conversationId, appointmentData, profile, replyCredentials) => {
+const bookAppointment = async (lead, conversationId, appointmentData, profile, fromNumber) => {
   try {
     const tz = profile?.timezone || 'America/New_York'
     const localStr = appointmentData.datetime
@@ -396,7 +402,7 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, r
 
       const agentName = profile?.agent_name || 'your agent'
       const confirmText = `Perfect, locked in! ${agentName} will call you ${appointmentData.day_desc} at ${appointmentData.time_desc}. Looking forward to it!`
-      const confirmResult = await sendSMS(lead.phone, confirmText, replyCredentials)
+      const confirmResult = await sendSMS(lead.phone, confirmText, fromNumber)
       if (confirmResult.success) {
         await supabase.from('messages').insert({
           conversation_id: conversationId,

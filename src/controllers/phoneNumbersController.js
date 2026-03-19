@@ -1,12 +1,5 @@
 const supabase = require('../db')
-const { getTwilioClient } = require('../twilio')
-
-const getMasterClient = () => {
-  const sid = process.env.TWILIO_ACCOUNT_SID
-  const token = process.env.TWILIO_AUTH_TOKEN
-  if (!sid || !token) throw new Error('Master Twilio credentials not configured')
-  return getTwilioClient(sid, token)
-}
+const { getMasterClient } = require('../twilio')
 
 const getPhoneNumbers = async (req, res) => {
   try {
@@ -76,8 +69,6 @@ const purchasePhoneNumber = async (req, res) => {
         user_id: req.user.id,
         phone_number: purchased.phoneNumber,
         friendly_name: friendly_name || purchased.friendlyName,
-        twilio_account_sid: process.env.TWILIO_ACCOUNT_SID,
-        twilio_auth_token: process.env.TWILIO_AUTH_TOKEN,
         state: state || null,
         is_active: true
       })
