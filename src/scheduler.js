@@ -1,6 +1,17 @@
 const supabase = require('./db')
 const { sendSMS, buildMessageBody } = require('./twilio')
 const { spintext } = require('./spintext')
+const nodemailer = require('nodemailer')
+
+const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
+
+const getMailer = () => nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: process.env.SMTP_SECURE === 'true',
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+})
 
 const calculateSendTime = (dayNumber, sendTime, startDate, timezone) => {
   try {
@@ -35,8 +46,46 @@ const isWithinBusinessHours = (sendTime) => {
 }
 
 const processScheduledMessages = async () => {
+  let messagesSent = 0
+  let errorsCount = 0
+
   try {
-    const now = new Date().toISOString()
+    const now = new Date()
+
+    // Read previous heartbeat, check for gap, send alert if needed
+    const { data: healthRow } = await supabase
+      .from('scheduler_health')
+      .select('last_heartbeat')
+      .eq('id', HEALTH_ID)
+      .single()
+
+    if (healthRow?.last_heartbeat) {
+      const gap = now - new Date(healthRow.last_heartbeat)
+      if (gap > HEALTH_ALERT_THRESHOLD_MS) {
+        const gapMin = Math.round(gap / 60000)
+        const adminEmail = process.env.ADMIN_EMAIL
+        if (adminEmail && process.env.SMTP_HOST) {
+          try {
+            const mailer = getMailer()
+            await mailer.sendMail({
+              from: process.env.SMTP_USER,
+              to: adminEmail,
+              subject: 'TextApp Scheduler Alert — Gap Detected',
+              text: `The scheduler has recovered after a ${gapMin}-minute gap.\n\nLast heartbeat: ${healthRow.last_heartbeat}\nCurrent time: ${now.toISOString()}`
+            })
+          } catch (mailErr) {
+            console.error('Scheduler alert email failed:', mailErr.message)
+          }
+        }
+        console.warn(`Scheduler gap detected: ${gapMin} minutes since last tick`)
+      }
+    }
+
+    // Update heartbeat at start of tick
+    await supabase
+      .from('scheduler_health')
+      .update({ last_heartbeat: now.toISOString(), updated_at: now.toISOString() })
+      .eq('id', HEALTH_ID)
 
     const { data: dueCampaignLeads, error } = await supabase
       .from('campaign_leads')
@@ -46,7 +95,7 @@ const processScheduledMessages = async () => {
         campaigns (id, name, status)
       `)
       .eq('status', 'pending')
-      .lte('next_send_at', now)
+      .lte('next_send_at', now.toISOString())
 
     if (error) throw error
     if (!dueCampaignLeads || dueCampaignLeads.length === 0) return
@@ -120,6 +169,7 @@ const processScheduledMessages = async () => {
       const result = await sendSMS(enrollment.leads.phone, messageBody, fromNumber)
 
       if (result.success) {
+        messagesSent++
         let { data: conversation } = await supabase
           .from('conversations')
           .select('*')
@@ -173,10 +223,23 @@ const processScheduledMessages = async () => {
             .update({ current_step: nextStep, next_send_at: nextSendAt })
             .eq('id', enrollment.id)
         }
+      } else {
+        errorsCount++
       }
     }
+
+    await supabase
+      .from('scheduler_health')
+      .update({ messages_sent_last_run: messagesSent, errors_last_run: errorsCount })
+      .eq('id', HEALTH_ID)
   } catch (err) {
     console.error('Scheduler error:', err.message)
+    errorsCount++
+    await supabase
+      .from('scheduler_health')
+      .update({ errors_last_run: errorsCount })
+      .eq('id', HEALTH_ID)
+      .catch(() => {})
   }
 }
 

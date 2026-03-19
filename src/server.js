@@ -46,6 +46,25 @@ app.get('/health', (req, res) => {
   res.json({ status: 'server is running' })
 })
 
+app.get('/health/scheduler', async (_req, res) => {
+  try {
+    const supabase = require('./db')
+    const { data, error } = await supabase
+      .from('scheduler_health')
+      .select('last_heartbeat, messages_sent_last_run, errors_last_run, updated_at')
+      .eq('id', 'a1b2c3d4-e5f6-7890-abcd-ef1234567890')
+      .single()
+
+    if (error || !data) return res.json({ status: 'unknown', last_heartbeat: null })
+
+    const ageMs = Date.now() - new Date(data.last_heartbeat).getTime()
+    const status = ageMs < 3 * 60 * 1000 ? 'healthy' : 'down'
+    res.json({ status, last_heartbeat: data.last_heartbeat, age_seconds: Math.round(ageMs / 1000), messages_sent_last_run: data.messages_sent_last_run, errors_last_run: data.errors_last_run })
+  } catch (err) {
+    res.json({ status: 'unknown', error: err.message })
+  }
+})
+
 startScheduler()
 
 app.listen(PORT, () => {

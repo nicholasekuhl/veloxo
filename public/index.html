@@ -714,6 +714,11 @@
       <div style="font-size:12px;color:#9ca3af;" id="today-rate-sub">delivery rate today</div>
     </div>
 
+    <div id="scheduler-status-bar" style="background:white;border-radius:12px;padding:12px 18px;border:1px solid #f0f0f0;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      <span id="scheduler-dot" style="width:10px;height:10px;border-radius:50%;background:#d1d5db;flex-shrink:0;"></span>
+      <span id="scheduler-status-text" style="font-size:13px;color:#6b7280;">Checking scheduler...</span>
+    </div>
+
     <div style="background:white;border-radius:16px;padding:24px 28px;border:1px solid #f0f0f0;margin-bottom:20px;display:flex;align-items:center;gap:20px;">
       <div style="font-size:48px;font-weight:800;color:#6366f1;line-height:1;min-width:100px;" id="stats-rate">—</div>
       <div style="width:1px;height:52px;background:#f0f0f0;"></div>
@@ -2521,6 +2526,31 @@ const collectActions = () => {
 
       const noteEl = document.getElementById('stats-callback-note')
       noteEl.style.display = (total > 0 && totals.delivered === 0 && total_failed === 0) ? 'block' : 'none'
+
+      // Scheduler health
+      try {
+        const hRes = await fetch('/health/scheduler')
+        const h = await hRes.json()
+        const dot = document.getElementById('scheduler-dot')
+        const txt = document.getElementById('scheduler-status-text')
+        if (h.status === 'healthy') {
+          dot.style.background = '#059669'
+          const mins = Math.round(h.age_seconds / 60)
+          txt.textContent = `Scheduler running — last tick ${mins === 0 ? 'just now' : `${mins}m ago`}`
+          txt.style.color = '#374151'
+        } else if (h.status === 'down') {
+          dot.style.background = '#dc2626'
+          const mins = Math.round(h.age_seconds / 60)
+          txt.textContent = `Scheduler may be down — last tick ${mins}m ago`
+          txt.style.color = '#dc2626'
+        } else {
+          dot.style.background = '#d1d5db'
+          txt.textContent = 'Scheduler status unknown'
+          txt.style.color = '#6b7280'
+        }
+      } catch {
+        // ignore scheduler health errors
+      }
     } catch (err) {
       console.error('Stats load error:', err)
     }
