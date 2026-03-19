@@ -389,6 +389,7 @@
       <h3>Upload Lead Sheet</h3>
       <p>Click to configure and import, or drag and drop a file here</p>
       <button class="btn btn-primary" onclick="event.stopPropagation(); openUploadModal()">Import Leads</button>
+      <button class="btn btn-secondary" onclick="event.stopPropagation(); openCreateLeadModal()" style="margin-left:8px;">+ Create Lead</button>
       <div class="status-bar" id="status-bar"></div>
     </div>
     <div class="stats">
@@ -400,6 +401,14 @@
     </div>
     <div class="bucket-tabs" id="bucket-tabs">
       <div class="bucket-tab active" onclick="selectBucket('', this)">All Leads</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="bucket-search" placeholder="Search buckets..." oninput="filterBucketTabs()" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none;width:160px;">
+      <div style="position:relative;">
+        <input type="text" id="campaign-quick-input" placeholder="Search campaigns..." oninput="showCampaignDropdown()" autocomplete="off" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none;width:180px;">
+        <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</button>
+        <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
+      </div>
     </div>
     <div class="search-panel" id="search-panel">
       <div class="search-panel-header">
@@ -484,6 +493,12 @@
           <select id="sf-sold">
             <option value="">All</option>
             <option value="true">Sold only</option>
+            <option value="false">Not Sold</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Exclude Dispositions</label>
+          <select id="sf-exclude-disposition" multiple style="height:72px;">
           </select>
         </div>
         <div class="form-group">
@@ -717,24 +732,10 @@
 
             <div class="settings-section-title">Search Available Numbers</div>
             <div class="form-row" style="align-items:flex-end;gap:12px;flex-wrap:wrap;">
-              <div class="form-group" style="flex:1;min-width:140px;margin-bottom:0;">
+              <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;position:relative;">
                 <label>State</label>
-                <select id="pn-search-state">
-                  <option value="">— any —</option>
-                  <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
-                  <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
-                  <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
-                  <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
-                  <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
-                  <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
-                  <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
-                  <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
-                  <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
-                  <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
-                  <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
-                  <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
-                  <option>WI</option><option>WY</option>
-                </select>
+                <input type="text" id="pn-search-state-input" placeholder="Type state name..." autocomplete="off" oninput="filterStateDropdown()" onfocus="filterStateDropdown()" style="width:100%;">
+                <div id="pn-state-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
               </div>
               <div style="font-size:13px;color:#9ca3af;padding-bottom:8px;">or</div>
               <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
@@ -1018,6 +1019,7 @@
   let smsTargetLeadId = null
   let dispositionTargetLeadId = null
   let activeBucket = ''
+  let activeCampaignQuickFilter = ''
   let importFile = null
   let campaignSortKey = 'created_at'
   let campaignSortDir = -1
@@ -1105,6 +1107,10 @@
     if (autopilot === 'true') filtered = filtered.filter(l => l.autopilot === true)
     if (autopilot === 'false') filtered = filtered.filter(l => !l.autopilot)
     if (sold === 'true') filtered = filtered.filter(l => l.is_sold === true)
+    if (sold === 'false') filtered = filtered.filter(l => !l.is_sold)
+    const excludeDispositions = [...(document.getElementById('sf-exclude-disposition')?.selectedOptions || [])].map(o => o.value).filter(Boolean)
+    if (excludeDispositions.length) filtered = filtered.filter(l => !excludeDispositions.includes(l.disposition_tag_id))
+    if (activeCampaignQuickFilter) filtered = filtered.filter(l => l.campaign_tags?.includes(activeCampaignQuickFilter))
     if (dateFrom) filtered = filtered.filter(l => l.created_at && new Date(l.created_at) >= new Date(dateFrom))
     if (dateTo) filtered = filtered.filter(l => l.created_at && new Date(l.created_at) <= new Date(dateTo + 'T23:59:59'))
 
@@ -1123,7 +1129,12 @@
       const el = document.getElementById(id)
       if (el) el.value = ''
     })
+    const excludeEl = document.getElementById('sf-exclude-disposition')
+    if (excludeEl) Array.from(excludeEl.options).forEach(o => o.selected = false)
     activeBucket = ''
+    activeCampaignQuickFilter = ''
+    document.getElementById('campaign-quick-input').value = ''
+    document.getElementById('campaign-clear-btn').style.display = 'none'
     document.querySelectorAll('.bucket-tab').forEach(t => t.classList.remove('active'))
     document.querySelector('.bucket-tab')?.classList.add('active')
     filterLeads()
@@ -1312,6 +1323,10 @@
     const dispEl = document.getElementById('sf-disposition')
     if (dispEl) {
       dispEl.innerHTML = '<option value="">All dispositions</option>' + allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+    }
+    const excludeEl = document.getElementById('sf-exclude-disposition')
+    if (excludeEl) {
+      excludeEl.innerHTML = allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
     }
   }
 
@@ -2424,7 +2439,7 @@ const collectActions = () => {
   }
 
   const searchNumbers = async () => {
-    const state = document.getElementById('pn-search-state').value
+    const state = selectedStateAbbr
     const areaCode = document.getElementById('pn-search-areacode').value.trim()
     if (!state && !areaCode) return alert('Choose a state or enter an area code.')
     const resultsEl = document.getElementById('pn-search-results')
@@ -2432,7 +2447,8 @@ const collectActions = () => {
     resultsEl.innerHTML = `<div style="color:#9ca3af;font-size:13px;">Searching...</div>`
     btn.disabled = true
     try {
-      const params = areaCode ? `area_code=${encodeURIComponent(areaCode)}` : `state=${encodeURIComponent(state)}`
+      if (areaCode) { selectedStateAbbr = ''; document.getElementById('pn-search-state-input').value = '' }
+    const params = areaCode ? `area_code=${encodeURIComponent(areaCode)}` : `state=${encodeURIComponent(state)}`
       const res = await fetch(`/phone-numbers/search?${params}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Search failed')
@@ -2506,6 +2522,151 @@ const collectActions = () => {
       if (!res.ok) throw new Error(data.error || 'Release failed')
       loadPhoneNumbers()
     } catch (err) { alert(err.message) }
+  }
+
+  // STATE TYPEAHEAD (Phone Numbers panel)
+  const US_STATES = [
+    {n:'Alabama',a:'AL'},{n:'Alaska',a:'AK'},{n:'Arizona',a:'AZ'},{n:'Arkansas',a:'AR'},
+    {n:'California',a:'CA'},{n:'Colorado',a:'CO'},{n:'Connecticut',a:'CT'},{n:'Delaware',a:'DE'},
+    {n:'Florida',a:'FL'},{n:'Georgia',a:'GA'},{n:'Hawaii',a:'HI'},{n:'Idaho',a:'ID'},
+    {n:'Illinois',a:'IL'},{n:'Indiana',a:'IN'},{n:'Iowa',a:'IA'},{n:'Kansas',a:'KS'},
+    {n:'Kentucky',a:'KY'},{n:'Louisiana',a:'LA'},{n:'Maine',a:'ME'},{n:'Maryland',a:'MD'},
+    {n:'Massachusetts',a:'MA'},{n:'Michigan',a:'MI'},{n:'Minnesota',a:'MN'},{n:'Mississippi',a:'MS'},
+    {n:'Missouri',a:'MO'},{n:'Montana',a:'MT'},{n:'Nebraska',a:'NE'},{n:'Nevada',a:'NV'},
+    {n:'New Hampshire',a:'NH'},{n:'New Jersey',a:'NJ'},{n:'New Mexico',a:'NM'},{n:'New York',a:'NY'},
+    {n:'North Carolina',a:'NC'},{n:'North Dakota',a:'ND'},{n:'Ohio',a:'OH'},{n:'Oklahoma',a:'OK'},
+    {n:'Oregon',a:'OR'},{n:'Pennsylvania',a:'PA'},{n:'Rhode Island',a:'RI'},{n:'South Carolina',a:'SC'},
+    {n:'South Dakota',a:'SD'},{n:'Tennessee',a:'TN'},{n:'Texas',a:'TX'},{n:'Utah',a:'UT'},
+    {n:'Vermont',a:'VT'},{n:'Virginia',a:'VA'},{n:'Washington',a:'WA'},{n:'West Virginia',a:'WV'},
+    {n:'Wisconsin',a:'WI'},{n:'Wyoming',a:'WY'}
+  ]
+  let selectedStateAbbr = ''
+
+  const filterStateDropdown = () => {
+    const query = (document.getElementById('pn-search-state-input')?.value || '').toLowerCase()
+    const dropdown = document.getElementById('pn-state-dropdown')
+    if (!dropdown) return
+    const matches = query
+      ? US_STATES.filter(s => s.n.toLowerCase().includes(query) || s.a.toLowerCase().startsWith(query))
+      : US_STATES
+    if (!matches.length) { dropdown.style.display = 'none'; return }
+    dropdown.innerHTML = matches.map(s =>
+      `<div onclick="selectState('${s.a}','${s.n}')" style="padding:8px 12px;cursor:pointer;font-size:13px;color:#374151;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">${s.n} <span style="color:#9ca3af;">${s.a}</span></div>`
+    ).join('')
+    dropdown.style.display = 'block'
+  }
+
+  const selectState = (abbr, name) => {
+    selectedStateAbbr = abbr
+    document.getElementById('pn-search-state-input').value = `${name} (${abbr})`
+    document.getElementById('pn-search-areacode').value = ''
+    document.getElementById('pn-state-dropdown').style.display = 'none'
+    searchNumbers()
+  }
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#pn-search-state-input') && !e.target.closest('#pn-state-dropdown')) {
+      const dd = document.getElementById('pn-state-dropdown')
+      if (dd) dd.style.display = 'none'
+    }
+    if (!e.target.closest('#campaign-quick-input') && !e.target.closest('#campaign-quick-dropdown')) {
+      const dd = document.getElementById('campaign-quick-dropdown')
+      if (dd) dd.style.display = 'none'
+    }
+  })
+
+  // BUCKET & CAMPAIGN QUICK FILTERS
+  const filterBucketTabs = () => {
+    const query = (document.getElementById('bucket-search')?.value || '').toLowerCase()
+    document.querySelectorAll('.bucket-tab').forEach(tab => {
+      const text = tab.textContent.toLowerCase()
+      if (text.includes('all leads')) { tab.style.display = ''; return }
+      tab.style.display = query && !text.includes(query) ? 'none' : ''
+    })
+  }
+
+  const showCampaignDropdown = () => {
+    const query = (document.getElementById('campaign-quick-input')?.value || '').toLowerCase()
+    const dropdown = document.getElementById('campaign-quick-dropdown')
+    if (!dropdown) return
+    const allCampaigns = [...new Set(allLeads.flatMap(l => l.campaign_tags || []))].sort()
+    const matches = query ? allCampaigns.filter(c => c.toLowerCase().includes(query)) : allCampaigns
+    if (!matches.length) { dropdown.style.display = 'none'; return }
+    dropdown.innerHTML = matches.map(c =>
+      `<div onclick="selectCampaignFilter('${c.replace(/'/g,"\\'")}','${c.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;font-size:13px;color:#374151;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">${c}</div>`
+    ).join('')
+    dropdown.style.display = 'block'
+  }
+
+  const selectCampaignFilter = (label, value) => {
+    activeCampaignQuickFilter = value
+    document.getElementById('campaign-quick-input').value = label
+    document.getElementById('campaign-clear-btn').style.display = 'block'
+    document.getElementById('campaign-quick-dropdown').style.display = 'none'
+    filterLeads()
+  }
+
+  const clearCampaignQuickFilter = () => {
+    activeCampaignQuickFilter = ''
+    document.getElementById('campaign-quick-input').value = ''
+    document.getElementById('campaign-clear-btn').style.display = 'none'
+    filterLeads()
+  }
+
+  // CREATE LEAD
+  const openCreateLeadModal = () => {
+    document.getElementById('create-lead-modal').classList.add('open')
+    document.getElementById('cl-first').value = ''
+    document.getElementById('cl-last').value = ''
+    document.getElementById('cl-phone').value = ''
+    document.getElementById('cl-email').value = ''
+    document.getElementById('cl-dob').value = ''
+    document.getElementById('cl-state').value = ''
+    document.getElementById('cl-zip').value = ''
+    document.getElementById('cl-plan').value = ''
+    document.getElementById('cl-address').value = ''
+    document.getElementById('cl-notes').value = ''
+    document.getElementById('cl-autopilot').checked = false
+    document.getElementById('cl-error').style.display = 'none'
+  }
+
+  const closeCreateLeadModal = () => document.getElementById('create-lead-modal').classList.remove('open')
+
+  const saveCreateLead = async () => {
+    const phone = document.getElementById('cl-phone').value.trim()
+    if (!phone) { document.getElementById('cl-error').textContent = 'Phone is required.'; document.getElementById('cl-error').style.display = 'block'; return }
+    const body = {
+      first_name: document.getElementById('cl-first').value.trim(),
+      last_name: document.getElementById('cl-last').value.trim(),
+      phone,
+      email: document.getElementById('cl-email').value.trim(),
+      date_of_birth: document.getElementById('cl-dob').value.trim(),
+      state: document.getElementById('cl-state').value,
+      zip_code: document.getElementById('cl-zip').value.trim(),
+      plan_type: document.getElementById('cl-plan').value,
+      address: document.getElementById('cl-address').value.trim(),
+      notes: document.getElementById('cl-notes').value.trim(),
+      autopilot: document.getElementById('cl-autopilot').checked
+    }
+    const btn = document.getElementById('cl-save-btn')
+    btn.disabled = true
+    btn.textContent = 'Saving...'
+    try {
+      const res = await fetch('/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create lead')
+      closeCreateLeadModal()
+      allLeads.unshift(data.lead)
+      updateStats(allLeads)
+      renderBucketTabs()
+      filterLeads()
+    } catch (err) {
+      document.getElementById('cl-error').textContent = err.message
+      document.getElementById('cl-error').style.display = 'block'
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Create Lead'
+    }
   }
 
   // TEAM & INVITES
@@ -3004,6 +3165,70 @@ const collectActions = () => {
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeInviteModal()">Cancel</button>
       <button class="btn btn-primary" id="invite-submit-btn" onclick="sendInvite()">Send Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE LEAD MODAL -->
+<div class="modal-overlay" id="create-lead-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2>Create Lead</h2>
+      <button class="modal-close" onclick="closeCreateLeadModal()">×</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>First Name</label><input type="text" id="cl-first" placeholder="Jane"></div>
+      <div class="form-group"><label>Last Name</label><input type="text" id="cl-last" placeholder="Smith"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Phone <span style="color:#ef4444;">*</span></label><input type="tel" id="cl-phone" placeholder="+15551234567"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="cl-email" placeholder="jane@example.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date of Birth</label><input type="text" id="cl-dob" placeholder="MM/DD/YYYY"></div>
+      <div class="form-group">
+        <label>State</label>
+        <select id="cl-state">
+          <option value="">Select state</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+          <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+          <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+          <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+          <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+          <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+          <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+          <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+          <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+          <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+          <option>WI</option><option>WY</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>ZIP Code</label><input type="text" id="cl-zip" placeholder="33101"></div>
+      <div class="form-group">
+        <label>Plan Type</label>
+        <select id="cl-plan">
+          <option value="">Select plan</option>
+          <option value="ACA">ACA</option>
+          <option value="Medicare">Medicare</option>
+          <option value="Medicaid">Medicaid</option>
+          <option value="Private">Private</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Address</label><input type="text" id="cl-address" placeholder="123 Main St"></div>
+    <div class="form-group"><label>Notes</label><textarea id="cl-notes" rows="2" placeholder="Any notes..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+      <input type="checkbox" id="cl-autopilot" style="width:auto;accent-color:#6366f1;">
+      <label for="cl-autopilot" style="margin:0;cursor:pointer;">Enable Autopilot</label>
+    </div>
+    <div id="cl-error" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeCreateLeadModal()">Cancel</button>
+      <button class="btn btn-primary" id="cl-save-btn" onclick="saveCreateLead()">Create Lead</button>
     </div>
   </div>
 </div>

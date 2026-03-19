@@ -23,6 +23,8 @@
     .toggle-link a { color: #6366f1; cursor: pointer; text-decoration: none; font-weight: 500; }
     .toggle-link a:hover { text-decoration: underline; }
     .hidden { display: none; }
+    .inline-error { color: #dc2626; font-size: 12px; margin-top: 4px; }
+    .success-box { background: #d1fae5; color: #065f46; padding: 16px; border-radius: 8px; font-size: 14px; text-align: center; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -46,19 +48,27 @@
 
     <!-- Create Account form -->
     <div id="signup-form" class="hidden">
-      <div class="form-group">
-        <label>Your Name</label>
-        <input type="text" id="signup-name" placeholder="Nick Kuhl" autocomplete="name">
+      <div id="signup-success" class="success-box hidden"></div>
+      <div id="signup-fields">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="signup-name" placeholder="Nick Kuhl" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input type="password" id="signup-confirm" placeholder="Repeat your password" autocomplete="new-password" oninput="checkPasswordMatch()">
+          <div class="inline-error hidden" id="pwd-mismatch">Passwords do not match</div>
+        </div>
+        <button class="btn" id="signup-btn" onclick="signup()">Create Account</button>
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email">
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="signup-password" placeholder="At least 6 characters" autocomplete="new-password">
-      </div>
-      <button class="btn" id="signup-btn" onclick="signup()">Create Account</button>
     </div>
 
     <div class="toggle-link" id="toggle-login">
@@ -71,6 +81,14 @@
 
   <script>
     fetch('/auth/me').then(r => { if (r.ok) window.location.href = '/' })
+
+    // Show verification error from callback redirect
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('verified') === 'failed') {
+      const errEl = document.getElementById('error-msg')
+      errEl.textContent = 'Email verification failed or link expired. Please try signing up again.'
+      errEl.style.display = 'block'
+    }
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter') {
@@ -128,14 +146,24 @@
       }
     }
 
+    const checkPasswordMatch = () => {
+      const pwd = document.getElementById('signup-password').value
+      const confirm = document.getElementById('signup-confirm').value
+      const mismatch = document.getElementById('pwd-mismatch')
+      if (confirm && pwd !== confirm) mismatch.classList.remove('hidden')
+      else mismatch.classList.add('hidden')
+    }
+
     const signup = async () => {
       const agent_name = document.getElementById('signup-name').value.trim()
       const email = document.getElementById('signup-email').value.trim()
       const password = document.getElementById('signup-password').value
+      const confirm = document.getElementById('signup-confirm').value
       const btn = document.getElementById('signup-btn')
       const errEl = document.getElementById('error-msg')
 
       if (!email || !password) { errEl.textContent = 'Email and password are required.'; errEl.style.display = 'block'; return }
+      if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return }
 
       btn.disabled = true
       btn.textContent = 'Creating account...'
@@ -144,7 +172,13 @@
       try {
         const res = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, agent_name }) })
         const data = await res.json()
-        if (data.success) {
+        if (data.success && data.needsVerification) {
+          document.getElementById('signup-fields').classList.add('hidden')
+          const successEl = document.getElementById('signup-success')
+          successEl.textContent = 'Check your email to verify your account before logging in.'
+          successEl.classList.remove('hidden')
+          document.getElementById('toggle-signup').classList.add('hidden')
+        } else if (data.success) {
           window.location.href = '/'
         } else {
           errEl.textContent = data.error || 'Signup failed.'

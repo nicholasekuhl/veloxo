@@ -77,23 +77,48 @@ const signup = async (req, res) => {
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
     if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' })
 
-    const { data, error } = await supabase.auth.admin.createUser({ email, password, email_confirm: true })
+    const appUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${appUrl}/auth/callback` }
+    })
     if (error) return res.status(400).json({ error: error.message })
 
-    await supabase.from('user_profiles').insert({
-      id: data.user.id,
-      email: data.user.email,
-      agent_name: agent_name || email.split('@')[0]
-    })
+    if (data.user) {
+      await supabase.from('user_profiles').insert({
+        id: data.user.id,
+        email: data.user.email,
+        agent_name: agent_name || email.split('@')[0]
+      })
+    }
 
-    const { data: session, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-    if (signInError) return res.status(500).json({ error: signInError.message })
-
-    res.cookie('session', session.session.access_token, { ...COOKIE_OPTS, maxAge: 60 * 60 * 1000 })
-    res.cookie('refresh', session.session.refresh_token, { ...COOKIE_OPTS, maxAge: 30 * 24 * 60 * 60 * 1000 })
-    res.json({ success: true })
+    res.json({ success: true, needsVerification: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
+  }
+}
+
+const authCallback = async (req, res) => {
+  try {
+    const { token_hash, type, code } = req.query
+    let session = null
+
+    if (token_hash) {
+      const { data, error } = await supabase.auth.verifyOtp({ token_hash, type: type || 'signup' })
+      if (!error && data.session) session = data.session
+    } else if (code) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+      if (!error && data.session) session = data.session
+    }
+
+    if (!session) return res.redirect('/login.html?verified=failed')
+
+    res.cookie('session', session.access_token, { ...COOKIE_OPTS, maxAge: 60 * 60 * 1000 })
+    res.cookie('refresh', session.refresh_token, { ...COOKIE_OPTS, maxAge: 30 * 24 * 60 * 60 * 1000 })
+    res.redirect('/')
+  } catch (err) {
+    res.redirect('/login.html?verified=failed')
   }
 }
 
@@ -219,4 +244,4 @@ const cancelInvite = async (req, res) => {
   }
 }
 
-module.exports = { login, logout, getMe, updateProfile, signup, inviteAgent, validateToken, signupWithToken, getInvites, cancelInvite }
+module.exports = { login, logout, getMe, updateProfile, signup, authCallback, inviteAgent, validateToken, signupWithToken, getInvites, cancelInvite }

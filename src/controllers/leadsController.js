@@ -451,4 +451,40 @@ const getLeadById = async (req, res) => {
   }
 }
 
-module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes }
+const createLead = async (req, res) => {
+  try {
+    const { first_name, last_name, phone, email, date_of_birth, state, zip_code, plan_type, address, notes, autopilot } = req.body
+    if (!phone) return res.status(400).json({ error: 'Phone is required' })
+    const normalizedPhone = normalizePhone(phone)
+    if (!normalizedPhone) return res.status(400).json({ error: 'Invalid phone number format' })
+    const normalizedState = state ? normalizeState(state) : null
+
+    const { data, error } = await supabase
+      .from('leads')
+      .insert({
+        user_id: req.user.id,
+        first_name: first_name || null,
+        last_name: last_name || null,
+        phone: normalizedPhone,
+        email: email || null,
+        date_of_birth: date_of_birth ? normalizeDOB(date_of_birth) : null,
+        state: normalizedState,
+        zip_code: zip_code || null,
+        plan_type: plan_type || null,
+        address: address || null,
+        notes: notes || null,
+        autopilot: autopilot === true || autopilot === 'true',
+        status: 'new',
+        timezone: normalizedState ? getTimezone(normalizedState) : 'America/New_York'
+      })
+      .select()
+      .single()
+
+    if (error) return res.status(400).json({ error: error.message })
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead }
