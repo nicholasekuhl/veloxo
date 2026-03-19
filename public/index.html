@@ -459,7 +459,10 @@
     <div id="onboarding-checklist" style="display:none;">
       <div class="checklist-card">
         <div class="checklist-header">
-          <h3>🚀 Get started — complete your setup</h3>
+          <div>
+            <h3>Get started with TextApp</h3>
+            <div style="font-size:13px;color:#9ca3af;margin-top:2px;">Complete these steps to start texting leads</div>
+          </div>
           <button class="checklist-dismiss" onclick="dismissChecklist()">Dismiss</button>
         </div>
         <div class="checklist-progress"><div class="checklist-progress-bar" id="checklist-bar" style="width:0%"></div></div>
@@ -681,6 +684,13 @@
       </div>
     </div>
 
+    <div id="stats-empty" style="display:none;text-align:center;padding:72px 20px;">
+      <div style="font-size:40px;margin-bottom:14px;">📊</div>
+      <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No message data yet</div>
+      <div style="font-size:13px;color:#9ca3af;">Stats will appear here once you start sending messages.</div>
+    </div>
+
+    <div id="stats-content">
     <div class="stats" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
       <div class="stat-card" style="border-left:3px solid #6366f1;">
         <div class="num" id="stats-total">—</div>
@@ -747,6 +757,7 @@
     <div id="stats-callback-note" style="display:none;background:#fef3c7;border-radius:12px;padding:14px 18px;font-size:13px;color:#92400e;border:1px solid #fde68a;">
       <strong>Set up delivery tracking:</strong> Add <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">/messages/status-callback</code> as the Status Callback URL on your Twilio phone number, or set <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">STATUS_CALLBACK_URL=https://yourdomain.com/messages/status-callback</code> in your <code style="background:#fde68a;padding:1px 5px;border-radius:4px;">.env</code>. Without this, messages stay as "Pending."
     </div>
+    </div><!-- end stats-content -->
   </div>
 
   <!-- CALENDAR PAGE -->
@@ -1427,7 +1438,16 @@
   const renderLeads = (leads) => {
     const grid = document.getElementById('leads-grid')
     if (!leads.length) {
-      grid.innerHTML = `<div style="text-align:center;padding:60px;color:#d1d5db;"><div style="font-size:32px;margin-bottom:8px;">👥</div><div>No leads found</div></div>`
+      if (!allLeads.length) {
+        grid.innerHTML = `<div style="text-align:center;padding:72px 20px;">
+          <div style="font-size:40px;margin-bottom:14px;">👥</div>
+          <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No leads yet</div>
+          <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Import a CSV file or create a lead manually to get started.</div>
+          <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="openUploadModal()">Import Leads</button>
+        </div>`
+      } else {
+        grid.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#d1d5db;"><div style="font-size:28px;margin-bottom:8px;">🔍</div><div style="font-size:14px;">No leads match your filters</div></div>`
+      }
       return
     }
     grid.innerHTML = leads.map(lead => {
@@ -2049,7 +2069,18 @@ const collectActions = () => {
 
   const renderConversationList = (convs) => {
     const list = document.getElementById('conv-list')
-    if (!convs.length) { list.innerHTML = `<div style="padding:32px;text-align:center;color:#d1d5db;font-size:13px;">No conversations</div>`; return }
+    if (!convs.length) {
+      if (!allConversations.length) {
+        list.innerHTML = `<div style="padding:40px 20px;text-align:center;">
+          <div style="font-size:32px;margin-bottom:10px;">💬</div>
+          <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;">No conversations yet</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.5;">Conversations appear here when leads reply to your messages.</div>
+        </div>`
+      } else {
+        list.innerHTML = `<div style="padding:32px;text-align:center;color:#d1d5db;font-size:13px;">No conversations match</div>`
+      }
+      return
+    }
     list.innerHTML = convs.map(c => {
       const lead = allLeads.find(l => l.id === c.lead_id)
       const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ') : 'Unknown'
@@ -2301,7 +2332,17 @@ const collectActions = () => {
       return av < bv ? -campaignSortDir : av > bv ? campaignSortDir : 0
     })
     const tbody = document.getElementById('campaigns-tbody')
-    if (!sorted.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:48px;color:#d1d5db;">No campaigns yet</td></tr>`; return }
+    if (!sorted.length) {
+      tbody.innerHTML = `<tr><td colspan="7">
+        <div style="text-align:center;padding:72px 20px;">
+          <div style="font-size:40px;margin-bottom:14px;">📋</div>
+          <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No campaigns yet</div>
+          <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Create a drip campaign to automatically follow up with leads over time.</div>
+          <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="openCreateCampaignModal()">Create Campaign</button>
+        </div>
+      </td></tr>`
+      return
+    }
     tbody.innerHTML = sorted.map((c, idx) => {
       const total = c.campaign_leads?.length || 0
       const completed = c.campaign_leads?.filter(l => l.status === 'completed').length || 0
@@ -2486,6 +2527,16 @@ const collectActions = () => {
 
       const { total, totals, delivery_rate, total_failed, error_breakdown, today } = data
 
+      const statsEmpty = document.getElementById('stats-empty')
+      const statsContent = document.getElementById('stats-content')
+      if (total === 0 && (!today || today.total === 0)) {
+        statsEmpty.style.display = 'block'
+        statsContent.style.display = 'none'
+      } else {
+        statsEmpty.style.display = 'none'
+        statsContent.style.display = 'block'
+      }
+
       if (today) {
         document.getElementById('today-total').textContent = today.total
         document.getElementById('today-delivered').textContent = today.delivered
@@ -2604,7 +2655,18 @@ const collectActions = () => {
     })
     document.getElementById('today-count').textContent = todays.length
     const container = document.getElementById('today-appts')
-    if (!todays.length) { container.innerHTML = `<div style="color:#d1d5db;font-size:13px;">No calls scheduled for today</div>`; return }
+    if (!todays.length) {
+      if (!allAppointments.length) {
+        container.innerHTML = `<div style="text-align:center;padding:40px 20px;">
+          <div style="font-size:36px;margin-bottom:12px;">📅</div>
+          <div style="font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">No appointments scheduled</div>
+          <div style="font-size:13px;color:#9ca3af;">Appointments are created automatically when the AI books a call with a lead.</div>
+        </div>`
+      } else {
+        container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:12px 0;">No calls scheduled for today</div>`
+      }
+      return
+    }
     container.innerHTML = todays.map(a => renderApptCard(a)).join('')
   }
 
@@ -2657,7 +2719,7 @@ const collectActions = () => {
     const label = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
     document.getElementById('day-view-label').textContent = label
     const container = document.getElementById('day-appts')
-    if (!dayAppts.length) { container.innerHTML = `<div style="color:#d1d5db;font-size:13px;">No appointments this day</div>`; return }
+    if (!dayAppts.length) { container.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No appointments this day</div>`; return }
     container.innerHTML = dayAppts.map(a => renderApptCard(a)).join('')
   }
 
@@ -2757,7 +2819,12 @@ const collectActions = () => {
     const container = document.getElementById('phone-numbers-list')
     if (!container) return
     if (!allPhoneNumbers.length) {
-      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No phone numbers yet. Search above to purchase one.</div>`
+      container.innerHTML = `<div style="text-align:center;padding:48px 20px;">
+        <div style="font-size:36px;margin-bottom:12px;">📱</div>
+        <div style="font-size:15px;font-weight:600;color:#1a1a2e;margin-bottom:4px;">No phone numbers yet</div>
+        <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;">Search for and purchase a number to start sending texts.</div>
+        <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('pn-area-code').focus()">Search Numbers</button>
+      </div>`
       return
     }
     const stateColors = { FL:'#3b82f6', TX:'#ef4444', CA:'#f97316', NY:'#8b5cf6', GA:'#22c55e', OH:'#eab308', PA:'#14b8a6', NC:'#ec4899', MI:'#6366f1', AZ:'#64748b' }
@@ -3358,24 +3425,22 @@ const collectActions = () => {
         profile: !!(profile.agent_name && profile.agency_name),
         phone: (pnData.phone_numbers || []).length > 0,
         campaign: (campData.campaigns || []).length > 0,
-        leads: allLeads.length > 0,
-        notifications: !!profile.personal_phone
+        leads: allLeads.length > 0
       }
       const done = Object.values(checks).filter(Boolean).length
-      if (done === 5) return  // All complete — hide permanently
+      if (done === 4) return  // All complete — hide permanently
       renderChecklist(checks, done)
     } catch (err) { console.error('Checklist error:', err) }
   }
 
   const renderChecklist = (checks, done) => {
     const steps = [
-      { key: 'profile', label: 'Complete your profile', sub: 'Agent name and agency name filled in', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
-      { key: 'phone', label: 'Add a phone number', sub: 'Purchase a Twilio number to send messages', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
-      { key: 'campaign', label: 'Create your first campaign', sub: 'Set up an automated drip sequence', action: () => showPage('campaigns', document.querySelectorAll('.nav-btn')[2]), actionText: 'Go to Campaigns →' },
-      { key: 'leads', label: 'Import your first leads', sub: 'Upload a CSV or Excel file', action: () => document.getElementById('drop-zone').click(), actionText: 'Import now →' },
-      { key: 'notifications', label: 'Set up notifications', sub: 'Add your personal phone to receive SMS alerts when leads reply', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' }
+      { key: 'profile', label: 'Complete your profile', sub: 'Add your name and agency — Settings → Account', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
+      { key: 'phone', label: 'Add a phone number', sub: 'Purchase a number to send and receive texts', action: () => showPage('settings', document.querySelector('.nav-btn:last-child')), actionText: 'Go to Settings →' },
+      { key: 'campaign', label: 'Create your first campaign', sub: 'Write your drip message sequence', action: () => showPage('campaigns', document.querySelectorAll('.nav-btn')[2]), actionText: 'Go to Campaigns →' },
+      { key: 'leads', label: 'Import your first leads', sub: 'Upload a CSV or Excel file', action: () => document.getElementById('drop-zone').click(), actionText: 'Import now →' }
     ]
-    const pct = Math.round((done / 5) * 100)
+    const pct = Math.round((done / 4) * 100)
     document.getElementById('checklist-bar').style.width = `${pct}%`
     document.getElementById('checklist-steps').innerHTML = steps.map(s => `
       <div class="checklist-step ${checks[s.key] ? 'done' : ''}" onclick="${checks[s.key] ? '' : `(${s.action.toString()})()`}">
