@@ -1422,7 +1422,7 @@
               </label>
               <div>
                 <div style="font-size:13px;font-weight:500;color:#374151;">Text me when a lead replies</div>
-                <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Forwards lead messages to your personal cell from +1 (561) 652-6496. Save that number as TextApp Alerts.</div>
+                <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Lead replies will be forwarded to your personal cell from your TextApp number.</div>
               </div>
             </div>
             <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
@@ -1460,7 +1460,7 @@
     <input type="file" id="modal-file-input" accept=".csv,.xlsx,.xls">
     <div class="form-group">
       <label>Bucket Name (required)</label>
-      <input type="text" id="import-bucket" placeholder="e.g. Dynasty Batch - March 16">
+      <input type="text" id="import-bucket" placeholder="e.g. Lead Vendor - March 16">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -3588,7 +3588,7 @@ const collectActions = () => {
     step.innerHTML = `
       <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
       <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${messageStepCount === 1 ? 1 : messageStepCount * 3}"><label>at</label><input type="time" class="step-time" value="10:00"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
-      <textarea class="step-body" placeholder="Hi [First Name], this is Nick with Coverage by Kuhl..." rows="3" oninput="updateCharCount(this)"></textarea>
+      <textarea class="step-body" placeholder="Hi [First Name], this is [Your Name] with [Your Agency]..." rows="3" oninput="updateCharCount(this)"></textarea>
       <div class="char-count">0 / 160</div>
     `
     container.appendChild(step)
@@ -4699,7 +4699,7 @@ const collectActions = () => {
     const customFooter = document.getElementById('compliance-footer').value.trim()
     const agencyName = document.getElementById('profile-agency-name').value.trim()
     const footer = customFooter || (agencyName ? `Reply STOP to opt out. ${agencyName}` : 'Reply STOP to opt out.')
-    const sampleMsg = `Hi there! This is Nick with Coverage by Kuhl. I saw you were exploring health insurance options and I'd love to help you find the right plan for your needs and budget. Do you have a few minutes to connect?`
+    const sampleMsg = `Hi there! This is [Your Name] with [Your Agency]. I saw you were looking for coverage and I'd love to help find the right option for you. Do you have a few minutes to connect?`
     previewEl.textContent = enabled ? `${sampleMsg}\n${footer}` : sampleMsg
   }
 

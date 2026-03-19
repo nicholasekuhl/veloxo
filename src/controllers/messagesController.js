@@ -5,7 +5,7 @@ const { spintext } = require('../spintext')
 
 const getInitialMessage = (lead) => {
   const firstName = lead.first_name || 'there'
-  return `Hi ${firstName}! This is Nick with Coverage by Kuhl. I saw you were exploring health insurance options and I'd love to help you find the right plan for your needs and budget. Do you have a few minutes to connect?`
+  return `Hi ${firstName}! I saw you were exploring your options and I'd love to help find the right fit for your needs and budget. Do you have a few minutes to connect?`
 }
 
 const getUserFromNumber = async (userId) => {
