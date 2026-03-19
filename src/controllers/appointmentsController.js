@@ -60,6 +60,16 @@ const createAppointment = async (req, res) => {
       .select()
       .single()
     if (error) throw error
+
+    // Upgrade lead status to booked (never downgrade from sold)
+    if (data && lead_id) {
+      const { data: leadRow } = await supabase.from('leads').select('status').eq('id', lead_id).single()
+      const STATUS_PRIORITY = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
+      if (leadRow && (STATUS_PRIORITY[leadRow.status] ?? 0) < STATUS_PRIORITY.booked) {
+        await supabase.from('leads').update({ status: 'booked', updated_at: new Date().toISOString() }).eq('id', lead_id)
+      }
+    }
+
     res.json({ success: true, appointment: data })
   } catch (err) {
     res.status(500).json({ error: err.message })

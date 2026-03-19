@@ -6,6 +6,7 @@
   <title>TextApp</title>
   <script src="/toast.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
@@ -524,6 +525,12 @@
     .lead-qa-btn.qa-note:hover .qa-label { color: #d97706; }
     .lead-qa-btn.qa-profile:hover { background: #f9fafb; }
     .lead-qa-btn.qa-profile:hover .qa-label { color: #374151; }
+    .lead-qa-btn.qa-sold:hover { background: #ecfdf5; }
+    .lead-qa-btn.qa-sold:hover .qa-label { color: #059669; }
+    .lead-qa-btn.qa-unsold:hover { background: #f9fafb; }
+    .lead-qa-btn.qa-unsold:hover .qa-label { color: #9ca3af; }
+    .sold-badge { display:inline-flex;align-items:center;gap:3px;background:#d1fae5;color:#065f46;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:0.03em; }
+    .sold-info { font-size:11px;color:#059669;font-weight:500;margin-top:2px; }
     .qa-sep { width: 1px; background: #f0f0f0; align-self: stretch; flex-shrink: 0; }
     /* Inline note editor */
     .lead-qa-note-editor { display: none; padding: 10px 14px 12px; background: #fffbeb; border-top: 1px solid #fde68a; margin: 0 -22px; }
@@ -700,7 +707,7 @@
 
       /* Analytics */
       #an-metric-grid { grid-template-columns: repeat(2, 1fr) !important; }
-      #an-charts-row, #an-bottom-row { grid-template-columns: 1fr !important; }
+      #an-charts-row, #an-bottom-row, #an-feed-row { grid-template-columns: 1fr !important; }
 
       /* Notification panel */
       .notif-panel { width: calc(100vw - 28px); right: -4px; max-height: 70vh; }
@@ -829,11 +836,13 @@
         <div class="form-group">
           <label>Status</label>
           <select id="sf-status">
-            <option value="">All statuses</option>
+            <option value="">All Statuses</option>
             <option value="new">New</option>
             <option value="contacted">Contacted</option>
+            <option value="replied">Replied</option>
             <option value="booked">Booked</option>
-            <option value="opted_out">Opted out</option>
+            <option value="sold">Sold</option>
+            <option value="cold">Cold</option>
           </select>
         </div>
         <div class="form-group">
@@ -1060,6 +1069,16 @@
         <div class="lbl">Active Campaigns</div>
         <div id="an-campaigns-sub" style="font-size:11px;color:#9ca3af;margin-top:3px;"></div>
       </div>
+      <div class="stat-card" style="border-left:3px solid #10b981;">
+        <div class="num" style="color:#059669;" id="an-total-sold"><span class="skeleton" style="width:36px;height:28px;"></span></div>
+        <div class="lbl">Total Sold</div>
+        <div id="an-total-sold-sub" style="font-size:11px;color:#9ca3af;margin-top:3px;"></div>
+      </div>
+      <div class="stat-card" style="border-left:3px solid #f59e0b;">
+        <div class="num" style="color:#d97706;" id="an-monthly-premium"><span class="skeleton" style="width:64px;height:28px;"></span></div>
+        <div class="lbl">Premium This Month</div>
+        <div id="an-monthly-premium-sub" style="font-size:11px;color:#9ca3af;margin-top:3px;"></div>
+      </div>
     </div>
 
     <!-- Message volume chart + Lead funnel -->
@@ -1106,11 +1125,22 @@
       </div>
     </div>
 
-    <!-- Activity feed -->
-    <div style="background:white;border-radius:16px;border:1px solid #f0f0f0;overflow:hidden;">
-      <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;font-size:15px;font-weight:600;">Recent Activity</div>
-      <div id="an-activity" style="max-height:320px;overflow-y:auto;">
-        <div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>
+    <!-- Activity feed + Recent Sales -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;" id="an-feed-row">
+      <div style="background:white;border-radius:16px;border:1px solid #f0f0f0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;font-size:15px;font-weight:600;">Recent Activity</div>
+        <div id="an-activity" style="max-height:340px;overflow-y:auto;">
+          <div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:16px;border:1px solid #f0f0f0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:15px;font-weight:600;">Recent Sales</div>
+          <span id="an-sold-month-badge" style="font-size:12px;color:#059669;font-weight:600;"></span>
+        </div>
+        <div id="an-sold-list" style="max-height:340px;overflow-y:auto;">
+          <div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1442,6 +1472,35 @@
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeEnrollModal()">Cancel</button>
       <button class="btn btn-primary" onclick="enrollSelectedLeads()">Tag Leads</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARK AS SOLD MODAL -->
+<div class="modal-overlay" id="sold-modal">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="sold-modal-title">Mark as Sold</h2>
+      <button class="modal-close" onclick="document.getElementById('sold-modal').classList.remove('open')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Plan Type</label>
+      <input type="text" id="sold-plan-type" placeholder="e.g. UnitedHealthcare PPO">
+    </div>
+    <div class="form-group">
+      <label>Monthly Premium</label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <input type="number" id="sold-premium" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="sold-notes" placeholder="Any additional details about the sale" rows="3" style="resize:none;width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.2s;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('sold-modal').classList.remove('open')">Cancel</button>
+      <button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="submitMarkSold()">Mark as Sold</button>
     </div>
   </div>
 </div>
@@ -1878,10 +1937,12 @@
               <div class="lead-info">
                 <div class="lead-name">
                   <a href="/lead.html?id=${lead.id}" target="_blank" style="color:inherit;text-decoration:none;cursor:pointer;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='inherit'">${name}</a>
+                  ${lead.is_sold ? '<span class="sold-badge">✓ SOLD</span>' : ''}
                   ${lead.bucket ? `<span class="tag tag-bucket" style="font-size:10px;">${lead.bucket}</span>` : ''}
                   ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
                   ${replyBadge}
                 </div>
+                ${lead.is_sold ? `<div class="sold-info">${lead.sold_at ? 'Sold ' + new Date(lead.sold_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Sold'}${lead.sold_plan_type ? ' · ' + lead.sold_plan_type : ''}${lead.sold_premium ? ' · $' + parseFloat(lead.sold_premium).toFixed(0) + '/mo' : ''}</div>` : ''}
                 <div class="lead-meta">
                   <span>📞 ${lead.phone}</span>
                   ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
@@ -1933,6 +1994,14 @@
             <button class="lead-qa-btn qa-note" onclick="event.stopPropagation();quickNote('${lead.id}')">
               <span class="qa-icon">✏️</span><span class="qa-label">Quick Note</span>
             </button>
+            <div class="qa-sep"></div>
+            ${lead.is_sold
+              ? `<button class="lead-qa-btn qa-unsold" onclick="event.stopPropagation();markUnsold('${lead.id}','${safeName}')">
+                  <span class="qa-icon">↩</span><span class="qa-label">Unsold</span>
+                </button>`
+              : `<button class="lead-qa-btn qa-sold" onclick="event.stopPropagation();openMarkSoldModal('${lead.id}','${safeName}')">
+                  <span class="qa-icon">🎉</span><span class="qa-label">Mark Sold</span>
+                </button>`}
             <div class="qa-sep"></div>
             <a class="lead-qa-btn qa-profile" href="/lead.html?id=${lead.id}" target="_blank" onclick="event.stopPropagation()">
               <span class="qa-icon">👤</span><span class="qa-label">Profile</span>
@@ -2154,6 +2223,63 @@
         toast.success('Disposition applied', tag ? `${tag.name} applied to lead` : 'Disposition updated')
       } else { toast.error('Error', data.error || 'Failed to apply disposition') }
     } catch (err) { toast.error('Error', 'Something went wrong') }
+  }
+
+  // MARK AS SOLD
+  let soldTargetLeadId = null
+  let soldTargetLeadName = ''
+
+  const openMarkSoldModal = (leadId, leadName) => {
+    soldTargetLeadId = leadId
+    soldTargetLeadName = leadName
+    document.getElementById('sold-modal-title').textContent = `Mark ${leadName} as Sold 🎉`
+    document.getElementById('sold-plan-type').value = ''
+    document.getElementById('sold-premium').value = ''
+    document.getElementById('sold-notes').value = ''
+    document.getElementById('sold-modal').classList.add('open')
+    setTimeout(() => document.getElementById('sold-plan-type').focus(), 100)
+  }
+
+  const submitMarkSold = async () => {
+    const planType = document.getElementById('sold-plan-type').value.trim()
+    const premium = parseFloat(document.getElementById('sold-premium').value) || null
+    const notes = document.getElementById('sold-notes').value.trim()
+    try {
+      const res = await fetch(`/leads/${soldTargetLeadId}/sold`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold_plan_type: planType || null, sold_premium: premium, sold_notes: notes || null })
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      document.getElementById('sold-modal').classList.remove('open')
+      const lead = allLeads.find(l => l.id === soldTargetLeadId)
+      if (lead) Object.assign(lead, { is_sold: true, status: 'sold', sold_at: data.lead.sold_at, sold_plan_type: data.lead.sold_plan_type, sold_premium: data.lead.sold_premium })
+      toast.success(`${soldTargetLeadName} marked as sold!`, planType ? `${planType}${premium ? ` — $${premium}/mo` : ''}` : 'Sale recorded')
+      fireConfetti()
+      filterLeads()
+    } catch (err) { toast.error('Error', err.message || 'Could not mark as sold') }
+  }
+
+  const markUnsold = async (leadId, leadName) => {
+    const ok = await confirmModal(`Remove sold status from ${leadName}?`, 'This will restore their previous status. You can mark them as sold again anytime.', 'Remove', true)
+    if (!ok) return
+    try {
+      const res = await fetch(`/leads/${leadId}/unsold`, { method: 'PATCH' })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      const lead = allLeads.find(l => l.id === leadId)
+      if (lead) Object.assign(lead, { is_sold: false, status: data.lead.status, sold_at: null, sold_plan_type: null, sold_premium: null })
+      toast.info('Sold status removed', `${leadName} moved back to ${data.lead.status}`)
+      filterLeads()
+    } catch (err) { toast.error('Error', err.message || 'Could not remove sold status') }
+  }
+
+  const fireConfetti = () => {
+    if (typeof confetti !== 'undefined') {
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#6366f1', '#f59e0b', '#ec4899'] })
+      setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#10b981', '#6366f1'] }), 600)
+    }
   }
 
   // DISPOSITION TAG MANAGEMENT
@@ -3015,6 +3141,9 @@ const collectActions = () => {
               <button class="conv3-icon-btn actions-btn" onclick="toggleActionsMenu(this)" style="font-size:18px;">⋯</button>
               <div class="actions-dropdown down">
                 <button onclick="window.open('/lead.html?id=${lead?.id}','_blank');closeAllMenus()">👤 View full profile</button>
+                ${lead?.is_sold
+                  ? `<button onclick="closeAllMenus();markUnsold('${lead?.id}','${safeName}')">↩ Remove sold status</button>`
+                  : `<button onclick="closeAllMenus();openMarkSoldModal('${lead?.id}','${safeName}')">🎉 Mark as Sold</button>`}
                 ${isBlocked
                   ? `<button onclick="unblockConvLead('${lead?.id}','${conv.id}');closeAllMenus()">✅ Unblock lead</button>`
                   : `<button onclick="blockConvLead('${lead?.id}','${conv.id}');closeAllMenus()">🚫 Block lead</button>`}
@@ -3436,32 +3565,68 @@ const collectActions = () => {
 
   const loadAnalytics = async () => {
     // Reset metric skeletons
-    ;['an-messages-sent','an-delivery-rate','an-reply-rate','an-total-leads','an-sold','an-active-campaigns'].forEach(id => {
+    ;['an-messages-sent','an-delivery-rate','an-reply-rate','an-total-leads','an-sold','an-active-campaigns','an-total-sold','an-monthly-premium'].forEach(id => {
       const el = document.getElementById(id)
       if (el) el.innerHTML = `<span class="skeleton" style="width:48px;height:28px;display:inline-block;"></span>`
     })
     loadSchedulerHealth()
     try {
-      const [ovRes, msgRes, campRes, funnelRes, actRes] = await Promise.all([
+      const [ovRes, msgRes, campRes, funnelRes, actRes, soldRes] = await Promise.all([
         fetch(`/stats/overview?range=${analyticsRange}`),
         fetch(`/stats/messages?range=${analyticsRange}`),
         fetch(`/stats/campaigns`),
         fetch(`/stats/leads`),
         fetch(`/stats/activity?range=${analyticsRange}`),
+        fetch(`/stats/sold`),
       ])
-      const [ov, msg, camp, funnel, act] = await Promise.all([ovRes.json(), msgRes.json(), campRes.json(), funnelRes.json(), actRes.json()])
+      const [ov, msg, camp, funnel, act, sold] = await Promise.all([ovRes.json(), msgRes.json(), campRes.json(), funnelRes.json(), actRes.json(), soldRes.json()])
 
       renderMetrics(ov)
+      renderSoldMetrics(sold)
       renderVolumeChart(msg.daily || [])
       renderFunnel(funnel.funnel)
       anCampData = camp.campaigns || []
       renderAnCampaigns()
       renderHeatmap(msg.heatmap || [])
       renderActivity(act.activity || [])
+      renderSoldList(sold)
     } catch (err) {
       console.error('Analytics load error:', err)
       toast.error('Failed to load analytics', 'Could not fetch analytics data')
     }
+  }
+
+  const renderSoldMetrics = (sold) => {
+    document.getElementById('an-total-sold').textContent = sold.total_sold ?? '—'
+    document.getElementById('an-total-sold-sub').textContent = sold.sold_this_month ? `${sold.sold_this_month} this month` : 'None this month'
+    document.getElementById('an-monthly-premium').textContent = sold.total_premium > 0 ? `$${sold.total_premium.toLocaleString()}/mo` : '—'
+    document.getElementById('an-monthly-premium-sub').textContent = sold.avg_premium ? `avg $${sold.avg_premium}/mo per sale` : 'No premium data yet'
+    const badge = document.getElementById('an-sold-month-badge')
+    if (badge) badge.textContent = sold.sold_this_month ? `${sold.sold_this_month} this month` : ''
+  }
+
+  const renderSoldList = (sold) => {
+    const el = document.getElementById('an-sold-list')
+    if (!el) return
+    if (!sold.recent || !sold.recent.length) {
+      el.innerHTML = `<div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px;">No sales recorded yet</div>`
+      return
+    }
+    el.innerHTML = sold.recent.map(s => {
+      const name = [s.first_name, s.last_name].filter(Boolean).join(' ') || 'Unknown'
+      const date = s.sold_at ? new Date(s.sold_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+      return `<div style="padding:10px 18px;border-bottom:1px solid #f9fafb;display:flex;align-items:center;gap:12px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:#d1fae5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">${(name[0] || '?').toUpperCase()}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:#1a1a2e;">${name}</div>
+          <div style="font-size:11px;color:#9ca3af;">${s.sold_plan_type || 'No plan type'}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:13px;font-weight:700;color:#059669;">${s.sold_premium ? '$' + parseFloat(s.sold_premium).toFixed(0) + '/mo' : '—'}</div>
+          <div style="font-size:11px;color:#9ca3af;">${date}</div>
+        </div>
+      </div>`
+    }).join('')
   }
 
   const renderMetrics = (ov) => {

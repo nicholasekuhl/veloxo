@@ -582,4 +582,70 @@ const unblockLead = async (req, res) => {
   }
 }
 
-module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead, resumeCampaigns, blockLead, unblockLead }
+const markSold = async (req, res) => {
+  try {
+    const { sold_plan_type, sold_premium, sold_notes } = req.body
+    const now = new Date().toISOString()
+
+    const { data: lead, error: fetchErr } = await supabase
+      .from('leads').select('id, first_name, last_name, notes').eq('id', req.params.id).eq('user_id', req.user.id).single()
+    if (fetchErr || !lead) return res.status(404).json({ error: 'Lead not found' })
+
+    const saleParts = ['Marked as sold']
+    if (sold_plan_type) saleParts.push(sold_plan_type)
+    if (sold_premium) saleParts.push(`$${sold_premium}/month`)
+    if (sold_notes) saleParts.push(sold_notes)
+    const saleNote = saleParts.join(' — ')
+    const newNotes = lead.notes ? `${lead.notes}\n${saleNote}` : saleNote
+
+    const { data, error } = await supabase
+      .from('leads')
+      .update({
+        is_sold: true, sold_at: now,
+        sold_plan_type: sold_plan_type || null,
+        sold_premium: sold_premium ? parseFloat(sold_premium) : null,
+        sold_notes: sold_notes || null,
+        status: 'sold', autopilot: false, notes: newNotes, updated_at: now
+      })
+      .eq('id', req.params.id).eq('user_id', req.user.id).select().single()
+    if (error) throw error
+
+    await supabase.from('campaign_leads')
+      .update({ status: 'paused', paused_at: now })
+      .eq('lead_id', req.params.id).in('status', ['pending', 'active'])
+
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const unmarkSold = async (req, res) => {
+  try {
+    const now = new Date().toISOString()
+
+    const { data: lead, error: fetchErr } = await supabase
+      .from('leads').select('id, has_replied, notes').eq('id', req.params.id).eq('user_id', req.user.id).single()
+    if (fetchErr || !lead) return res.status(404).json({ error: 'Lead not found' })
+
+    const newStatus = lead.has_replied ? 'replied' : 'contacted'
+    const unsoldNote = 'Removed sold status'
+    const newNotes = lead.notes ? `${lead.notes}\n${unsoldNote}` : unsoldNote
+
+    const { data, error } = await supabase
+      .from('leads')
+      .update({
+        is_sold: false, sold_at: null,
+        sold_plan_type: null, sold_premium: null, sold_notes: null,
+        status: newStatus, notes: newNotes, updated_at: now
+      })
+      .eq('id', req.params.id).eq('user_id', req.user.id).select().single()
+    if (error) throw error
+
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold }

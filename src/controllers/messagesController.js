@@ -270,6 +270,17 @@ const handleIncomingMessage = async (req, res) => {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversation.id)
 
+    // Upgrade lead status to 'replied' if new or contacted
+    const STATUS_PRIORITY = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
+    if ((STATUS_PRIORITY[lead.status] ?? 0) < STATUS_PRIORITY.replied) {
+      await supabase.from('leads').update({
+        status: 'replied',
+        has_replied: true,
+        updated_at: new Date().toISOString()
+      }).eq('id', lead.id)
+      lead = { ...lead, status: 'replied', has_replied: true }
+    }
+
     // In-app notification
     if (profile?.inapp_notifications_enabled !== false) {
       const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.phone
@@ -385,7 +396,10 @@ const sendManualMessage = async (req, res) => {
       .update({ updated_at: new Date().toISOString() })
       .eq('id', conversation_id)
 
-    const leadUpdates = { status: 'contacted', updated_at: new Date().toISOString() }
+    // Only upgrade status, never downgrade
+    const STATUS_PRIORITY_M = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
+    const leadUpdates = { updated_at: new Date().toISOString() }
+    if ((STATUS_PRIORITY_M[lead.status] ?? 0) < STATUS_PRIORITY_M.contacted) leadUpdates.status = 'contacted'
     if (!lead.first_message_sent) leadUpdates.first_message_sent = true
     await supabase.from('leads').update(leadUpdates).eq('id', lead_id)
 
@@ -451,10 +465,11 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
         updated_at: new Date().toISOString()
       }).eq('id', conversationId)
 
-      await supabase.from('leads').update({
-        autopilot: false,
-        updated_at: new Date().toISOString()
-      }).eq('id', lead.id)
+      // Upgrade to booked status (never downgrade from sold)
+      const STATUS_PRIORITY_B = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
+      const bookedUpdate = { autopilot: false, updated_at: new Date().toISOString() }
+      if ((STATUS_PRIORITY_B[lead.status] ?? 0) < STATUS_PRIORITY_B.booked) bookedUpdate.status = 'booked'
+      await supabase.from('leads').update(bookedUpdate).eq('id', lead.id)
 
       const agentName = profile?.agent_name || 'your agent'
       const confirmText = `Perfect, locked in! ${agentName} will call you ${appointmentData.day_desc} at ${appointmentData.time_desc}. Looking forward to it!`

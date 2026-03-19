@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lead Profile — TextApp</title>
   <script src="/toast.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; color: #1a1a2e; }
@@ -285,9 +286,14 @@
               ${name}
               <span class="tag tag-${lead.status}">${lead.status}</span>
               ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
-              ${lead.is_sold ? '<span class="tag" style="background:#d1fae5;color:#065f46;">✓ Sold</span>' : ''}
+              ${lead.is_sold ? `<span class="tag" style="background:#d1fae5;color:#065f46;font-weight:700;">✓ SOLD</span>` : ''}
               ${lead.is_cold ? '<span class="tag" style="background:#e0e7ff;color:#3730a3;">❄ Cold</span>' : ''}
             </div>
+            ${lead.is_sold ? `
+              <div style="font-size:13px;color:#059669;margin-top:4px;display:flex;align-items:center;gap:10px;">
+                <span>${lead.sold_at ? 'Sold ' + new Date(lead.sold_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Marked as sold'}${lead.sold_plan_type ? ' · ' + lead.sold_plan_type : ''}${lead.sold_premium ? ' · $' + parseFloat(lead.sold_premium).toFixed(0) + '/mo' : ''}</span>
+                <button onclick="removeSoldStatus()" style="font-size:12px;color:#9ca3af;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">Remove sold status</button>
+              </div>` : ''}
             <div class="lead-meta">
               <span>📞 ${lead.phone}</span>
               ${lead.email ? `<span>✉️ ${lead.email}</span>` : ''}
@@ -304,6 +310,9 @@
             <button class="btn btn-call" onclick="callLead()">📞 Call</button>
             <button class="btn btn-disposition" onclick="toggleDispositionPicker()">🏷️ Disposition</button>
             <button class="btn btn-primary" onclick="switchTab('sms')">💬 Send SMS</button>
+            ${lead.is_sold
+              ? `<span style="background:#d1fae5;color:#065f46;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">✓ SOLD</span>`
+              : `<button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="openMarkSoldModal()">🎉 Mark as Sold</button>`}
           </div>
         </div>
 
@@ -1027,7 +1036,86 @@
   }
 
   init()
+
+  const openMarkSoldModal = () => {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Lead'
+    document.getElementById('lp-sold-modal-title').textContent = `Mark ${name} as Sold 🎉`
+    document.getElementById('lp-sold-plan-type').value = ''
+    document.getElementById('lp-sold-premium').value = ''
+    document.getElementById('lp-sold-notes').value = ''
+    document.getElementById('lp-sold-modal').style.display = 'flex'
+    setTimeout(() => document.getElementById('lp-sold-plan-type').focus(), 100)
+  }
+
+  const submitMarkSold = async () => {
+    const planType = document.getElementById('lp-sold-plan-type').value.trim()
+    const premium = parseFloat(document.getElementById('lp-sold-premium').value) || null
+    const notes = document.getElementById('lp-sold-notes').value.trim()
+    try {
+      const res = await fetch(`/leads/${leadId}/sold`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sold_plan_type: planType || null, sold_premium: premium, sold_notes: notes || null })
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      document.getElementById('lp-sold-modal').style.display = 'none'
+      lead = data.lead
+      renderPage()
+      loadConversation(); loadTasks(); loadDispositionHistory(); loadLeadAppointments()
+      const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Lead'
+      toast.success(`${name} marked as sold!`, planType ? `${planType}${premium ? ` — $${premium}/mo` : ''}` : 'Sale recorded')
+      if (typeof confetti !== 'undefined') {
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#10b981', '#6366f1', '#f59e0b', '#ec4899'] })
+        setTimeout(() => confetti({ particleCount: 80, spread: 60, origin: { y: 0.5 }, colors: ['#10b981', '#6366f1'] }), 600)
+      }
+    } catch (err) { toast.error('Error', err.message || 'Could not mark as sold') }
+  }
+
+  const removeSoldStatus = async () => {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Lead'
+    const ok = await confirmModal(`Remove sold status from ${name}?`, 'This will restore their previous status.', 'Remove', true)
+    if (!ok) return
+    try {
+      const res = await fetch(`/leads/${leadId}/unsold`, { method: 'PATCH' })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      lead = data.lead
+      renderPage()
+      loadConversation(); loadTasks(); loadDispositionHistory(); loadLeadAppointments()
+      toast.info('Sold status removed', `${name} moved back to ${data.lead.status}`)
+    } catch (err) { toast.error('Error', err.message || 'Could not remove sold status') }
+  }
 </script>
+
+<!-- MARK AS SOLD MODAL (lead profile) -->
+<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100000;align-items:center;justify-content:center;padding:20px;" id="lp-sold-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:white;border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-size:17px;font-weight:700;" id="lp-sold-modal-title">Mark as Sold</div>
+      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Plan Type</label>
+      <input type="text" id="lp-sold-plan-type" placeholder="e.g. UnitedHealthcare PPO" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Monthly Premium</label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <input type="number" id="lp-sold-premium" placeholder="0.00" step="0.01" min="0" style="width:100%;padding:8px 12px 8px 26px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+      </div>
+    </div>
+    <div style="margin-bottom:20px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Notes</label>
+      <textarea id="lp-sold-notes" placeholder="Any additional details about the sale" rows="3" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:none;outline:none;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#f3f4f6;color:#374151;border:none;">Cancel</button>
+      <button onclick="submitMarkSold()" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#10b981;color:white;border:none;">Mark as Sold</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

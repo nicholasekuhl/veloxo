@@ -6,6 +6,10 @@ const nodemailer = require('nodemailer')
 const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
 
+// Status priority — never downgrade
+const STATUS_PRIORITY = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
+const canUpgrade = (current, target) => (STATUS_PRIORITY[target] ?? -1) > (STATUS_PRIORITY[current] ?? -1)
+
 const getMailer = () => nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: parseInt(process.env.SMTP_PORT || '587'),
@@ -196,7 +200,8 @@ const processScheduledMessages = async () => {
             status: 'sent'
           })
 
-        const leadUpdates = { status: 'contacted', updated_at: new Date().toISOString() }
+        const leadUpdates = { updated_at: new Date().toISOString() }
+        if (canUpgrade(enrollment.leads.status, 'contacted')) leadUpdates.status = 'contacted'
         if (!enrollment.leads.first_message_sent) leadUpdates.first_message_sent = true
         await supabase.from('leads').update(leadUpdates).eq('id', enrollment.leads.id)
         if (!enrollment.leads.first_message_sent) enrollment.leads.first_message_sent = true
@@ -247,6 +252,10 @@ const processScheduledMessages = async () => {
         if (result.success) {
           messagesSent++
           await supabase.from('scheduled_messages').update({ status: 'sent', sent_at: now.toISOString() }).eq('id', sm.id)
+          // Upgrade lead status new → contacted on one-off send
+          if (canUpgrade(sm.leads.status, 'contacted')) {
+            await supabase.from('leads').update({ status: 'contacted', updated_at: now.toISOString() }).eq('id', sm.leads.id)
+          }
           if (sm.conversation_id) {
             await supabase.from('messages').insert({
               conversation_id: sm.conversation_id,

@@ -283,4 +283,35 @@ const getActivityStats = async (req, res) => {
   }
 }
 
-module.exports = { getDeliveryStats, getOverview, getMessageStats, getCampaignStats, getLeadFunnel, getActivityStats }
+const getSoldStats = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const { data: sold, error } = await supabase
+      .from('leads')
+      .select('id, first_name, last_name, sold_at, sold_plan_type, sold_premium, sold_notes')
+      .eq('user_id', userId)
+      .eq('is_sold', true)
+      .order('sold_at', { ascending: false })
+    if (error) throw error
+
+    const now = new Date()
+    const thisMonth = (sold || []).filter(l => {
+      if (!l.sold_at) return false
+      const d = new Date(l.sold_at)
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    })
+    const totalPremium = thisMonth.reduce((s, l) => s + (parseFloat(l.sold_premium) || 0), 0)
+
+    res.json({
+      total_sold: sold?.length || 0,
+      sold_this_month: thisMonth.length,
+      total_premium: Math.round(totalPremium * 100) / 100,
+      avg_premium: thisMonth.length > 0 ? Math.round((totalPremium / thisMonth.length) * 100) / 100 : null,
+      recent: (sold || []).slice(0, 10)
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getDeliveryStats, getOverview, getMessageStats, getCampaignStats, getLeadFunnel, getActivityStats, getSoldStats }
