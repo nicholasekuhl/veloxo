@@ -420,6 +420,25 @@
     .checklist-step .step-action { font-size: 11px; color: #6366f1; }
     .checklist-step.done .step-action { display: none; }
 
+    /* PROFILE DROPDOWN */
+    .profile-menu { position: relative; }
+    .profile-trigger { display: flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 8px; cursor: pointer; border: none; background: none; font-family: inherit; font-size: 13px; color: #374151; font-weight: 500; transition: background 0.15s; white-space: nowrap; }
+    .profile-trigger:hover { background: #f3f4f6; }
+    .profile-trigger-name { color: #374151; }
+    .profile-chevron { font-size: 10px; color: #9ca3af; transition: transform 0.15s; }
+    .profile-menu.open .profile-chevron { transform: rotate(180deg); }
+    .profile-dropdown { position: absolute; top: calc(100% + 6px); right: 0; width: 220px; background: white; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); z-index: 200; overflow: hidden; display: none; }
+    .profile-menu.open .profile-dropdown { display: block; }
+    .profile-dropdown-header { padding: 12px 16px 10px; border-bottom: 1px solid #f0f0f0; }
+    .profile-dropdown-name { font-size: 13px; font-weight: 600; color: #1a1a2e; }
+    .profile-dropdown-email { font-size: 11px; color: #9ca3af; margin-top: 1px; }
+    .profile-dropdown-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 16px; border: none; background: none; font-size: 13px; color: #374151; cursor: pointer; font-family: inherit; text-align: left; transition: background 0.1s; text-decoration: none; }
+    .profile-dropdown-item:hover { background: #f9fafb; color: #1a1a2e; }
+    .profile-dropdown-item.danger { color: #dc2626; }
+    .profile-dropdown-item.danger:hover { background: #fef2f2; }
+    .profile-dropdown-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .profile-dropdown-divider { height: 1px; background: #f0f0f0; margin: 4px 0; }
+
     /* =============================================
        RESPONSIVE — Mobile & Tablet
        ============================================= */
@@ -475,6 +494,8 @@
       .nav { display: none; }
       .hamburger-btn { display: inline-flex; }
       #header-agent-name { display: none; }
+      .profile-trigger-name { display: none; }
+      .profile-dropdown { right: -8px; }
 
       /* Container */
       .container { padding: 14px; max-width: 100%; overflow-x: hidden; }
@@ -584,8 +605,7 @@
     <button class="nav-btn" onclick="showPage('settings', this)">Settings</button>
     <a href="/admin.html" id="admin-nav-link" class="nav-btn" style="display:none;text-decoration:none;">Admin</a>
   </nav>
-  <div class="header-right" style="display:flex;align-items:center;gap:10px;">
-    <span id="header-agent-name" style="font-size:13px;color:#888;"></span>
+  <div class="header-right" style="display:flex;align-items:center;gap:8px;">
     <div class="notif-wrap" id="notif-wrap">
       <button class="btn btn-ghost btn-sm notif-btn" onclick="toggleNotifPanel(event)" title="Notifications">
         🔔<span class="notif-badge" id="notif-badge" style="display:none;">0</span>
@@ -599,7 +619,31 @@
         <div class="notif-footer">Showing last 30 notifications</div>
       </div>
     </div>
-    <button class="btn btn-ghost btn-sm" id="desktop-logout" onclick="logout()">Log out</button>
+    <div class="profile-menu" id="profile-menu">
+      <button class="profile-trigger" onclick="toggleProfileMenu(event)" id="profile-trigger">
+        <span class="profile-trigger-name" id="header-agent-name"></span>
+        <span class="profile-chevron">▼</span>
+      </button>
+      <div class="profile-dropdown" id="profile-dropdown">
+        <div class="profile-dropdown-header">
+          <div class="profile-dropdown-name" id="profile-dropdown-name"></div>
+          <div class="profile-dropdown-email" id="profile-dropdown-email"></div>
+        </div>
+        <button class="profile-dropdown-item" onclick="goToSettings('account'); closeProfileMenu()">
+          <span class="profile-dropdown-icon">👤</span> Profile &amp; Settings
+        </button>
+        <button class="profile-dropdown-item" onclick="goToSettingsNotif(); closeProfileMenu()">
+          <span class="profile-dropdown-icon">🔔</span> Notification Settings
+        </button>
+        <a href="/admin.html" id="profile-admin-link" class="profile-dropdown-item" style="display:none;">
+          <span class="profile-dropdown-icon">🛡️</span> Admin Panel
+        </a>
+        <div class="profile-dropdown-divider"></div>
+        <button class="profile-dropdown-item danger" onclick="logout()">
+          <span class="profile-dropdown-icon">→</span> Log out
+        </button>
+      </div>
+    </div>
     <button class="hamburger-btn" onclick="openNavDrawer()" aria-label="Open menu">☰</button>
   </div>
 </header>
@@ -3387,14 +3431,21 @@ const collectActions = () => {
       if (!res.ok) return
       const data = await res.json()
       const p = data.user
-      document.getElementById('header-agent-name').textContent = p.agent_name || p.email || ''
+      const displayName = p.agent_name || p.email || ''
+      document.getElementById('header-agent-name').textContent = displayName
+      const ddName = document.getElementById('profile-dropdown-name')
+      if (ddName) ddName.textContent = displayName
+      const ddEmail = document.getElementById('profile-dropdown-email')
+      if (ddEmail) ddEmail.textContent = p.email || ''
       const drawerName = document.getElementById('drawer-agent-name')
-      if (drawerName) drawerName.textContent = p.agent_name || p.email || ''
+      if (drawerName) drawerName.textContent = displayName
       if (p.is_admin) {
         const adminLink = document.getElementById('admin-nav-link')
         if (adminLink) adminLink.style.display = 'inline-flex'
         const adminDrawerBtn = document.getElementById('drawer-btn-admin')
         if (adminDrawerBtn) adminDrawerBtn.style.display = 'flex'
+        const profileAdminLink = document.getElementById('profile-admin-link')
+        if (profileAdminLink) profileAdminLink.style.display = 'flex'
       }
       document.getElementById('profile-agent-name').value = p.agent_name || ''
       document.getElementById('profile-agency-name').value = p.agency_name || ''
@@ -3964,6 +4015,29 @@ const collectActions = () => {
     } catch (err) { console.error(err) }
   }
   init()
+
+  // PROFILE DROPDOWN
+  const toggleProfileMenu = (e) => {
+    e.stopPropagation()
+    document.getElementById('profile-menu').classList.toggle('open')
+  }
+  const closeProfileMenu = () => {
+    document.getElementById('profile-menu').classList.remove('open')
+  }
+  const goToSettings = (panel) => {
+    showPage('settings', document.querySelectorAll('.nav-btn')[5])
+    const item = document.querySelector(`.settings-nav-item[onclick*="'${panel}'"]`)
+    showSettingsPanel(panel, item)
+  }
+  const goToSettingsNotif = () => {
+    goToSettings('account')
+    setTimeout(() => {
+      document.querySelector('#panel-account .settings-card:last-of-type')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 100)
+  }
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('profile-menu')?.contains(e.target)) closeProfileMenu()
+  })
 
   // MOBILE NAV DRAWER
   const openNavDrawer = () => {
