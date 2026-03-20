@@ -275,6 +275,43 @@ const copyToClipboard = async (text, btn) => {
   } catch (e) { toast.error('Could not copy', 'Please copy manually') }
 }
 
+// ─── KEYWORD CHIPS ───────────────────────────────────────────────────────────
+
+const insertAtCursor = (textarea, value) => {
+  if (!textarea) return
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const before = textarea.value.substring(0, start)
+  const after = textarea.value.substring(end)
+  textarea.value = before + value + after
+  const newPos = start + value.length
+  textarea.setSelectionRange(newPos, newPos)
+  textarea.focus()
+  textarea.dispatchEvent(new Event('input', { bubbles: true }))
+}
+
+const kwChipFlash = (chip) => {
+  chip.style.background = '#c7d2fe'
+  chip.style.borderColor = '#818cf8'
+  chip.style.color = '#4338ca'
+  setTimeout(() => { chip.style.background = ''; chip.style.borderColor = ''; chip.style.color = '' }, 150)
+}
+
+const KW_CHIPS = [
+  ['First Name', '[First Name]'], ['Last Name', '[Last Name]'], ['Full Name', '[Full Name]'],
+  ['Phone', '[Phone]'], ['Email', '[Email]'], ['State', '[State]'],
+  ['City', '[City]'], ['Zip', '[Zip]'], ['Agent Name', '[Agent Name]'],
+  ['Agency Name', '[Agency Name]'], ['Calendly Link', '[Calendly Link]'],
+  ['Date', '[Date]'], ['Time', '[Time]'],
+]
+
+const kwChipsRowHTML = (taExpr) => {
+  const chips = KW_CHIPS.map(([label, val]) =>
+    `<button type="button" class="kw-chip" onclick="kwChipFlash(this);insertAtCursor(${taExpr},${JSON.stringify(val)})">${label}</button>`
+  ).join('')
+  return `<div class="kw-chips"><span class="kw-chips-label">Insert variable:</span>${chips}</div>`
+}
+
 // ─── CONFETTI ────────────────────────────────────────────────────────────────
 
 const fireConfetti = () => {

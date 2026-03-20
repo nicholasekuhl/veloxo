@@ -87,7 +87,7 @@
       <h2 id="campaign-modal-title">Create Campaign</h2>
       <button class="modal-close" onclick="closeCampaignModal()">×</button>
     </div>
-    <div class="tip">Use <strong>[First Name]</strong> for personalization. Use <strong>{Hi|Hey|Hello}</strong> to randomize phrasing — the scheduler picks one variation per send.</div>
+    <div class="tip">Click any variable below to insert it. Use <strong>{Option 1|Option 2}</strong> to randomize — the scheduler picks one variation per send.</div>
     <div class="form-group">
       <label>Campaign Name</label>
       <input type="text" id="campaign-name" placeholder="e.g. End of Month Push">
@@ -279,6 +279,7 @@
         <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${msg.day_number}"><label>at</label><input type="time" class="step-time" value="${msg.send_time || '10:00'}"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
         <textarea class="step-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
         <div class="char-count">${msg.message_body.length} / 160</div>
+        ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
       `
       container.appendChild(step)
     })
@@ -307,8 +308,9 @@
     step.innerHTML = `
       <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
       <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${messageStepCount === 1 ? 1 : messageStepCount * 3}"><label>at</label><input type="time" class="step-time" value="10:00"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
-      <textarea class="step-body" placeholder="Hi [First Name], this is [Your Name] with [Your Agency]..." rows="3" oninput="updateCharCount(this)"></textarea>
+      <textarea class="step-body" placeholder="Hi [First Name], this is [Agent Name] with [Agency Name]..." rows="3" oninput="updateCharCount(this)"></textarea>
       <div class="char-count">0 / 160</div>
+      ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
     `
     container.appendChild(step)
   }

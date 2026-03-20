@@ -285,7 +285,7 @@
       <button class="btn btn-secondary btn-sm" onclick="addDispMessageStep()">+ Add Message</button>
     </div>
 
-    <div class="tip">Use <strong>[First Name]</strong> for personalization. Use <strong>{Hi|Hey|Hello}</strong> to randomize phrasing — the scheduler picks one variation per send.</div>
+    <div class="tip">Click any variable below to insert it. Use <strong>{Option 1|Option 2}</strong> to randomize — the scheduler picks one variation per send.</div>
     <div id="disp-message-steps"></div>
 
     <div class="modal-footer">
@@ -524,6 +524,7 @@
           </div>
           <textarea class="dstep-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
           <div class="char-count">${msg.message_body.length} / 160</div>
+          ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
         `
         container.appendChild(step)
       })
@@ -546,6 +547,7 @@
       </div>
       <textarea class="dstep-body" placeholder="Hi [First Name], just checking in..." rows="3" oninput="updateCharCount(this)"></textarea>
       <div class="char-count">0 / 160</div>
+      ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
     `
     container.appendChild(step)
   }

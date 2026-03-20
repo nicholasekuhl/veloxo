@@ -163,6 +163,7 @@ input:checked + .toggle-slider:before { transform: translateX(18px); }
 .conv3-updated { font-size: 11px; color: #d1d5db; text-align: right; padding: 2px 14px; flex-shrink: 0; }
 .conv3-input-area { padding: 12px 14px; border-top: 1px solid #f0f0f0; flex-shrink: 0; position: relative; }
 .conv3-textarea { width: 100%; padding: 9px 13px; border: 1px solid #e5e7eb; border-radius: 10px 10px 0 0; border-bottom: none; font-size: 14px; font-family: inherit; resize: none; height: 72px; outline: none; transition: border-color 0.2s; }
+.conv3-input-area .kw-chips { margin-top: 6px; margin-bottom: 6px; }
 .conv3-textarea:focus { border-color: #6366f1; }
 .conv3-input-toolbar { display: flex; align-items: center; gap: 4px; height: 40px; padding: 0 8px; border: 1px solid #e5e7eb; border-top: 1px solid #f0f0f0; border-radius: 0 0 10px 10px; background: #f9fafb; }
 .conv3-itb { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; border: none; background: none; cursor: pointer; color: #6b7280; transition: background 0.1s, color 0.1s; }
@@ -317,6 +318,10 @@ input:checked + .toggle-slider:before { transform: translateX(18px); }
 .char-count { font-size: 11px; color: #d1d5db; text-align: right; margin-top: 3px; }
 .char-count.warning { color: #f59e0b; }
 .char-count.danger { color: #ef4444; }
+.kw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+.kw-chips-label { font-size: 11px; color: #9ca3af; flex-shrink: 0; margin-right: 2px; white-space: nowrap; }
+.kw-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 99px; border: 1px solid #e5e7eb; background: #f9fafb; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; transition: background 100ms, border-color 100ms, color 100ms; }
+.kw-chip:hover { background: #EEF2FF; border-color: #818cf8; color: #4338ca; }
 .tip { background: #f5f3ff; border-left: 3px solid #8b5cf6; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: #6d28d9; margin-bottom: 16px; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f9fafb; }
 .checkbox-row input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; accent-color: #6366f1; }
