@@ -409,6 +409,7 @@
 <script>
   let allDispositionTags = []
   let allCampaigns = []
+  let allBuckets = []
   let allTemplates = []
   let allPhoneNumbers = []
   let editingDispositionId = null
@@ -433,7 +434,8 @@
     { value: 'update_status', label: 'Update lead status' },
     { value: 'mark_as_sold', label: 'Mark as sold' },
     { value: 'flag_as_cold', label: 'Flag as cold' },
-    { value: 'add_note', label: 'Add internal note' }
+    { value: 'add_note', label: 'Add internal note' },
+    { value: 'move_to_bucket', label: 'Move to bucket' }
   ]
 
   // ─── SETTINGS PANEL ──────────────────────────────────────────────────────────
@@ -719,6 +721,16 @@
         `
         break
       }
+      case 'move_to_bucket': {
+        container.innerHTML = `
+          <label>Select Bucket</label>
+          <select id="${rowId}-bucket">
+            <option value="">Choose bucket...</option>
+            ${allBuckets.map(b => `<option value="${b.id}" ${existingValue?.bucket_id === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
+          </select>
+        `
+        break
+      }
       default:
         break
     }
@@ -762,6 +774,11 @@
         case 'remove_disposition_tags': {
           const el = document.getElementById(`${rowId}-remove-tag`)
           actionValue = el?.value ? { tag_ids: [el.value] } : { tag_ids: [] }
+          break
+        }
+        case 'move_to_bucket': {
+          const el = document.getElementById(`${rowId}-bucket`)
+          if (el?.value) actionValue = { bucket_id: el.value }
           break
         }
         default:
@@ -1212,9 +1229,11 @@
     if (!authed) return
 
     try {
-      const res = await fetch('/campaigns')
-      const data = await res.json()
-      allCampaigns = data.campaigns || []
+      const [campRes, bucketsRes] = await Promise.all([fetch('/campaigns'), fetch('/buckets')])
+      const campData = await campRes.json()
+      const bucketsData = await bucketsRes.json()
+      allCampaigns = campData.campaigns || []
+      allBuckets = bucketsData.buckets || []
     } catch (e) {}
 
     await Promise.all([loadDispositionTags(), loadTemplates(), loadProfile()])

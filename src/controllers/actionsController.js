@@ -208,6 +208,17 @@ const executeActions = async (lead, actions, dispositionTagId, profile) => {
           break
         }
 
+        case 'move_to_bucket': {
+          const bucketId = action.action_value?.bucket_id
+          if (bucketId) {
+            await supabase.from('leads').update({
+              bucket_id: bucketId,
+              updated_at: new Date().toISOString()
+            }).eq('id', lead.id)
+          }
+          break
+        }
+
         default:
           console.log(`Unknown action type: ${action.action_type}`)
       }

@@ -70,6 +70,54 @@
       transition: background 0.1s;
     }
     .ami-sub-item:hover { background: #f3f4f6; }
+    .bulk-dd {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 300;
+      min-width: 200px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .bulk-dd-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 8px 8px;
+    }
+    .bulk-dd-pills { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; }
+    .bulk-dd-pill {
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .bulk-dd-pill:hover { opacity: 0.82; transform: scale(1.03); }
+    .bulk-dd-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #374151;
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+    .bulk-dd-item:hover { background: #f9fafb; }
   </style>
   <script src="/toast.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -164,6 +212,7 @@
   <div class="bucket-tabs" id="bucket-tabs">
     <div class="bucket-tab active" onclick="selectBucket('', this)">All Leads</div>
   </div>
+  <div id="sold-commission-banner" style="display:none;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:10px;"></div>
   <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
     <div style="position:relative;">
       <input type="text" id="campaign-quick-input" placeholder="⚡ Filter by campaign..." oninput="showCampaignDropdown()" autocomplete="off" title="Filter by active drip campaign" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none;width:190px;">
@@ -232,7 +281,7 @@
         </div>
       </div>
       <div class="form-group">
-        <label title="Filter by active drip campaign">⚡ Enrolled Campaign</label>
+        <label title="The first campaign this lead was enrolled in — use to compare outreach strategies">📤 Initial Campaign</label>
         <select id="sf-campaign">
           <option value="">All campaigns</option>
         </select>
@@ -292,8 +341,25 @@
   </div>
   <div class="leads-grid" id="leads-grid"></div>
   <div class="bulk-bar" id="bulk-actions">
-    <span id="selected-count"></span>
-    <button class="btn btn-primary btn-sm" onclick="openEnrollModal()">Tag with Campaign</button>
+    <span id="selected-count" style="font-weight:600;font-size:13px;flex-shrink:0;"></span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <div style="position:relative;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-disp-dd','disp')">🏷 Disposition ▾</button>
+        <div id="bulk-disp-dd" class="bulk-dd" style="display:none;"></div>
+      </div>
+      <div style="position:relative;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-camp-dd','campaign')">⚡ Campaign ▾</button>
+        <div id="bulk-camp-dd" class="bulk-dd" style="display:none;"></div>
+      </div>
+      <div style="position:relative;">
+        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')">📁 Bucket ▾</button>
+        <div id="bulk-bucket-dd" class="bulk-dd" style="display:none;"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openBulkSoldModal()">🎉 Mark as Sold</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportSelectedLeads()">⬇ Export CSV</button>
+      <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="openBulkDeleteModal()">🗑 Delete</button>
+      <button class="btn btn-ghost btn-sm" style="color:#9ca3af;" onclick="clearSelection()">✕ Clear</button>
+    </div>
   </div>
 </div>
 
@@ -605,6 +671,51 @@
 <div id="bucket-context-menu" style="display:none;position:fixed;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:140px;overflow:hidden;">
   <button onclick="editBucketFromMenu()" style="display:block;width:100%;padding:9px 16px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#374151;" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background=''">✏️ Rename</button>
   <button onclick="deleteBucketFromMenu()" style="display:block;width:100%;padding:9px 16px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#dc2626;" onmouseenter="this.style.background='#fee2e2'" onmouseleave="this.style.background=''">🗑️ Delete</button>
+</div>
+
+<!-- BULK SOLD MODAL -->
+<div class="modal-overlay" id="bulk-sold-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="bulk-sold-title">Mark as Sold</h2>
+      <button class="modal-close" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">×</button>
+    </div>
+    <div id="bulk-sold-note" style="font-size:13px;color:#6b7280;margin-bottom:16px;background:#f9fafb;border-radius:8px;padding:10px 14px;"></div>
+    <div class="form-group">
+      <label>Product Sold</label>
+      <input type="text" id="bulk-sold-plan" placeholder="e.g. UHC PPO $245/mo, Term Life $500k...">
+    </div>
+    <div class="form-group">
+      <label>Commission per Lead (optional)</label>
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <input type="number" id="bulk-sold-commission" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">Cancel</button>
+      <button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="submitBulkSold()">Mark All as Sold</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK DELETE MODAL -->
+<div class="modal-overlay" id="bulk-delete-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="bulk-delete-title">Delete Leads?</h2>
+      <button class="modal-close" onclick="closeBulkDeleteModal()">×</button>
+    </div>
+    <p id="bulk-delete-body" style="font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.5;"></p>
+    <div class="form-group">
+      <label>Type <strong>DELETE</strong> to confirm</label>
+      <input type="text" id="bulk-delete-input" placeholder="DELETE" oninput="checkBulkDeleteInput()" autocomplete="off">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeBulkDeleteModal()">Cancel</button>
+      <button class="btn" id="bulk-delete-btn" style="background:#ef4444;color:white;font-weight:600;opacity:0.4;cursor:not-allowed;" disabled onclick="confirmBulkDelete()">Permanently Delete</button>
+    </div>
+  </div>
 </div>
 
 <!-- LEAD ACTIONS MENU (global floating) -->

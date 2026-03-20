@@ -68,6 +68,7 @@
     <input type="text" class="campaigns-search" placeholder="Search campaigns..." oninput="filterCampaigns(this.value)">
     <button class="btn btn-primary" onclick="openCreateCampaignModal()">+ New Campaign</button>
   </div>
+  <div style="font-size:13px;color:#6b7280;margin-bottom:14px;">Create multiple campaigns and compare response rates to find the most effective outreach message.</div>
   <div class="table-card">
     <table>
       <thead>
@@ -80,6 +81,7 @@
           <th>Enrolled</th>
           <th>Completed</th>
           <th>Paused</th>
+          <th title="Leads who replied ÷ leads enrolled">Response Rate</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -200,6 +202,7 @@
           <td><div class="skeleton" style="height:13px;width:30px;"></div></td>
           <td><div class="skeleton" style="height:13px;width:30px;"></div></td>
           <td><div class="skeleton" style="height:13px;width:30px;"></div></td>
+          <td><div class="skeleton" style="height:13px;width:40px;"></div></td>
           <td><div class="skeleton" style="height:22px;width:30px;border-radius:6px;"></div></td>
         </tr>`).join('')
     }
@@ -232,7 +235,7 @@
     })
     const tbody = document.getElementById('campaigns-tbody')
     if (!sorted.length) {
-      tbody.innerHTML = `<tr><td colspan="9">
+      tbody.innerHTML = `<tr><td colspan="10">
         <div style="text-align:center;padding:72px 20px;">
           <div style="font-size:40px;margin-bottom:14px;">📋</div>
           <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No campaigns yet</div>
@@ -242,15 +245,29 @@
       </td></tr>`
       return
     }
+    const rateOf = (c) => {
+      const leads = c.campaign_leads || []
+      const enrolled = leads.length
+      if (!enrolled) return -1
+      const replied = leads.filter(l => l.leads?.has_replied).length
+      return replied / enrolled
+    }
+    const bestId = sorted.reduce((best, c) => {
+      const r = rateOf(c)
+      return r > rateOf(best) ? c : best
+    }, sorted[0]).id
     tbody.innerHTML = sorted.map((c, idx) => {
       const leads = c.campaign_leads || []
       const enrolled = leads.length
       const completed = leads.filter(l => l.status === 'completed').length
       const paused = leads.filter(l => l.status === 'paused').length
+      const replied = leads.filter(l => l.leads?.has_replied).length
+      const responseRate = enrolled > 0 ? Math.round((replied / enrolled) * 100) : null
+      const isBest = c.id === bestId && responseRate !== null && responseRate > 0 && sorted.length > 1
       const steps = c.campaign_messages?.length || 0
       const isLast = idx >= sorted.length - 2
       return `<tr>
-        <td><div class="campaign-name-cell">${c.name}</div>${c.description ? `<div class="campaign-desc">${c.description}</div>` : ''}</td>
+        <td><div class="campaign-name-cell">${c.name}${isBest ? ' <span title="Highest response rate" style="font-size:13px;">⭐</span>' : ''}</div>${c.description ? `<div class="campaign-desc">${c.description}</div>` : ''}</td>
         <td><span class="type-label">Workflow</span><span class="drip-badge">Drip</span></td>
         <td style="color:#6b7280;font-size:13px;">${formatDate(c.created_at)}</td>
         <td style="color:#6b7280;font-size:13px;">${steps} msg${steps !== 1 ? 's' : ''}</td>
@@ -258,6 +275,7 @@
         <td style="font-size:13px;font-weight:600;color:#1a1a2e;">${enrolled}</td>
         <td style="font-size:13px;color:#059669;font-weight:600;">${completed}</td>
         <td style="font-size:13px;color:#d97706;font-weight:600;">${paused}</td>
+        <td style="font-size:13px;font-weight:600;color:${responseRate !== null && responseRate > 0 ? '#059669' : '#9ca3af'};">${responseRate !== null ? `${responseRate}%` : '—'}</td>
         <td>
           <div class="actions-menu">
             <button class="actions-btn" onclick="toggleActionsMenu('menu-${c.id}', ${isLast})">⋯</button>

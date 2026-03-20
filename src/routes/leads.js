@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled } = require('../controllers/leadsController')
+const { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction } = require('../controllers/leadsController')
 const storage = multer.memoryStorage()
 const upload = multer({
   storage,
@@ -22,6 +22,7 @@ const upload = multer({
 router.get('/', getLeads)
 router.get('/buckets', getBuckets)
 router.get('/export', exportLeads)
+router.post('/bulk', bulkAction)
 router.post('/', createLead)
 router.post('/upload', upload.single('file'), uploadLeads)
 router.patch('/:id/product', updateProduct)

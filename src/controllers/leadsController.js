@@ -331,7 +331,7 @@ const getLeads = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('leads')
-      .select('*')
+      .select('*, campaign_leads(status)')
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -581,14 +581,26 @@ const unblockLead = async (req, res) => {
   }
 }
 
+const getOrCreateSoldBucket = async (userId) => {
+  const { data: existing } = await supabase
+    .from('buckets').select('id').eq('user_id', userId).eq('is_system', true).single()
+  if (existing) return existing.id
+  const { data: created } = await supabase
+    .from('buckets').insert({ user_id: userId, name: 'Sold', color: '#22c55e', is_system: true })
+    .select('id').single()
+  return created?.id || null
+}
+
 const markSold = async (req, res) => {
   try {
     const { sold_plan_type, sold_premium, sold_notes, commission } = req.body
     const now = new Date().toISOString()
 
     const { data: lead, error: fetchErr } = await supabase
-      .from('leads').select('id, first_name, last_name, notes').eq('id', req.params.id).eq('user_id', req.user.id).single()
+      .from('leads').select('id, first_name, last_name, notes, bucket_id').eq('id', req.params.id).eq('user_id', req.user.id).single()
     if (fetchErr || !lead) return res.status(404).json({ error: 'Lead not found' })
+
+    const soldBucketId = await getOrCreateSoldBucket(req.user.id)
 
     const saleParts = ['Marked as sold']
     if (sold_plan_type) saleParts.push(sold_plan_type)
@@ -607,7 +619,9 @@ const markSold = async (req, res) => {
         sold_notes: sold_notes || null,
         commission: commission ? parseFloat(commission) : null,
         commission_status: 'pending',
-        status: 'sold', autopilot: false, notes: newNotes, updated_at: now
+        status: 'sold', autopilot: false, notes: newNotes, updated_at: now,
+        bucket_id: soldBucketId,
+        previous_bucket_id: lead.bucket_id !== soldBucketId ? lead.bucket_id : null
       })
       .eq('id', req.params.id).eq('user_id', req.user.id).select().single()
     if (error) throw error
@@ -627,7 +641,7 @@ const unmarkSold = async (req, res) => {
     const now = new Date().toISOString()
 
     const { data: lead, error: fetchErr } = await supabase
-      .from('leads').select('id, has_replied, notes').eq('id', req.params.id).eq('user_id', req.user.id).single()
+      .from('leads').select('id, has_replied, notes, previous_bucket_id').eq('id', req.params.id).eq('user_id', req.user.id).single()
     if (fetchErr || !lead) return res.status(404).json({ error: 'Lead not found' })
 
     const newStatus = lead.has_replied ? 'replied' : 'contacted'
@@ -640,7 +654,9 @@ const unmarkSold = async (req, res) => {
         is_sold: false, sold_at: null,
         sold_plan_type: null, sold_premium: null, sold_notes: null,
         commission: null, commission_status: null, commission_paid_at: null,
-        status: newStatus, notes: newNotes, updated_at: now
+        status: newStatus, notes: newNotes, updated_at: now,
+        bucket_id: lead.previous_bucket_id || null,
+        previous_bucket_id: null
       })
       .eq('id', req.params.id).eq('user_id', req.user.id).select().single()
     if (error) throw error
@@ -693,6 +709,107 @@ const updateLeadBucket = async (req, res) => {
       .select().single()
     if (error) throw error
     res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const bulkAction = async (req, res) => {
+  try {
+    const { lead_ids, action, payload = {} } = req.body
+    if (!Array.isArray(lead_ids) || !lead_ids.length) {
+      return res.status(400).json({ error: 'No leads specified' })
+    }
+    const userId = req.user.id
+    const now = new Date().toISOString()
+
+    // Verify all leads belong to this user
+    const { data: owned, error: verifyErr } = await supabase
+      .from('leads').select('id, bucket_id').eq('user_id', userId).in('id', lead_ids)
+    if (verifyErr) throw verifyErr
+    const validIds = owned.map(l => l.id)
+    if (!validIds.length) return res.status(403).json({ error: 'No valid leads found' })
+
+    if (action === 'disposition') {
+      const { disposition_id } = payload
+      if (!disposition_id) return res.status(400).json({ error: 'disposition_id required' })
+      await supabase.from('leads')
+        .update({ disposition_tag_id: disposition_id, updated_at: now })
+        .in('id', validIds)
+      const historyRows = validIds.map(id => ({ lead_id: id, user_id: userId, disposition_tag_id: disposition_id, applied_at: now }))
+      await supabase.from('lead_dispositions').insert(historyRows)
+      return res.json({ success: true, affected: validIds.length })
+    }
+
+    if (action === 'campaign') {
+      const { campaign_id, start_date } = payload
+      if (!campaign_id) return res.status(400).json({ error: 'campaign_id required' })
+      const { data: existing } = await supabase
+        .from('campaign_leads').select('lead_id')
+        .eq('campaign_id', campaign_id).in('lead_id', validIds).in('status', ['pending', 'active'])
+      const existingSet = new Set((existing || []).map(r => r.lead_id))
+      const toEnroll = validIds.filter(id => !existingSet.has(id))
+      if (toEnroll.length) {
+        const enrollRows = toEnroll.map(leadId => ({
+          lead_id: leadId, campaign_id, user_id: userId,
+          status: 'pending', enrolled_at: now,
+          next_send_at: start_date || now
+        }))
+        await supabase.from('campaign_leads').insert(enrollRows)
+      }
+      return res.json({ success: true, affected: toEnroll.length, skipped: validIds.length - toEnroll.length })
+    }
+
+    if (action === 'bucket') {
+      const { bucket_id } = payload
+      await supabase.from('leads')
+        .update({ bucket_id: bucket_id || null, updated_at: now })
+        .in('id', validIds)
+      return res.json({ success: true, affected: validIds.length })
+    }
+
+    if (action === 'sold') {
+      const { sold_plan_type, commission } = payload
+      const soldBucketId = await getOrCreateSoldBucket(userId)
+      // Group leads by their current bucket_id so we can set previous_bucket_id correctly
+      const bucketGroups = new Map()
+      for (const l of owned) {
+        const key = l.bucket_id || null
+        if (!bucketGroups.has(key)) bucketGroups.set(key, [])
+        bucketGroups.get(key).push(l.id)
+      }
+      for (const [currentBucketId, ids] of bucketGroups) {
+        await supabase.from('leads')
+          .update({
+            is_sold: true, sold_at: now, status: 'sold', autopilot: false,
+            sold_plan_type: sold_plan_type || null,
+            commission: commission ? parseFloat(commission) : null,
+            commission_status: commission ? 'pending' : null,
+            updated_at: now,
+            bucket_id: soldBucketId,
+            previous_bucket_id: currentBucketId !== soldBucketId ? currentBucketId : null
+          })
+          .in('id', ids)
+      }
+      await supabase.from('campaign_leads')
+        .update({ status: 'paused', paused_at: now })
+        .in('lead_id', validIds).in('status', ['pending', 'active'])
+      return res.json({ success: true, affected: validIds.length })
+    }
+
+    if (action === 'delete') {
+      await supabase.from('messages').delete().in('lead_id', validIds)
+      await supabase.from('conversations').delete().in('lead_id', validIds)
+      await supabase.from('tasks').delete().in('lead_id', validIds)
+      await supabase.from('campaign_leads').delete().in('lead_id', validIds)
+      await supabase.from('lead_dispositions').delete().in('lead_id', validIds)
+      await supabase.from('notifications').delete().in('lead_id', validIds)
+      await supabase.from('appointments').delete().in('lead_id', validIds)
+      await supabase.from('leads').delete().in('id', validIds).eq('user_id', userId)
+      return res.json({ success: true, affected: validIds.length })
+    }
+
+    return res.status(400).json({ error: 'Invalid action' })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -777,4 +894,4 @@ const markCalled = async (req, res) => {
   }
 }
 
-module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled }
+module.exports = { uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction }

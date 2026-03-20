@@ -98,13 +98,33 @@ const renderBucketPills = () => {
   for (const b of allBuckets) {
     const count = allLeads.filter(l => l.bucket_id === b.id).length
     const isActive = activeBucket === b.id
-    const bg = isActive ? b.color : b.color + '18'
-    const color = isActive ? 'white' : b.color
-    const border = isActive ? b.color : b.color + '40'
+    const bucketColor = b.is_system ? '#22c55e' : b.color
+    const bg = isActive ? bucketColor : bucketColor + '18'
+    const color = isActive ? 'white' : bucketColor
+    const border = isActive ? bucketColor : bucketColor + '40'
     const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
-    html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">📁 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+    if (b.is_system) {
+      html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+    } else {
+      html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">📁 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+    }
   }
   container.innerHTML = html
+
+  // Show commission total when Sold bucket is active
+  const soldBucket = allBuckets.find(b => b.is_system)
+  const banner = document.getElementById('sold-commission-banner')
+  if (banner) {
+    if (activeBucket && soldBucket && activeBucket === soldBucket.id) {
+      const soldLeads = allLeads.filter(l => l.bucket_id === soldBucket.id)
+      const total = soldLeads.reduce((sum, l) => sum + (l.commission || 0), 0)
+      const pending = soldLeads.filter(l => l.commission_status === 'pending').reduce((sum, l) => sum + (l.commission || 0), 0)
+      banner.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:#6b7280;font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
+      banner.style.display = 'flex'
+    } else {
+      banner.style.display = 'none'
+    }
+  }
 }
 
 // ===== FILTERING =====
@@ -269,11 +289,14 @@ const renderLeads = (leads) => {
           ? `<span style="background:#d1fae5;color:#065f46;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;">Replied</span>`
           : `<span style="background:#f3f4f6;color:#9ca3af;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;">No reply</span>`)
       : ''
-    const campProgress = (tags.length && lead.campaign_day != null)
-      ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]} — Day ${lead.campaign_day}</span>`
-      : tags.length
-        ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]}</span>`
-        : ''
+    const hasActiveEnrollment = (lead.campaign_leads || []).some(cl => cl.status === 'active' || cl.status === 'pending')
+    const campProgress = tags.length
+      ? hasActiveEnrollment && lead.campaign_day != null
+        ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]} — Day ${lead.campaign_day}</span>`
+        : hasActiveEnrollment
+          ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]}</span>`
+          : `<span class="tag" style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:600;border:1px solid #bbf7d0;">📤 Via: ${tags[0]}</span>`
+      : ''
     return `
       <div class="lead-card" style="border-left: 4px solid ${borderColor};">
         <div class="lead-card-top">
@@ -459,8 +482,216 @@ const toggleLead = (cb) => { if (cb.checked) selectedLeads.add(cb.dataset.id); e
 const updateBulkActions = () => {
   const bar = document.getElementById('bulk-actions')
   const count = document.getElementById('selected-count')
-  if (selectedLeads.size > 0) { bar.classList.add('visible'); count.textContent = `${selectedLeads.size} lead${selectedLeads.size > 1 ? 's' : ''} selected` }
-  else bar.classList.remove('visible')
+  const n = selectedLeads.size
+  if (n > 0) { bar.classList.add('visible'); count.textContent = `${n} lead${n !== 1 ? 's' : ''} selected` }
+  else { bar.classList.remove('visible'); closeBulkDropdowns() }
+}
+
+const clearSelection = () => {
+  selectedLeads.clear()
+  document.querySelectorAll('.lead-select-cb').forEach(c => c.checked = false)
+  const sa = document.getElementById('select-all')
+  if (sa) sa.checked = false
+  updateBulkActions()
+}
+
+// ===== BULK DROPDOWNS =====
+const closeBulkDropdowns = () => {
+  ['bulk-disp-dd', 'bulk-camp-dd', 'bulk-bucket-dd'].forEach(id => {
+    const el = document.getElementById(id)
+    if (el) el.style.display = 'none'
+  })
+}
+
+const toggleBulkDropdown = (ddId, type) => {
+  const dd = document.getElementById(ddId)
+  if (!dd) return
+  const isOpen = dd.style.display !== 'none'
+  closeBulkDropdowns()
+  if (isOpen) return
+
+  const n = selectedLeads.size
+  if (type === 'disp') {
+    if (!allDispositionTags.length) {
+      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:#9ca3af;">No disposition tags yet. Create them in Settings.</div>'
+    } else {
+      dd.innerHTML = `<div class="bulk-dd-label">Apply to ${n} lead${n !== 1 ? 's' : ''}:</div><div class="bulk-dd-pills">` +
+        allDispositionTags.map(t => `<button class="bulk-dd-pill" style="background:${t.color};" onclick="confirmBulkDisposition('${t.id}','${t.name.replace(/'/g, "\\'")}')">${t.name}</button>`).join('') +
+        '</div>'
+    }
+  } else if (type === 'campaign') {
+    if (!allCampaigns.length) {
+      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:#9ca3af;">No campaigns yet. Create one first.</div>'
+    } else {
+      dd.innerHTML = `<div class="bulk-dd-label">Enroll ${n} lead${n !== 1 ? 's' : ''} in:</div>` +
+        allCampaigns.map(c => `<button class="bulk-dd-item" onclick="confirmBulkCampaign('${c.id}','${c.name.replace(/'/g, "\\'")}')" >⚡ ${c.name}</button>`).join('')
+    }
+  } else if (type === 'bucket') {
+    const bucketPills = allBuckets.map(b => `<button class="bulk-dd-pill" style="background:${b.color};" onclick="confirmBulkBucket('${b.id}','${b.name.replace(/'/g, "\\'")}')" >📁 ${b.name}</button>`).join('')
+    dd.innerHTML = `<div class="bulk-dd-label">Move ${n} lead${n !== 1 ? 's' : ''} to:</div><div class="bulk-dd-pills">` +
+      `<button class="bulk-dd-pill" style="background:#9ca3af;" onclick="confirmBulkBucket(null,'No bucket')">— No bucket</button>` +
+      bucketPills + '</div>'
+  }
+
+  dd.style.display = 'block'
+  setTimeout(() => {
+    const close = (e) => {
+      if (!dd.contains(e.target)) { dd.style.display = 'none'; document.removeEventListener('click', close) }
+    }
+    document.addEventListener('click', close)
+  }, 0)
+}
+
+// ===== BULK ACTION HELPER =====
+const executeBulkAction = async (action, payload) => {
+  const res = await fetch('/leads/bulk', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lead_ids: Array.from(selectedLeads), action, payload })
+  })
+  return res.json()
+}
+
+// ===== BULK CONFIRM ACTIONS =====
+const confirmBulkDisposition = async (tagId, tagName) => {
+  closeBulkDropdowns()
+  const n = selectedLeads.size
+  if (!await confirmModal(`Apply "${tagName}" to ${n} lead${n !== 1 ? 's' : ''}?`, `This will set the disposition tag for all ${n} selected lead${n !== 1 ? 's' : ''}.`, 'Apply')) return
+  try {
+    const data = await executeBulkAction('disposition', { disposition_id: tagId })
+    if (!data.success) throw new Error(data.error)
+    allLeads.forEach(l => { if (selectedLeads.has(l.id)) l.disposition_tag_id = tagId })
+    clearSelection()
+    filterLeads()
+    toast.success('Disposition applied', `${tagName} applied to ${data.affected} lead${data.affected !== 1 ? 's' : ''}`)
+  } catch (err) { toast.error('Error', err.message || 'Bulk action failed') }
+}
+
+const confirmBulkCampaign = async (campaignId, campaignName) => {
+  closeBulkDropdowns()
+  const n = selectedLeads.size
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
+  if (!await confirmModal(`Enroll ${n} lead${n !== 1 ? 's' : ''} in "${campaignName}"?`, `Messages will begin tomorrow at 10:00 AM in each lead's local timezone.`, 'Enroll')) return
+  try {
+    const data = await executeBulkAction('campaign', { campaign_id: campaignId, start_date: tomorrow.toISOString() })
+    if (!data.success) throw new Error(data.error)
+    clearSelection()
+    loadLeads()
+    const msg = data.skipped > 0 ? `${data.affected} enrolled · ${data.skipped} already in campaign` : `${data.affected} lead${data.affected !== 1 ? 's' : ''} enrolled`
+    toast.success(`Enrolled in ${campaignName}`, msg)
+  } catch (err) { toast.error('Error', err.message || 'Bulk action failed') }
+}
+
+const confirmBulkBucket = async (bucketId, bucketName) => {
+  closeBulkDropdowns()
+  const n = selectedLeads.size
+  if (!await confirmModal(`Move ${n} lead${n !== 1 ? 's' : ''} to "${bucketName}"?`, '', 'Move')) return
+  try {
+    const data = await executeBulkAction('bucket', { bucket_id: bucketId })
+    if (!data.success) throw new Error(data.error)
+    allLeads.forEach(l => { if (selectedLeads.has(l.id)) l.bucket_id = bucketId })
+    clearSelection()
+    renderBucketPills()
+    filterLeads()
+    toast.success('Bucket updated', `${data.affected} lead${data.affected !== 1 ? 's' : ''} moved to ${bucketName}`)
+  } catch (err) { toast.error('Error', err.message || 'Bulk action failed') }
+}
+
+// ===== BULK SOLD =====
+const openBulkSoldModal = () => {
+  const n = selectedLeads.size
+  document.getElementById('bulk-sold-title').textContent = `Mark ${n} Lead${n !== 1 ? 's' : ''} as Sold 🎉`
+  document.getElementById('bulk-sold-note').textContent = `This will mark all ${n} selected lead${n !== 1 ? 's' : ''} as sold, pause their campaigns, and record the sale.`
+  document.getElementById('bulk-sold-plan').value = ''
+  document.getElementById('bulk-sold-commission').value = ''
+  document.getElementById('bulk-sold-modal').classList.add('open')
+  setTimeout(() => document.getElementById('bulk-sold-plan')?.focus(), 80)
+}
+
+const submitBulkSold = async () => {
+  const n = selectedLeads.size
+  const plan = document.getElementById('bulk-sold-plan').value.trim()
+  const commission = parseFloat(document.getElementById('bulk-sold-commission').value) || null
+  if (!await confirmModal(`Mark ${n} lead${n !== 1 ? 's' : ''} as sold?`, plan ? `Product: ${plan}` : 'No product specified.', 'Mark as Sold')) return
+  document.getElementById('bulk-sold-modal').classList.remove('open')
+  try {
+    const data = await executeBulkAction('sold', { sold_plan_type: plan || null, commission })
+    if (!data.success) throw new Error(data.error)
+    const soldBucket = allBuckets.find(b => b.is_system)
+    allLeads.forEach(l => {
+      if (selectedLeads.has(l.id)) {
+        Object.assign(l, { is_sold: true, status: 'sold', sold_at: new Date().toISOString(), sold_plan_type: plan || null, commission })
+        if (soldBucket) { l.previous_bucket_id = l.bucket_id !== soldBucket.id ? l.bucket_id : null; l.bucket_id = soldBucket.id }
+      }
+    })
+    clearSelection()
+    fireConfetti()
+    renderBucketPills()
+    filterLeads()
+    toast.success(`${data.affected} lead${data.affected !== 1 ? 's' : ''} marked as sold!`, plan || '')
+  } catch (err) { toast.error('Error', err.message || 'Bulk action failed') }
+}
+
+// ===== BULK EXPORT =====
+const exportSelectedLeads = () => {
+  const leads = allLeads.filter(l => selectedLeads.has(l.id))
+  if (!leads.length) return
+  const headers = ['First Name','Last Name','Phone','Email','State','Zip Code','Date of Birth','Product','Status','Bucket','Timezone','Notes','Autopilot','Is Sold','Created At']
+  const rows = leads.map(l => [
+    l.first_name || '', l.last_name || '', l.phone || '',
+    l.email || '', l.state || '', l.zip_code || '',
+    l.date_of_birth || '', l.product || '', l.status || '',
+    allBuckets.find(b => b.id === l.bucket_id)?.name || l.bucket || '',
+    l.timezone || '', l.notes || '',
+    l.autopilot ? 'Yes' : 'No', l.is_sold ? 'Yes' : 'No',
+    l.created_at ? new Date(l.created_at).toLocaleDateString() : ''
+  ])
+  const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href = url; a.download = `leads-export-${Date.now()}.csv`; a.click()
+  URL.revokeObjectURL(url)
+  toast.success('Export downloaded', `${leads.length} lead${leads.length !== 1 ? 's' : ''} exported`)
+}
+
+// ===== BULK DELETE =====
+const openBulkDeleteModal = () => {
+  const n = selectedLeads.size
+  document.getElementById('bulk-delete-title').textContent = `Delete ${n} Lead${n !== 1 ? 's' : ''}?`
+  document.getElementById('bulk-delete-body').textContent = `This will permanently delete ${n} lead${n !== 1 ? 's' : ''} and all their conversation history, tasks, and activity. This cannot be undone.`
+  document.getElementById('bulk-delete-input').value = ''
+  const btn = document.getElementById('bulk-delete-btn')
+  btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; btn.textContent = 'Permanently Delete'
+  document.getElementById('bulk-delete-modal').classList.add('open')
+  setTimeout(() => document.getElementById('bulk-delete-input')?.focus(), 80)
+}
+
+const closeBulkDeleteModal = () => document.getElementById('bulk-delete-modal').classList.remove('open')
+
+const checkBulkDeleteInput = () => {
+  const valid = document.getElementById('bulk-delete-input').value === 'DELETE'
+  const btn = document.getElementById('bulk-delete-btn')
+  btn.disabled = !valid; btn.style.opacity = valid ? '1' : '0.4'; btn.style.cursor = valid ? 'pointer' : 'not-allowed'
+}
+
+const confirmBulkDelete = async () => {
+  if (document.getElementById('bulk-delete-input').value !== 'DELETE') return
+  const n = selectedLeads.size
+  const btn = document.getElementById('bulk-delete-btn')
+  btn.disabled = true; btn.textContent = 'Deleting...'
+  try {
+    const data = await executeBulkAction('delete', {})
+    if (!data.success) throw new Error(data.error)
+    const deletedIds = new Set(Array.from(selectedLeads))
+    allLeads = allLeads.filter(l => !deletedIds.has(l.id))
+    closeBulkDeleteModal()
+    clearSelection()
+    updateStats(allLeads)
+    renderBucketPills()
+    filterLeads()
+    toast.success(`${data.affected} lead${data.affected !== 1 ? 's' : ''} deleted`)
+  } catch (err) { toast.error('Error', err.message || 'Bulk delete failed') }
+  finally { btn.disabled = false; btn.textContent = 'Permanently Delete' }
 }
 
 // ===== AUTOPILOT =====
@@ -617,9 +848,10 @@ const submitMarkSold = async () => {
     if (!data.success) throw new Error(data.error)
     document.getElementById('sold-modal').classList.remove('open')
     const lead = allLeads.find(l => l.id === soldTargetLeadId)
-    if (lead) Object.assign(lead, { is_sold: true, status: 'sold', sold_at: data.lead.sold_at, sold_plan_type: data.lead.sold_plan_type, sold_premium: data.lead.sold_premium, commission: data.lead.commission, commission_status: data.lead.commission_status })
+    if (lead) Object.assign(lead, { is_sold: true, status: 'sold', sold_at: data.lead.sold_at, sold_plan_type: data.lead.sold_plan_type, sold_premium: data.lead.sold_premium, commission: data.lead.commission, commission_status: data.lead.commission_status, bucket_id: data.lead.bucket_id, previous_bucket_id: data.lead.previous_bucket_id })
     toast.success(`${soldTargetLeadName} marked as sold!`, planType ? `${planType}${premium ? ` — $${premium}/mo` : ''}` : 'Sale recorded')
     fireConfetti()
+    renderBucketPills()
     filterLeads()
   } catch (err) { toast.error('Error', err.message || 'Could not mark as sold') }
 }
@@ -632,8 +864,9 @@ const markUnsold = async (leadId, leadName) => {
     const data = await res.json()
     if (!data.success) throw new Error(data.error)
     const lead = allLeads.find(l => l.id === leadId)
-    if (lead) Object.assign(lead, { is_sold: false, status: data.lead.status, sold_at: null, sold_plan_type: null, sold_premium: null, commission: null, commission_status: null })
+    if (lead) Object.assign(lead, { is_sold: false, status: data.lead.status, sold_at: null, sold_plan_type: null, sold_premium: null, commission: null, commission_status: null, bucket_id: data.lead.bucket_id, previous_bucket_id: null })
     toast.info('Sold status removed', `${leadName} moved back to ${data.lead.status}`)
+    renderBucketPills()
     filterLeads()
   } catch (err) { toast.error('Error', err.message || 'Could not remove sold status') }
 }
@@ -869,6 +1102,8 @@ const saveBucket = async () => {
 const showBucketContextMenu = (e, id, name, color) => {
   e.preventDefault()
   e.stopPropagation()
+  const bucket = allBuckets.find(b => b.id === id)
+  if (bucket?.is_system) return
   contextMenuBucketId = id
   contextMenuBucketName = name
   contextMenuBucketColor = color

@@ -30,7 +30,7 @@ const updateBucket = async (req, res) => {
     const { data: existing } = await supabase
       .from('buckets').select('*').eq('id', req.params.id).eq('user_id', req.user.id).single()
     if (!existing) return res.status(404).json({ error: 'Bucket not found' })
-    if (existing.name === 'Sold') return res.status(403).json({ error: 'Cannot update the Sold bucket' })
+    if (existing.is_system) return res.status(403).json({ error: 'Cannot rename a system bucket' })
 
     const { name, color } = req.body
     const updates = {}
@@ -52,7 +52,7 @@ const deleteBucket = async (req, res) => {
     const { data: existing } = await supabase
       .from('buckets').select('*').eq('id', req.params.id).eq('user_id', req.user.id).single()
     if (!existing) return res.status(404).json({ error: 'Bucket not found' })
-    if (existing.name === 'Sold') return res.status(403).json({ error: 'Cannot delete the Sold bucket' })
+    if (existing.is_system) return res.status(403).json({ error: 'Cannot delete a system bucket' })
 
     // Move all leads in this bucket to no bucket
     await supabase.from('leads')
