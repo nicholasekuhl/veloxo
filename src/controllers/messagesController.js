@@ -157,17 +157,24 @@ const executeHandoff = async (lead, conversation, handoff, fromNumber) => {
 
 const handleIncomingMessage = async (req, res) => {
   try {
-    const { From, Body, To } = req.body
+    const { From, Body } = req.body
+    const toNumber = req.body.To || req.body.to
+
+    if (!toNumber) {
+      console.log('Full webhook body:', JSON.stringify(req.body))
+      res.set('Content-Type', 'text/xml')
+      return res.send('<Response></Response>')
+    }
 
     // Look up which user owns this number via phone_numbers table
     let userId = null
     let profile = null
-    const fromNumber = To
+    const fromNumber = toNumber
 
     const { data: phoneRecord } = await supabase
       .from('phone_numbers')
       .select('user_id')
-      .eq('phone_number', To)
+      .eq('phone_number', toNumber)
       .eq('is_active', true)
       .single()
 
@@ -178,7 +185,7 @@ const handleIncomingMessage = async (req, res) => {
     }
 
     if (!userId) {
-      console.log(`Incoming message to unrecognized number ${To} — ignoring`)
+      console.log(`Incoming message to unrecognized number ${toNumber} — ignoring`)
       res.set('Content-Type', 'text/xml')
       return res.send('<Response></Response>')
     }
@@ -198,7 +205,7 @@ const handleIncomingMessage = async (req, res) => {
       return res.send('<Response></Response>')
     }
 
-    const { data: lead } = await supabase.from('leads').select('*').eq('phone', From).eq('user_id', userId).single()
+    let { data: lead } = await supabase.from('leads').select('*').eq('phone', From).eq('user_id', userId).single()
     if (!lead) {
       res.set('Content-Type', 'text/xml')
       return res.send('<Response></Response>')
