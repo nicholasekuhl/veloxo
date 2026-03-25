@@ -7,13 +7,14 @@ const getCampaigns = async (req, res) => {
       .select(`
         *,
         campaign_messages (id, day_number, send_time, message_body),
-        campaign_leads (id, status, leads(has_replied))
+        campaign_leads (id, status)
       `)
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false })
     if (error) throw error
     res.json({ campaigns: data })
   } catch (err) {
+    console.error('Campaigns getCampaigns error:', err.message)
     res.status(500).json({ error: err.message })
   }
 }
@@ -32,6 +33,7 @@ const getCampaign = async (req, res) => {
     if (error) throw error
     res.json({ campaign: data })
   } catch (err) {
+    console.error('Campaigns getCampaign error:', err.message)
     res.status(500).json({ error: err.message })
   }
 }
