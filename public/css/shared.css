@@ -89,6 +89,8 @@ header { display: none; }
   font-size: 18px; font-weight: 750; color: var(--gray-900); letter-spacing: -0.6px;
 }
 .sidebar-logo span { color: var(--indigo-500); }
+a.sidebar-logo { text-decoration: none; cursor: pointer; }
+a.sidebar-logo:hover { opacity: 0.85; }
 .sidebar-nav { flex: 1; padding: 10px 10px; }
 .sidebar-nav-item {
   display: flex; align-items: center; gap: 9px; height: 38px;
