@@ -161,3 +161,26 @@ queries against existing tables.
 - Conversation routes: src/routes/conversations.js
 - Phone number routes: src/routes/phoneNumbers.js
 - Notifications: src/notifications.js
+
+## VISUAL CONSISTENCY RULE:
+All new UI components must use the existing 
+CSS variables from shared.css. Never hardcode 
+colors, shadows, or border radius values.
+
+Always use:
+- var(--color-primary) not #6366f1
+- var(--shadow-md) not box-shadow: 0 4px...
+- var(--radius-md) not border-radius: 10px
+- var(--color-border) not #e2e8f0
+- var(--color-text-secondary) not #475569
+- var(--space-4) not padding: 16px
+
+New cards: white background, shadow-md, radius-md
+New buttons: use existing .btn-primary or .btn-secondary classes
+New badges: use existing .badge class with color modifier
+New modals: use existing .modal class structure
+New tables: use existing .table class structure
+
+If a new component needs a style not in shared.css,
+add it to shared.css as a reusable class — 
+never add one-off styles inline or in page files.
