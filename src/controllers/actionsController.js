@@ -219,6 +219,17 @@ const executeActions = async (lead, actions, dispositionTagId, profile) => {
           break
         }
 
+        case 'opt_out': {
+          const now = new Date().toISOString()
+          await supabase.from('leads').update({
+            opted_out: true, opted_out_at: now, autopilot: false, status: 'opted_out', updated_at: now
+          }).eq('id', lead.id)
+          await supabase.from('campaign_leads')
+            .update({ status: 'paused', paused_at: now })
+            .eq('lead_id', lead.id).in('status', ['pending', 'active'])
+          break
+        }
+
         default:
           console.log(`Unknown action type: ${action.action_type}`)
       }

@@ -95,7 +95,7 @@ const processScheduledMessages = async () => {
       .from('campaign_leads')
       .select(`
         *,
-        leads (id, first_name, last_name, phone, status, timezone, first_message_sent),
+        leads (id, first_name, last_name, phone, status, opted_out, timezone, first_message_sent),
         campaigns (id, name, status)
       `)
       .eq('status', 'pending')
@@ -133,7 +133,7 @@ const processScheduledMessages = async () => {
         continue
       }
 
-      if (enrollment.leads.status === 'opted_out') {
+      if (enrollment.leads.opted_out || enrollment.leads.status === 'opted_out') {
         await supabase
           .from('campaign_leads')
           .update({ status: 'opted_out' })

@@ -328,6 +328,7 @@ const renderLeads = (leads) => {
               <div class="lead-name">
                 <a href="/lead.html?id=${lead.id}" target="_blank" style="color:inherit;text-decoration:none;cursor:pointer;" onmouseover="this.style.color='#6366f1'" onmouseout="this.style.color='inherit'">${name}</a>
                 <button class="copy-btn" onclick="copyToClipboard('${safeName}', this)" title="Copy name">${COPY_SVG}</button>
+                ${lead.opted_out ? '<span style="background:#fee2e2;color:#b91c1c;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:.3px;">🚫 OPTED OUT</span>' : ''}
                 ${lead.is_sold ? '<span class="sold-badge">✓ SOLD</span>' : ''}
                 ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color}">${dispTag.name}</span>` : ''}
                 ${replyBadge}
@@ -1678,6 +1679,10 @@ const openLeadActionsMenu = (leadId, leadName, btn) => {
       <button class="ami-item" onclick="closeLeadActionsMenu();pauseAllDrips('${leadId}','${leadName}')">
         <span class="ami-icon">⏹</span> Pause All Drips
       </button>
+      ${lead.opted_out
+        ? `<button class="ami-item" onclick="closeLeadActionsMenu();undoOptOutAction('${leadId}','${leadName}')"><span class="ami-icon">✅</span> Remove Opt-out</button>`
+        : `<button class="ami-item ami-danger" onclick="closeLeadActionsMenu();confirmOptOutLead('${leadId}','${leadName}')"><span class="ami-icon">🚫</span> Opt out of all texts</button>`
+      }
       <div class="ami-divider"></div>
       <div class="ami-section" style="color:#ef4444;">DANGER ZONE</div>
       <button class="ami-item ami-danger" onclick="closeLeadActionsMenu();openDeleteLeadModal('${leadId}','${leadName}')">
@@ -1779,6 +1784,34 @@ const unblockLeadAction = async (leadId) => {
       filterLeads()
       toast.success('Lead unblocked')
     } else toast.error('Error', data.error || 'Could not unblock lead')
+  } catch (err) { toast.error('Error', 'Something went wrong') }
+}
+
+const confirmOptOutLead = async (leadId, name) => {
+  if (!confirm(`Opt out ${name} from all texts?\n\nThis will:\n• Cancel all scheduled messages\n• Pause all campaign drips\n• Prevent any future texts to this lead\n\nThis can be undone.`)) return
+  try {
+    const res = await fetch(`/leads/${leadId}/opt-out`, { method: 'POST' })
+    const data = await res.json()
+    if (data.success) {
+      const lead = allLeads.find(l => l.id === leadId)
+      if (lead) Object.assign(lead, data.lead)
+      filterLeads()
+      toast.success('Lead opted out', name + ' will no longer receive texts')
+    } else toast.error('Error', data.error || 'Could not opt out lead')
+  } catch (err) { toast.error('Error', 'Something went wrong') }
+}
+
+const undoOptOutAction = async (leadId, name) => {
+  if (!confirm(`Remove opt-out for ${name}? They can receive texts again.`)) return
+  try {
+    const res = await fetch(`/leads/${leadId}/undo-opt-out`, { method: 'POST' })
+    const data = await res.json()
+    if (data.success) {
+      const lead = allLeads.find(l => l.id === leadId)
+      if (lead) Object.assign(lead, data.lead)
+      filterLeads()
+      toast.success('Opt-out removed', name + ' can now receive texts')
+    } else toast.error('Error', data.error || 'Could not remove opt-out')
   } catch (err) { toast.error('Error', 'Something went wrong') }
 }
 

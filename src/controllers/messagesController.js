@@ -26,6 +26,7 @@ const sendInitialOutreach = async (req, res) => {
     const { data: lead, error: leadError } = await supabase
       .from('leads').select('*').eq('id', leadId).eq('user_id', req.user.id).single()
     if (leadError || !lead) return res.status(404).json({ error: 'Lead not found' })
+    if (lead.opted_out) return res.status(403).json({ error: 'Lead has opted out. Message not sent.' })
     if (lead.status !== 'new') return res.status(400).json({ error: 'Lead has already been contacted' })
 
     let { data: conversation } = await supabase
@@ -193,10 +194,17 @@ const handleIncomingMessage = async (req, res) => {
       return res.send('<Response></Response>')
     }
 
-    if (['STOP', 'UNSUBSCRIBE'].includes(Body.trim().toUpperCase())) {
+    if (['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'].includes(Body.trim().toUpperCase())) {
+      const now = new Date().toISOString()
       await supabase.from('leads')
-        .update({ status: 'opted_out', updated_at: new Date().toISOString() })
+        .update({ status: 'opted_out', opted_out: true, opted_out_at: now, autopilot: false, updated_at: now })
         .eq('phone', From).eq('user_id', userId)
+      const { data: stoppedLead } = await supabase.from('leads').select('id').eq('phone', From).eq('user_id', userId).single()
+      if (stoppedLead) {
+        await supabase.from('campaign_leads')
+          .update({ status: 'paused', paused_at: now })
+          .eq('lead_id', stoppedLead.id).in('status', ['pending', 'active'])
+      }
       res.set('Content-Type', 'text/xml')
       return res.send('<Response></Response>')
     }
@@ -375,6 +383,7 @@ const sendManualMessage = async (req, res) => {
     const { data: lead } = await supabase
       .from('leads').select('*').eq('id', lead_id).eq('user_id', req.user.id).single()
     if (!lead) return res.status(404).json({ error: 'Lead not found' })
+    if (lead.opted_out) return res.status(403).json({ error: 'Lead has opted out. Message not sent.' })
 
     const fromNumber = await getUserFromNumber(req.user.id)
     const processedBody = spintext(body).replace(/\[First Name\]/g, lead.first_name || 'there')
