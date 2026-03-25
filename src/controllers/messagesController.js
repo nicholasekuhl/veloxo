@@ -1,5 +1,5 @@
 const supabase = require('../db')
-const { sendSMS, buildMessageBody, getMasterClient } = require('../twilio')
+const { sendSMS, buildMessageBody, getMasterClient, getNumberForLead } = require('../twilio')
 const { createNotification } = require('../notifications')
 const { spintext } = require('../spintext')
 
@@ -8,17 +8,6 @@ const getInitialMessage = (lead) => {
   return `Hi ${firstName}! I saw you were exploring your options and I'd love to help find the right fit for your needs and budget. Do you have a few minutes to connect?`
 }
 
-const getUserFromNumber = async (userId) => {
-  const { data } = await supabase
-    .from('phone_numbers')
-    .select('phone_number')
-    .eq('user_id', userId)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .single()
-  return data?.phone_number || process.env.TWILIO_PHONE_NUMBER || null
-}
 
 const sendInitialOutreach = async (req, res) => {
   try {
@@ -38,7 +27,7 @@ const sendInitialOutreach = async (req, res) => {
       conversation = newConv
     }
 
-    const fromNumber = await getUserFromNumber(req.user.id)
+    const fromNumber = await getNumberForLead(req.user.id, lead.state)
     const rawBody = getInitialMessage(lead)
     const messageBody = buildMessageBody(rawBody, req.user.profile, lead, true)
     const result = await sendSMS(lead.phone, messageBody, fromNumber)
@@ -385,7 +374,7 @@ const sendManualMessage = async (req, res) => {
     if (!lead) return res.status(404).json({ error: 'Lead not found' })
     if (lead.opted_out) return res.status(403).json({ error: 'Lead has opted out. Message not sent.' })
 
-    const fromNumber = await getUserFromNumber(req.user.id)
+    const fromNumber = await getNumberForLead(req.user.id, lead.state)
     const processedBody = spintext(body).replace(/\[First Name\]/g, lead.first_name || 'there')
     const finalBody = buildMessageBody(processedBody, req.user.profile, lead, false)
     const result = await sendSMS(lead.phone, finalBody, fromNumber)

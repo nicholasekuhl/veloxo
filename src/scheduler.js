@@ -1,5 +1,5 @@
 const supabase = require('./db')
-const { sendSMS, buildMessageBody } = require('./twilio')
+const { sendSMS, buildMessageBody, pickNumberForLead } = require('./twilio')
 const { spintext } = require('./spintext')
 const nodemailer = require('nodemailer')
 
@@ -95,7 +95,7 @@ const processScheduledMessages = async () => {
       .from('campaign_leads')
       .select(`
         *,
-        leads (id, first_name, last_name, phone, status, opted_out, timezone, first_message_sent),
+        leads (id, first_name, last_name, phone, state, status, opted_out, timezone, first_message_sent),
         campaigns (id, name, status)
       `)
       .eq('status', 'pending')
@@ -106,16 +106,17 @@ const processScheduledMessages = async () => {
 
     // Batch-load active phone numbers and profiles for all unique user_ids in this batch
     const userIds = [...new Set(dueCampaignLeads.map(e => e.user_id).filter(Boolean))]
-    let phoneNumberMap = {}
+    let phoneNumbersMap = {}  // userId -> array of {phone_number, state, is_default}
     let profileMap = {}
     if (userIds.length > 0) {
       const [{ data: phoneNumbers }, { data: profiles }] = await Promise.all([
-        supabase.from('phone_numbers').select('user_id, phone_number').in('user_id', userIds).eq('is_active', true).order('created_at', { ascending: true }),
+        supabase.from('phone_numbers').select('user_id, phone_number, state, is_default').in('user_id', userIds).eq('is_active', true).order('created_at', { ascending: true }),
         supabase.from('user_profiles').select('id, agency_name, compliance_footer, compliance_footer_enabled').in('id', userIds)
       ])
       if (phoneNumbers) {
         for (const pn of phoneNumbers) {
-          if (!phoneNumberMap[pn.user_id]) phoneNumberMap[pn.user_id] = pn.phone_number
+          if (!phoneNumbersMap[pn.user_id]) phoneNumbersMap[pn.user_id] = []
+          phoneNumbersMap[pn.user_id].push(pn)
         }
       }
       if (profiles) {
@@ -169,7 +170,7 @@ const processScheduledMessages = async () => {
       const userProfile = enrollment.user_id ? profileMap[enrollment.user_id] : null
       const messageBody = buildMessageBody(rawBody, userProfile, enrollment.leads, false)
 
-      const fromNumber = (enrollment.user_id ? phoneNumberMap[enrollment.user_id] : null) || process.env.TWILIO_PHONE_NUMBER
+      const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, enrollment.leads.state) || process.env.TWILIO_PHONE_NUMBER
       const result = await sendSMS(enrollment.leads.phone, messageBody, fromNumber)
 
       if (result.success) {
@@ -236,7 +237,7 @@ const processScheduledMessages = async () => {
     // Process one-off scheduled messages
     const { data: dueOneOff } = await supabase
       .from('scheduled_messages')
-      .select('*, leads (id, first_name, phone, status, is_blocked)')
+      .select('*, leads (id, first_name, phone, state, status, is_blocked)')
       .eq('status', 'pending')
       .lte('send_at', now.toISOString())
 
@@ -247,7 +248,7 @@ const processScheduledMessages = async () => {
           await supabase.from('scheduled_messages').update({ status: 'cancelled' }).eq('id', sm.id)
           continue
         }
-        const fromNumber = (sm.user_id ? phoneNumberMap[sm.user_id] : null) || process.env.TWILIO_PHONE_NUMBER
+        const fromNumber = pickNumberForLead(sm.user_id ? phoneNumbersMap[sm.user_id] : null, sm.leads.state) || process.env.TWILIO_PHONE_NUMBER
         const result = await sendSMS(sm.leads.phone, sm.body, fromNumber)
         if (result.success) {
           messagesSent++

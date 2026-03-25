@@ -87,6 +87,29 @@ const purchasePhoneNumber = async (req, res) => {
   }
 }
 
+const setDefaultPhoneNumber = async (req, res) => {
+  try {
+    // Unset default on all other numbers for this user
+    await supabase
+      .from('phone_numbers')
+      .update({ is_default: false })
+      .eq('user_id', req.user.id)
+
+    // Set this number as default
+    const { data, error } = await supabase
+      .from('phone_numbers')
+      .update({ is_default: true })
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single()
+    if (error) throw error
+    res.json({ success: true, phone_number: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 const updatePhoneNumber = async (req, res) => {
   try {
     const { friendly_name, state, is_active } = req.body
@@ -140,4 +163,4 @@ const deletePhoneNumber = async (req, res) => {
   }
 }
 
-module.exports = { getPhoneNumbers, searchPhoneNumbers, purchasePhoneNumber, updatePhoneNumber, deletePhoneNumber }
+module.exports = { getPhoneNumbers, searchPhoneNumbers, purchasePhoneNumber, updatePhoneNumber, deletePhoneNumber, setDefaultPhoneNumber }

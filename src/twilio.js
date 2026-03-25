@@ -1,4 +1,5 @@
 const twilio = require('twilio')
+const { normalizeState, getStateFromPhone } = require('./areaCodes')
 
 const getMasterClient = () => {
   const sid = process.env.TWILIO_ACCOUNT_SID
@@ -44,4 +45,44 @@ const buildMessageBody = (body, userProfile, lead, isFirstMessage) => {
   return `${body}\n${footer}`
 }
 
-module.exports = { sendSMS, getMasterClient, buildMessageBody }
+/**
+ * Pick the best from-number for a lead given an array of phone_number records.
+ * Priority:
+ * 1. Number whose state matches lead's state (via stored state field, then area code lookup)
+ * 2. Number marked is_default
+ * 3. First active number
+ * Returns phone_number string or null.
+ */
+const pickNumberForLead = (phoneNumbers, leadState) => {
+  if (!phoneNumbers || phoneNumbers.length === 0) return null
+
+  const normLeadState = normalizeState(leadState)
+  if (normLeadState) {
+    const stateMatch = phoneNumbers.find(pn => {
+      const pnState = normalizeState(pn.state) || getStateFromPhone(pn.phone_number)
+      return pnState === normLeadState
+    })
+    if (stateMatch) return stateMatch.phone_number
+  }
+
+  const defaultNum = phoneNumbers.find(pn => pn.is_default === true)
+  if (defaultNum) return defaultNum.phone_number
+
+  return phoneNumbers[0].phone_number
+}
+
+/**
+ * Get the best from-number for a user + lead state, querying the DB.
+ */
+const getNumberForLead = async (userId, leadState) => {
+  const supabase = require('./db')
+  const { data } = await supabase
+    .from('phone_numbers')
+    .select('phone_number, state, is_default')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: true })
+  return pickNumberForLead(data || [], leadState) || process.env.TWILIO_PHONE_NUMBER || null
+}
+
+module.exports = { sendSMS, getMasterClient, buildMessageBody, pickNumberForLead, getNumberForLead }
