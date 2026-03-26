@@ -326,6 +326,7 @@ const handleIncomingMessage = async (req, res) => {
         role: m.direction === 'inbound' ? 'user' : 'assistant',
         content: m.body
       }))
+      console.log('Conversation history loaded:', history.length, 'messages')
 
       // Check handoff triggers before generating AI response
       const handoff = checkHandoffTriggers(conversation, Body, history, profile)

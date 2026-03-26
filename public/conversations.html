@@ -627,6 +627,14 @@
         </div>
       `
 
+      try {
+        const msgsRes = await fetch(`/conversations/${convId}/messages`)
+        const msgsData = await msgsRes.json()
+        conv.messages = msgsData.messages || []
+      } catch (e) {
+        console.error('Messages load error:', e.message)
+        conv.messages = conv.messages || []
+      }
       renderMessages(conv, 'all')
       renderTemplatePills(conv.lead_id)
       if (rightPanelOpen) renderRightPanel(conv, lead, [])
@@ -691,9 +699,10 @@
   const pollMessages = async () => {
     if (!activeConvId || document.hidden || convSubTab === 'scheduled') return
     try {
-      const res = await fetch(`/conversations/${activeConvId}`)
+      const res = await fetch(`/conversations/${activeConvId}/messages`)
       const data = await res.json()
-      const incoming = (data.conversation.messages || []).filter(m =>
+      const allMsgs = data.messages || []
+      const incoming = allMsgs.filter(m =>
         lastMessageTimestamp ? new Date(m.sent_at) > new Date(lastMessageTimestamp) : true
       )
       if (incoming.length > 0) {
@@ -711,8 +720,7 @@
         }
         const existingConv = allConversations.find(c => c.id === activeConvId)
         if (existingConv) {
-          existingConv.messages = data.conversation.messages
-          existingConv.updated_at = data.conversation.updated_at
+          existingConv.messages = allMsgs
           filterConversations(document.getElementById('conv3-search')?.value || '')
         }
       }

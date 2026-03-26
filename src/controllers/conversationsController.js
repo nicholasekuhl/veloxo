@@ -154,11 +154,33 @@ const createScheduledMessage = async (req, res) => {
   }
 }
 
+const getConversationMessages = async (req, res) => {
+  try {
+    const { data: conv, error: convErr } = await supabase
+      .from('conversations').select('id').eq('id', req.params.id).eq('user_id', req.user.id).single()
+    if (convErr || !conv) return res.status(404).json({ error: 'Conversation not found' })
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, body, direction, status, sent_at, twilio_sid, is_ai, error_message')
+      .eq('conversation_id', req.params.id)
+      .order('sent_at', { ascending: true })
+    if (error) {
+      console.error('getConversationMessages fetch error:', error.message)
+      throw error
+    }
+    res.json({ messages: data || [] })
+  } catch (err) {
+    console.error('getConversationMessages error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+}
+
 module.exports = {
   getConversations,
   getConversation,
   updateConversation,
   starConversation,
   getScheduledMessages,
-  createScheduledMessage
+  createScheduledMessage,
+  getConversationMessages
 }
