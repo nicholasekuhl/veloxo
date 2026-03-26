@@ -90,6 +90,29 @@ function getStateMaxPerDay(state) {
 }
 
 /**
+ * Check whether a system-initiated send would exceed the state's daily
+ * outbound limit (FL/OK/MD = 3). Conversational AI replies and manual
+ * agent replies must never call this — it only applies to messages the
+ * system originates without the lead having texted first.
+ *
+ * @param {string} leadState
+ * @param {number} outboundInitiatedToday  value of leads.outbound_initiated_today
+ * @returns {{ blocked: boolean, reason?: string }}
+ */
+function checkSystemInitiatedLimit(leadState, outboundInitiatedToday) {
+  const rules = STATE_RULES[leadState] || STATE_RULES.default
+  if (!rules.maxPer24Hours) return { blocked: false }
+  const count = outboundInitiatedToday || 0
+  if (count >= rules.maxPer24Hours) {
+    return {
+      blocked: true,
+      reason: `Daily system-initiated message limit reached for ${leadState} (${count}/${rules.maxPer24Hours})`
+    }
+  }
+  return { blocked: false }
+}
+
+/**
  * Returns the next datetime (as ISO string) when sending is permitted
  * for the given state and timezone.
  */
@@ -148,4 +171,4 @@ function getNextSendWindow(state, timezone) {
   return fallback.toISOString()
 }
 
-module.exports = { isWithinQuietHours, getStateMaxPerDay, getNextSendWindow, STATE_RULES }
+module.exports = { isWithinQuietHours, getStateMaxPerDay, checkSystemInitiatedLimit, getNextSendWindow, STATE_RULES }

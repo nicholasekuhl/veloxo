@@ -2,7 +2,7 @@ const supabase = require('./db')
 const { sendSMS, buildMessageBody, pickNumberForLead } = require('./twilio')
 const { spintext } = require('./spintext')
 const nodemailer = require('nodemailer')
-const { isWithinQuietHours } = require('./compliance')
+const { isWithinQuietHours, checkSystemInitiatedLimit } = require('./compliance')
 
 const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
@@ -171,6 +171,13 @@ const checkGhostedConversations = async () => {
         continue
       }
 
+      // Daily system-initiated limit (FL/OK/MD = 3/day)
+      const followupDailyCheck = checkSystemInitiatedLimit(lead.state, lead.outbound_initiated_today)
+      if (followupDailyCheck.blocked) {
+        console.log(`Follow-up blocked (daily limit): ${followupDailyCheck.reason} — lead ${lead.id}`)
+        continue
+      }
+
       // Load message history
       const { data: messages } = await supabase
         .from('messages')
@@ -217,6 +224,11 @@ const checkGhostedConversations = async () => {
         twilio_sid: result.sid,
         status: 'sent'
       })
+
+      // Increment system-initiated counter (re-engagement follows are system-initiated)
+      await supabase.from('leads')
+        .update({ outbound_initiated_today: (lead.outbound_initiated_today || 0) + 1 })
+        .eq('id', lead.id)
 
       const newFollowupCount = (conv.followup_count || 0) + 1
       const newStage = targetStage === 'stage4' ? 'completed' : targetStage
@@ -314,7 +326,7 @@ const processScheduledMessages = async () => {
       .from('campaign_leads')
       .select(`
         *,
-        leads (id, first_name, last_name, phone, state, status, opted_out, timezone, first_message_sent),
+        leads (id, first_name, last_name, phone, state, status, opted_out, timezone, first_message_sent, outbound_initiated_today),
         campaigns (id, name, status)
       `)
       .eq('status', 'pending')
@@ -391,6 +403,13 @@ const processScheduledMessages = async () => {
         continue
       }
 
+      // Daily system-initiated limit (FL/OK/MD = 3/day)
+      const dailyCheck = checkSystemInitiatedLimit(enrollment.leads.state, enrollment.leads.outbound_initiated_today)
+      if (dailyCheck.blocked) {
+        console.log(`Campaign send blocked (daily limit): ${dailyCheck.reason} — lead ${enrollment.leads.id}`)
+        continue
+      }
+
       const firstName = enrollment.leads.first_name || 'there'
       const rawBody = spintext(currentMessage.message_body).replace('[First Name]', firstName)
       const userProfile = enrollment.user_id ? profileMap[enrollment.user_id] : null
@@ -431,6 +450,8 @@ const processScheduledMessages = async () => {
         const leadUpdates = { updated_at: new Date().toISOString() }
         if (canUpgrade(enrollment.leads.status, 'contacted')) leadUpdates.status = 'contacted'
         if (!enrollment.leads.first_message_sent) leadUpdates.first_message_sent = true
+        // Increment system-initiated counter (used for FL/OK/MD daily limit)
+        leadUpdates.outbound_initiated_today = (enrollment.leads.outbound_initiated_today || 0) + 1
         await supabase.from('leads').update(leadUpdates).eq('id', enrollment.leads.id)
         if (!enrollment.leads.first_message_sent) enrollment.leads.first_message_sent = true
 
@@ -464,7 +485,7 @@ const processScheduledMessages = async () => {
     // Process one-off scheduled messages
     const { data: dueOneOff } = await supabase
       .from('scheduled_messages')
-      .select('*, leads (id, first_name, phone, state, status, is_blocked)')
+      .select('*, leads (id, first_name, phone, state, timezone, status, is_blocked, outbound_initiated_today)')
       .eq('status', 'pending')
       .lte('send_at', now.toISOString())
 
@@ -483,15 +504,29 @@ const processScheduledMessages = async () => {
           continue
         }
 
+        // AI-queued conversational replies are NOT system-initiated — skip daily limit
+        const isAiQueued = sm.notes && sm.notes.includes('AI response queued')
+        if (!isAiQueued) {
+          const smDailyCheck = checkSystemInitiatedLimit(sm.leads.state, sm.leads.outbound_initiated_today)
+          if (smDailyCheck.blocked) {
+            console.log(`Scheduled message blocked (daily limit): ${smDailyCheck.reason} — lead ${sm.leads.id}`)
+            continue
+          }
+        }
+
         const fromNumber = pickNumberForLead(sm.user_id ? phoneNumbersMap[sm.user_id] : null, sm.leads.state) || process.env.TWILIO_PHONE_NUMBER
         const result = await sendSMS(sm.leads.phone, sm.body, fromNumber)
         if (result.success) {
           messagesSent++
           await supabase.from('scheduled_messages').update({ status: 'sent', sent_at: now.toISOString() }).eq('id', sm.id)
           // Upgrade lead status new → contacted on one-off send
-          if (canUpgrade(sm.leads.status, 'contacted')) {
-            await supabase.from('leads').update({ status: 'contacted', updated_at: now.toISOString() }).eq('id', sm.leads.id)
+          const smLeadUpdates = { updated_at: now.toISOString() }
+          if (canUpgrade(sm.leads.status, 'contacted')) smLeadUpdates.status = 'contacted'
+          // Increment system-initiated counter only for non-AI-queued messages
+          if (!isAiQueued) {
+            smLeadUpdates.outbound_initiated_today = (sm.leads.outbound_initiated_today || 0) + 1
           }
+          await supabase.from('leads').update(smLeadUpdates).eq('id', sm.leads.id)
           if (sm.conversation_id) {
             await supabase.from('messages').insert({
               conversation_id: sm.conversation_id,
@@ -527,11 +562,17 @@ const processScheduledMessages = async () => {
 
 const resetDailySendCounts = async () => {
   try {
-    await supabase
-      .from('phone_numbers')
-      .update({ sent_today: 0 })
-      .neq('id', '00000000-0000-0000-0000-000000000000') // update all rows
-    console.log('Daily sent_today counters reset')
+    await Promise.all([
+      supabase
+        .from('phone_numbers')
+        .update({ sent_today: 0 })
+        .neq('id', '00000000-0000-0000-0000-000000000000'),
+      supabase
+        .from('leads')
+        .update({ outbound_initiated_today: 0 })
+        .gt('outbound_initiated_today', 0) // only touch rows that need it
+    ])
+    console.log('Daily sent_today and outbound_initiated_today counters reset')
   } catch (err) {
     console.error('resetDailySendCounts error:', err.message)
   }
