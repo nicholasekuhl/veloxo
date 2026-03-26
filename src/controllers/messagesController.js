@@ -298,13 +298,15 @@ const handleIncomingMessage = async (req, res) => {
 
     // SMS forwarding — non-blocking, never delays main flow
     if (profile?.sms_notifications_enabled !== false && profile?.personal_phone && lead.status !== 'opted_out') {
-      const forwardingNumber = process.env.FORWARDING_NUMBER
-      if (forwardingNumber) {
+      const forwardingNumber = (process.env.FORWARDING_NUMBER || '').trim()
+      if (!forwardingNumber) {
+        console.log('SMS forward skipped — FORWARDING_NUMBER env var not set')
+      } else {
         const agencyName = profile.agency_name || 'TextApp'
         const msgBody = Body.length > 100 ? Body.slice(0, 100) + '...' : Body
         const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || ''
         const forwardText = `${agencyName}: msg from ${leadName} ${lead.phone}: ${msgBody}`.trim()
-        sendSMS(profile.personal_phone, forwardText, forwardingNumber)
+        sendSMS(profile.personal_phone, forwardText, process.env.FORWARDING_NUMBER)
       }
     }
 
@@ -331,7 +333,7 @@ const handleIncomingMessage = async (req, res) => {
       if (handoff.triggered) {
         await executeHandoff(lead, conversation, handoff, fromNumber)
       } else {
-        const aiResponse = await generateAIResponse(lead, history, profile)
+        const aiResponse = await generateAIResponse(lead, history, profile, Body)
 
         if (aiResponse) {
           const aiBody = buildMessageBody(aiResponse, profile, lead, false)
@@ -501,7 +503,7 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
   }
 }
 
-const generateAIResponse = async (lead, history, profile) => {
+const generateAIResponse = async (lead, history, profile, inboundBody = '') => {
   try {
     const Anthropic = require('@anthropic-ai/sdk')
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -624,11 +626,17 @@ RESPONSE STYLE RULES:
 
 Lead info: Name: ${lead.first_name || ''} ${lead.last_name || ''}, State: ${lead.state || 'unknown'}, Product interest: ${lead.product || 'unknown'}`
 
+    const messagesToSend = history.length > 0
+      ? history.slice(-10)
+      : [{ role: 'user', content: inboundBody }]
+    console.log('Messages array length:', messagesToSend.length)
+    console.log('First message:', messagesToSend[0])
+
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 300,
       system: systemPrompt,
-      messages: history.slice(-10)
+      messages: messagesToSend
     })
 
     return response.content[0]?.text || null

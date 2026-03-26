@@ -1,5 +1,5 @@
 const supabase = require('../db')
-const { sendSMS } = require('../twilio')
+const { sendSMS, getNumberForLead } = require('../twilio')
 const { spintext } = require('../spintext')
 
 const calculateSendTime = (dayNumber, sendTime, startDate, timezone) => {
@@ -126,9 +126,12 @@ const executeActions = async (lead, actions, dispositionTagId, profile) => {
         case 'send_immediate_text': {
           const message = action.action_value?.message
           if (message && lead.phone) {
+            console.log('Disposition action triggered:', action.action_type)
+            console.log('Sending to:', lead.phone)
             const firstName = lead.first_name || 'there'
             const body = spintext(message).replace(/\[First Name\]/g, firstName)
-            const result = await sendSMS(lead.phone, body, profile)
+            const fromNumber = await getNumberForLead(lead.user_id, lead.state)
+            const result = await sendSMS(lead.phone, body, fromNumber)
             if (result.success) {
               let { data: conversation } = await supabase
                 .from('conversations')

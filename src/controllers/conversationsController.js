@@ -58,7 +58,10 @@ const getConversation = async (req, res) => {
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
       .single()
-    if (error) throw error
+    if (error) {
+      console.error('Messages fetch error:', error.message)
+      throw error
+    }
     res.json({ conversation: data })
   } catch (err) {
     console.error('Conversations getConversation error:', err.message)
