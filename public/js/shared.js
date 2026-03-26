@@ -81,6 +81,8 @@ const loadProfile = async () => {
     if (smsNotif) smsNotif.checked = p.sms_notifications_enabled !== false
     const inappNotif = document.getElementById('inapp-notif-enabled')
     if (inappNotif) inappNotif.checked = p.inapp_notifications_enabled !== false
+    const afterHours = document.getElementById('ai-afterhours-response')
+    if (afterHours) afterHours.value = p.ai_afterhours_response || 'queue'
     if (typeof loadChecklist === 'function') loadChecklist(p)
   } catch (err) { console.error('Profile load error:', err) }
 }

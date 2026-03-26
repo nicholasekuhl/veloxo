@@ -220,7 +220,8 @@
 
   const renderApptCard = (a) => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    const time = new Date(a.scheduled_at).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' })
+    const localTime = new Date(a.scheduled_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone })
+    const time = localTime
     const dateLabel = new Date(a.scheduled_at).toLocaleDateString('en-US', { timeZone: tz, month: 'short', day: 'numeric' })
     const name = a.lead_name || (a.leads ? `${a.leads.first_name || ''} ${a.leads.last_name || ''}`.trim() : 'Unknown')
     const phone = a.lead_phone || a.leads?.phone || ''

@@ -2,6 +2,7 @@ const supabase = require('../db')
 const { sendSMS, buildMessageBody, getMasterClient, getNumberForLead } = require('../twilio')
 const { createNotification } = require('../notifications')
 const { spintext } = require('../spintext')
+const { isWithinQuietHours, getNextSendWindow } = require('../compliance')
 
 const isPositiveEngagement = (history) => {
   const recentInbound = history.filter(m => m.role === 'user').slice(-5)
@@ -405,6 +406,28 @@ const handleIncomingMessage = async (req, res) => {
         const aiResponse = await generateAIResponse(lead, history, profile, Body)
 
         if (aiResponse) {
+          // Check quiet hours — queue if outside window and user prefers queuing
+          const quietCheck = isWithinQuietHours(lead.state, lead.timezone)
+          const afterHoursSetting = profile.ai_afterhours_response || 'queue'
+
+          if (quietCheck.blocked && afterHoursSetting === 'queue') {
+            const nextWindow = getNextSendWindow(lead.state, lead.timezone)
+            const aiBody = buildMessageBody(removeExcessEmojis(naturalizeText(aiResponse)), profile, lead, false)
+            await supabase.from('scheduled_messages').insert({
+              user_id: userId,
+              lead_id: lead.id,
+              conversation_id: conversation.id,
+              body: aiBody,
+              scheduled_at: nextWindow,
+              send_at: nextWindow,
+              status: 'pending',
+              notes: 'AI response queued — outside quiet hours'
+            })
+            console.log(`AI response queued until ${nextWindow} for lead ${lead.id} (${quietCheck.reason})`)
+            res.set('Content-Type', 'text/xml')
+            return res.send('<Response></Response>')
+          }
+
           // Delay scales with message length to feel more human
           const wordCount = aiResponse.split(' ').length
           const baseDelay = 12000
@@ -815,9 +838,12 @@ const STATUS_MAP = {
   failed: 'failed'
 }
 
+// Carrier/spam related error codes that indicate filtering
+const VIOLATION_CODES = new Set(['30003', '30004', '30005', '30006', '30007', '30008'])
+
 const handleStatusCallback = async (req, res) => {
   try {
-    const { MessageSid, MessageStatus, ErrorCode, ErrorMessage } = req.body
+    const { MessageSid, MessageStatus, ErrorCode, ErrorMessage, From } = req.body
     if (!MessageSid) return res.sendStatus(200)
 
     const update = { status: STATUS_MAP[MessageStatus] || MessageStatus }
@@ -825,6 +851,57 @@ const handleStatusCallback = async (req, res) => {
     if (ErrorMessage) update.error_message = ErrorMessage
 
     await supabase.from('messages').update(update).eq('twilio_sid', MessageSid)
+
+    // Carrier violation tracking
+    if (ErrorCode && VIOLATION_CODES.has(String(ErrorCode))) {
+      const fromNumber = From || req.body.from
+      if (fromNumber) {
+        const { data: pn } = await supabase
+          .from('phone_numbers')
+          .select('id, violation_count, daily_limit, status')
+          .eq('phone_number', fromNumber)
+          .single()
+
+        if (pn) {
+          // Count violations in last 100 messages for this number
+          const { count: totalSent } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('twilio_sid', MessageSid) // placeholder — use from number join in practice
+
+          const newCount = (pn.violation_count || 0) + 1
+
+          // Fetch recent 100 sends to compute rate
+          const { count: recentViolations } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'failed')
+            .not('error_code', 'is', null)
+            .gte('sent_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+
+          const violationRate = Math.min(((recentViolations || 0) / 100) * 100, 100)
+
+          let newStatus = pn.status || 'active'
+          const statusUpdate = {
+            violation_count: newCount,
+            violation_rate: violationRate
+          }
+
+          if (violationRate >= 15) {
+            newStatus = 'flagged'
+            console.log(`Number ${fromNumber} flagged — violation rate ${violationRate}%. Consider replacement.`)
+          } else if (violationRate >= 10) {
+            newStatus = 'cooling'
+            statusUpdate.cooloff_until = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            console.log(`Number ${fromNumber} cooling off for 24h — violation rate ${violationRate}%`)
+          }
+
+          statusUpdate.status = newStatus
+          await supabase.from('phone_numbers').update(statusUpdate).eq('id', pn.id)
+        }
+      }
+    }
+
     res.sendStatus(200)
   } catch (err) {
     console.error('Status callback error:', err.message)

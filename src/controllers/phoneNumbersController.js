@@ -223,4 +223,20 @@ const getPhoneNumberHealth = async (req, res) => {
   }
 }
 
-module.exports = { getPhoneNumbers, searchPhoneNumbers, purchasePhoneNumber, updatePhoneNumber, deletePhoneNumber, setDefaultPhoneNumber, getPhoneNumberHealth }
+const updatePhoneNumberState = async (req, res) => {
+  try {
+    const { state } = req.body
+    const { error } = await supabase
+      .from('phone_numbers')
+      .update({ state: state || null, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+    if (error) throw error
+    res.json({ success: true })
+  } catch (err) {
+    console.error('updatePhoneNumberState error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getPhoneNumbers, searchPhoneNumbers, purchasePhoneNumber, updatePhoneNumber, deletePhoneNumber, setDefaultPhoneNumber, getPhoneNumberHealth, updatePhoneNumberState }

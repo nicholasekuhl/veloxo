@@ -142,4 +142,31 @@ const deleteUser = async (req, res) => {
   }
 }
 
-module.exports = { getUsers, suspendUser, unsuspendUser, deleteUser }
+const getComplianceOverrides = async (req, res) => {
+  try {
+    const supabase = require('../db')
+    const { data, error } = await supabase
+      .from('compliance_overrides')
+      .select(`
+        id, created_at, message_body, lead_state, lead_timezone,
+        local_time_at_send, reason,
+        user_id,
+        user_profiles!compliance_overrides_user_id_fkey (agent_name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(500)
+    if (error) throw error
+
+    const overrides = (data || []).map(r => ({
+      ...r,
+      agent_name: r.user_profiles?.agent_name || null
+    }))
+
+    res.json({ overrides })
+  } catch (err) {
+    console.error('getComplianceOverrides error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getUsers, suspendUser, unsuspendUser, deleteUser, getComplianceOverrides }

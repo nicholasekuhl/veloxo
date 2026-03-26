@@ -215,6 +215,19 @@
           <div id="notif-settings-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
           <button class="btn btn-primary" onclick="saveNotifSettings()">Save Notification Settings</button>
         </div>
+        <div class="settings-card">
+          <h2>AI After-Hours Response</h2>
+          <p>When a lead texts after permitted marketing hours, should the AI respond right away or wait until the next allowed window?</p>
+          <div class="form-group" style="margin-bottom:20px;">
+            <select id="ai-afterhours-response" style="padding:9px 13px;border:1px solid var(--color-border);border-radius:var(--radius-md);font-size:14px;font-family:inherit;outline:none;background:white;color:var(--color-text);width:100%;max-width:320px;">
+              <option value="queue">Queue until morning (default)</option>
+              <option value="immediate">Respond immediately</option>
+            </select>
+            <div style="font-size:12px;color:var(--color-text-muted);margin-top:6px;">Queue sends the AI reply at the start of the next permitted window. Immediate responds right away regardless of time.</div>
+          </div>
+          <div id="afterhours-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
+          <button class="btn btn-primary" onclick="saveAfterHoursSettings()">Save After-Hours Settings</button>
+        </div>
       </div>
     </div>
   </div>
@@ -799,7 +812,9 @@
           <tr style="border-bottom:1px solid var(--color-border);">
             <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Phone</th>
             <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">State</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Violations</th>
+            <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Status</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Sent Today</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Viol. Rate</th>
             <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Opt-Outs</th>
             <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Delivery</th>
             <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Health</th>
@@ -814,19 +829,48 @@
             const violations = h.violation_count != null ? h.violation_count : '—'
             const optOuts = h.opt_out_count != null ? h.opt_out_count : '—'
             const delivery = h.delivery_rate != null ? h.delivery_rate + '%' : '—'
-            const status = h.health_status || 'good'
+            const healthStatus = h.health_status || 'good'
             const violColor = h.violation_count > 50 ? '#dc2626' : h.violation_count >= 20 ? '#d97706' : 'inherit'
             const delivColor = h.delivery_rate < 75 ? '#dc2626' : h.delivery_rate < 90 ? '#d97706' : 'inherit'
+
+            // Compliance status badge
+            const pnStatus = pn.status || 'active'
+            let statusBadge = ''
+            if (pnStatus === 'active') {
+              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#059669;"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span>Active</span>`
+            } else if (pnStatus === 'cooling') {
+              const coolUntil = pn.cooloff_until ? new Date(pn.cooloff_until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
+              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#d97706;" title="Cooling off until ${coolUntil}"><span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Cooling until ${coolUntil}</span>`
+            } else if (pnStatus === 'flagged') {
+              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#dc2626;"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Consider replacing</span>`
+            } else if (pnStatus === 'retired') {
+              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--color-text-muted);"><span style="width:7px;height:7px;border-radius:50%;background:#9ca3af;display:inline-block;"></span>Retired</span>`
+            }
+
+            const sentToday = pn.sent_today != null ? pn.sent_today : '—'
+            const dailyLimit = pn.daily_limit != null ? pn.daily_limit : 500
+            const violRate = pn.violation_rate != null ? pn.violation_rate + '%' : '—'
+            const violRateColor = pn.violation_rate >= 15 ? '#dc2626' : pn.violation_rate >= 10 ? '#d97706' : 'inherit'
+
+            const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
+            const stateOptions = `<option value="">Unassigned</option>` + US_STATES.map(s => `<option value="${s}"${pn.state === s ? ' selected' : ''}>${s}</option>`).join('')
+
             return `<tr style="border-bottom:1px solid var(--color-border-light);">
               <td style="padding:12px 10px;">
                 <div style="font-weight:600;color:var(--color-text);">${pn.friendly_name || pn.phone_number}</div>
                 <div style="font-size:11px;color:var(--color-text-muted);">${pn.phone_number}${pn.is_default ? ' · <span style="color:var(--color-primary);">Default</span>' : ''}</div>
               </td>
-              <td style="padding:12px 10px;color:var(--color-text-secondary);">${pn.state || '—'}</td>
-              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${violColor};font-weight:${h.violation_count >= 20 ? 600 : 400};">${violations}</td>
+              <td style="padding:12px 10px;">
+                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:12px;background:white;color:var(--color-text);cursor:pointer;">
+                  ${stateOptions}
+                </select>
+              </td>
+              <td style="padding:12px 10px;text-align:center;">${statusBadge}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-text-secondary);">${sentToday} / ${dailyLimit}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${violRateColor};font-weight:${pn.violation_rate >= 10 ? 600 : 400};">${violRate}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-text-secondary);">${optOuts}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${delivColor};font-weight:${h.delivery_rate < 90 ? 600 : 400};">${delivery}</td>
-              <td style="padding:12px 10px;text-align:center;">${healthBadge(status)}</td>
+              <td style="padding:12px 10px;text-align:center;">${healthBadge(healthStatus)}</td>
               <td style="padding:12px 10px;color:var(--color-text-secondary);">${purchased}</td>
               <td style="padding:12px 10px;text-align:right;">
                 <div style="position:relative;display:inline-block;">
@@ -835,7 +879,7 @@
                     ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--color-text);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
                     <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--color-text);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
                     <div style="height:1px;background:var(--color-border-light);margin:4px 0;"></div>
-                    <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${status}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">Release Number</button>
+                    <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${pnStatus}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">Release Number</button>
                   </div>
                 </div>
               </td>
@@ -843,6 +887,23 @@
           }).join('')}
         </tbody>
       </table>`
+  }
+
+  const saveNumberState = async (id, state) => {
+    try {
+      const res = await fetch(`/phone-numbers/${id}/state`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: state || null })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save state')
+      const pn = allPhoneNumbers.find(p => p.id === id)
+      if (pn) pn.state = state || null
+      toast.success('Saved', 'State assignment updated')
+    } catch (err) {
+      toast.error('Error', err.message)
+    }
   }
 
   const togglePnMenu = (id) => {
@@ -1225,6 +1286,29 @@
       if (data.success) toast.success('Settings saved', 'Notification preferences updated')
       else toast.error('Save failed', data.error || 'Could not save settings')
     } catch { toast.error('Error', 'Could not save settings') }
+  }
+
+  const saveAfterHoursSettings = async () => {
+    const statusEl = document.getElementById('afterhours-save-status')
+    statusEl.style.display = 'block'
+    statusEl.style.color = '#6366f1'
+    statusEl.textContent = 'Saving...'
+    try {
+      const body = { ai_afterhours_response: document.getElementById('ai-afterhours-response').value }
+      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      if (data.success) {
+        statusEl.style.color = '#059669'
+        statusEl.textContent = 'Saved!'
+      } else {
+        statusEl.style.color = '#dc2626'
+        statusEl.textContent = data.error || 'Save failed'
+      }
+    } catch {
+      statusEl.style.color = '#dc2626'
+      statusEl.textContent = 'Save failed'
+    }
+    setTimeout(() => { statusEl.style.display = 'none' }, 3000)
   }
 
   // ─── TEMPLATES ────────────────────────────────────────────────────────────────

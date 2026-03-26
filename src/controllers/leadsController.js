@@ -1024,4 +1024,41 @@ const markCalled = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut }
+const checkQuietHours = async (req, res) => {
+  try {
+    const { isWithinQuietHours } = require('../compliance')
+    const { data: lead, error } = await supabase
+      .from('leads')
+      .select('id, state, timezone')
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .single()
+    if (error || !lead) return res.status(404).json({ error: 'Lead not found' })
+    const result = isWithinQuietHours(lead.state, lead.timezone)
+    res.json(result)
+  } catch (err) {
+    console.error('checkQuietHours error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const logComplianceOverride = async (req, res) => {
+  try {
+    const { lead_id, message_body, lead_state, lead_timezone, local_time_at_send, reason } = req.body
+    await supabase.from('compliance_overrides').insert({
+      user_id: req.user.id,
+      lead_id,
+      message_body,
+      lead_state,
+      lead_timezone,
+      local_time_at_send,
+      reason
+    })
+    res.json({ success: true })
+  } catch (err) {
+    console.error('logComplianceOverride error:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { parseHeaders, uploadLeads, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride }

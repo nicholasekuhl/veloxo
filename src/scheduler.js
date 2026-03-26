@@ -2,6 +2,7 @@ const supabase = require('./db')
 const { sendSMS, buildMessageBody, pickNumberForLead } = require('./twilio')
 const { spintext } = require('./spintext')
 const nodemailer = require('nodemailer')
+const { isWithinQuietHours } = require('./compliance')
 
 const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
@@ -162,6 +163,13 @@ const checkGhostedConversations = async () => {
 
       if (!lead || !lead.autopilot || lead.opted_out || lead.is_blocked) continue
       if (!isInBusinessHoursForTimezone(lead.timezone)) continue
+
+      // TCPA quiet hours — hard block on follow-ups
+      const quietCheck = isWithinQuietHours(lead.state, lead.timezone)
+      if (quietCheck.blocked) {
+        console.log(`Follow-up blocked (quiet hours): ${quietCheck.reason} — lead ${lead.id}`)
+        continue
+      }
 
       // Load message history
       const { data: messages } = await supabase
@@ -376,6 +384,13 @@ const processScheduledMessages = async () => {
         continue
       }
 
+      // TCPA quiet hours — hard block, no override
+      const quietCheck = isWithinQuietHours(enrollment.leads.state, enrollment.leads.timezone)
+      if (quietCheck.blocked) {
+        console.log(`Campaign send blocked (quiet hours): ${quietCheck.reason} — lead ${enrollment.leads.id}`)
+        continue
+      }
+
       const firstName = enrollment.leads.first_name || 'there'
       const rawBody = spintext(currentMessage.message_body).replace('[First Name]', firstName)
       const userProfile = enrollment.user_id ? profileMap[enrollment.user_id] : null
@@ -460,6 +475,14 @@ const processScheduledMessages = async () => {
           await supabase.from('scheduled_messages').update({ status: 'cancelled' }).eq('id', sm.id)
           continue
         }
+
+        // TCPA quiet hours — hard block on scheduled messages
+        const smQuietCheck = isWithinQuietHours(sm.leads.state, sm.leads.timezone)
+        if (smQuietCheck.blocked) {
+          console.log(`Scheduled message blocked (quiet hours): ${smQuietCheck.reason} — lead ${sm.leads.id}`)
+          continue
+        }
+
         const fromNumber = pickNumberForLead(sm.user_id ? phoneNumbersMap[sm.user_id] : null, sm.leads.state) || process.env.TWILIO_PHONE_NUMBER
         const result = await sendSMS(sm.leads.phone, sm.body, fromNumber)
         if (result.success) {
@@ -502,10 +525,47 @@ const processScheduledMessages = async () => {
   }
 }
 
+const resetDailySendCounts = async () => {
+  try {
+    await supabase
+      .from('phone_numbers')
+      .update({ sent_today: 0 })
+      .neq('id', '00000000-0000-0000-0000-000000000000') // update all rows
+    console.log('Daily sent_today counters reset')
+  } catch (err) {
+    console.error('resetDailySendCounts error:', err.message)
+  }
+}
+
+const restoreCoolingNumbers = async () => {
+  try {
+    await supabase
+      .from('phone_numbers')
+      .update({ status: 'active', cooloff_until: null })
+      .eq('status', 'cooling')
+      .lt('cooloff_until', new Date().toISOString())
+    console.log('Cooling numbers restored to active')
+  } catch (err) {
+    console.error('restoreCoolingNumbers error:', err.message)
+  }
+}
+
+const scheduleMidnightReset = () => {
+  const now = new Date()
+  const nextMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0))
+  const msUntilMidnight = nextMidnight - now
+  setTimeout(() => {
+    resetDailySendCounts()
+    scheduleMidnightReset() // reschedule for next midnight
+  }, msUntilMidnight)
+}
+
 const startScheduler = () => {
   console.log('Campaign scheduler started — master Twilio account active')
   setInterval(processScheduledMessages, 60000)
   setInterval(checkGhostedConversations, 60000)
+  setInterval(restoreCoolingNumbers, 5 * 60 * 1000) // check every 5 min
+  scheduleMidnightReset()
   processScheduledMessages()
   checkGhostedConversations()
 }

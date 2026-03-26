@@ -100,25 +100,59 @@
     <div class="stat-card"><div class="num" id="stat-leads" style="color:#6366f1;">—</div><div class="lbl">Total Leads</div></div>
   </div>
 
-  <div class="table-card">
-    <div class="table-toolbar">
-      <h2>Users</h2>
-      <input type="text" class="search-input" placeholder="Search users..." oninput="filterUsers(this.value)">
+  <!-- Admin tabs -->
+  <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid #f0f0f0;padding-bottom:0;">
+    <button id="tab-btn-users" onclick="showAdminTab('users')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6366f1;border-bottom:2px solid #6366f1;cursor:pointer;font-family:inherit;">Users</button>
+    <button id="tab-btn-compliance" onclick="showAdminTab('compliance')" style="padding:8px 18px;border:none;background:none;font-size:13px;font-weight:500;color:#9ca3af;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;">Compliance Log</button>
+  </div>
+
+  <!-- Users tab -->
+  <div id="tab-users">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <h2>Users</h2>
+        <input type="text" class="search-input" placeholder="Search users..." oninput="filterUsers(this.value)">
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Agent</th>
+            <th>Agency</th>
+            <th>Joined</th>
+            <th>Leads</th>
+            <th>Msgs (month)</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Agent</th>
-          <th>Agency</th>
-          <th>Joined</th>
-          <th>Leads</th>
-          <th>Msgs (month)</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="users-tbody"></tbody>
-    </table>
+  </div>
+
+  <!-- Compliance Log tab -->
+  <div id="tab-compliance" style="display:none;">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <h2>Compliance Overrides</h2>
+        <span style="font-size:12px;color:#9ca3af;">Every manual send that bypassed quiet hours protections</span>
+      </div>
+      <div id="compliance-log-loading" style="padding:32px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>
+      <table id="compliance-log-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>Date &amp; Time</th>
+            <th>Agent</th>
+            <th>Lead State</th>
+            <th>Local Time at Send</th>
+            <th>Reason Blocked</th>
+            <th>Message Preview</th>
+          </tr>
+        </thead>
+        <tbody id="compliance-tbody"></tbody>
+      </table>
+      <div id="compliance-empty" style="display:none;padding:48px;text-align:center;color:#9ca3af;font-size:13px;">No compliance overrides recorded.</div>
+    </div>
   </div>
 </div>
 
@@ -360,6 +394,58 @@
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeSuspendModal(); closeDeleteModal() }
   })
+
+  // ─── ADMIN TABS ────────────────────────────────────────────────────────────
+
+  const showAdminTab = (tab) => {
+    document.getElementById('tab-users').style.display = tab === 'users' ? 'block' : 'none'
+    document.getElementById('tab-compliance').style.display = tab === 'compliance' ? 'block' : 'none'
+    document.getElementById('tab-btn-users').style.cssText = tab === 'users'
+      ? 'padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6366f1;border-bottom:2px solid #6366f1;cursor:pointer;font-family:inherit;'
+      : 'padding:8px 18px;border:none;background:none;font-size:13px;font-weight:500;color:#9ca3af;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;'
+    document.getElementById('tab-btn-compliance').style.cssText = tab === 'compliance'
+      ? 'padding:8px 18px;border:none;background:none;font-size:13px;font-weight:600;color:#6366f1;border-bottom:2px solid #6366f1;cursor:pointer;font-family:inherit;'
+      : 'padding:8px 18px;border:none;background:none;font-size:13px;font-weight:500;color:#9ca3af;border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;'
+    if (tab === 'compliance') loadComplianceLog()
+  }
+
+  let complianceLoaded = false
+
+  const loadComplianceLog = async () => {
+    if (complianceLoaded) return
+    try {
+      const res = await fetch('/admin/compliance-overrides')
+      const data = await res.json()
+      const loading = document.getElementById('compliance-log-loading')
+      const table = document.getElementById('compliance-log-table')
+      const empty = document.getElementById('compliance-empty')
+      const tbody = document.getElementById('compliance-tbody')
+
+      loading.style.display = 'none'
+      const rows = data.overrides || []
+      if (!rows.length) {
+        empty.style.display = 'block'
+        return
+      }
+
+      tbody.innerHTML = rows.map(r => {
+        const dt = r.created_at ? new Date(r.created_at).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+        const preview = r.message_body ? r.message_body.slice(0, 60) + (r.message_body.length > 60 ? '…' : '') : '—'
+        return `<tr>
+          <td>${dt}</td>
+          <td style="font-weight:500;">${r.agent_name || '—'}</td>
+          <td><span class="badge badge-admin" style="font-size:11px;">${r.lead_state || '—'}</span></td>
+          <td style="color:#9ca3af;font-size:12px;">${r.local_time_at_send || '—'}</td>
+          <td style="color:#dc2626;font-size:12px;max-width:220px;">${r.reason || '—'}</td>
+          <td style="color:#374151;font-size:12px;max-width:240px;font-style:italic;">${preview}</td>
+        </tr>`
+      }).join('')
+      table.style.display = 'table'
+      complianceLoaded = true
+    } catch (err) {
+      document.getElementById('compliance-log-loading').textContent = 'Failed to load compliance log'
+    }
+  }
 
   init()
 </script>
