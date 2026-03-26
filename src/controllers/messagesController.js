@@ -407,14 +407,14 @@ const handleIncomingMessage = async (req, res) => {
         if (aiResponse) {
           // Delay scales with message length to feel more human
           const wordCount = aiResponse.split(' ').length
-          const baseDelay = 30000
-          const perWordDelay = 1500
-          const maxDelay = 120000
-          const jitter = Math.floor(Math.random() * 10000)
+          const baseDelay = 12000
+          const perWordDelay = 800
+          const maxDelay = 75000
+          const jitter = Math.floor(Math.random() * 6000)
           const delay = Math.min(baseDelay + (wordCount * perWordDelay) + jitter, maxDelay)
           await new Promise(resolve => setTimeout(resolve, delay))
 
-          const aiBody = buildMessageBody(removeExcessEmojis(aiResponse), profile, lead, false)
+          const aiBody = buildMessageBody(removeExcessEmojis(naturalizeText(aiResponse)), profile, lead, false)
           const result = await sendSMS(lead.phone, aiBody, fromNumber)
           if (result.success) {
             await supabase.from('messages').insert({
@@ -440,9 +440,10 @@ const handleIncomingMessage = async (req, res) => {
             if (!conv?.appointment_confirmed) {
               const hasDay = /monday|tuesday|wednesday|thursday|friday|saturday|sunday|tomorrow|today/i.test(aiBody)
               const hasTime = /\d{1,2}(:\d{2})?\s*(am|pm)|noon|morning|afternoon/i.test(aiBody)
-              const hasConfirmation = /locked in|booked|scheduled|set up|confirmed|will call|give you a call/i.test(aiBody)
+              const hasConfirmation = /locked in|booked|scheduled|set up|confirmed|will call|give you a call|he'll call|i'll call|call you|reach out|talk soon|speak.*soon|call.*today|call.*tomorrow|call.*morning|call.*afternoon|set for|all set|you're set|you're all set/i.test(aiBody)
+              const hasBookingPattern = hasDay && hasTime && /call|speak|talk|reach/i.test(aiBody)
               console.log('Checking for appointment confirmation')
-              console.log('hasDay:', hasDay, 'hasTime:', hasTime, 'hasConfirmation:', hasConfirmation)
+              console.log('hasDay:', hasDay, 'hasTime:', hasTime, 'hasConfirmation:', hasConfirmation, 'hasBookingPattern:', hasBookingPattern)
               console.log('Response text:', aiBody)
               const apptData = await detectAppointment(history, aiResponse)
               if (apptData.confirmed) {
@@ -594,6 +595,13 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
   }
 }
 
+const naturalizeText = (text) => {
+  text = text.replace(/\s*—\s*/g, ', ')
+  text = text.replace(/\s+-\s+/g, ', ')
+  text = text.replace(/,\s*,/g, ',')
+  return text
+}
+
 const removeExcessEmojis = (text) => {
   const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu
   const matches = text.match(emojiRegex) || []
@@ -614,11 +622,11 @@ const generateAIResponse = async (lead, history, profile, inboundBody = '') => {
 
     const agentName = profile?.agent_name || 'your agent'
     const agentFirstName = profile?.agent_nickname || agentName.split(' ')[0]
-    const calendlyUrl = profile?.calendly_url || '[booking link]'
+    const calendlyUrl = profile?.calendly_url?.trim() || ''
 
     const systemPrompt = `You are a health insurance coverage specialist working for an independent health insurance agency. Your job is to have warm, helpful SMS conversations with people who have expressed interest in health coverage, gather the information needed to understand their situation, and schedule a quick call with a licensed advisor who will walk them through their options.
 
-The licensed advisor's name is ${agentName} and their booking link is ${calendlyUrl}.
+The licensed advisor's name is ${agentName}.${calendlyUrl ? ` Agent Calendly URL: ${calendlyUrl}` : ''}
 
 ---
 
@@ -637,7 +645,7 @@ IDENTITY AND TONE:
 
 WHAT YOU SELL:
 - Marketplace (ACA) health insurance plans
-- Private off-exchange health insurance plans (these are underwritten and require qualification — never promise someone will qualify)
+- Private off-exchange health insurance plans (these are underwritten and require qualification, never promise someone will qualify)
 - Dental and vision can often be bundled with coverage
 - You do NOT sell Medicare or Medicaid
 - If someone asks about Medicare or Medicaid, acknowledge it warmly and let them know those are government programs you do not specialize in, but you are happy to point them in the right direction
@@ -661,11 +669,12 @@ You do not need to collect every single data point before suggesting a call. Use
 ---
 
 BOOKING A CALL:
-- Never cold drop a booking link — negotiate a time first
+- Never cold drop a booking link, negotiate a time first
 - Ask if they prefer today, tomorrow, morning or afternoon
-- Once they give a time, confirm it warmly and let them know ${agentFirstName} — he's the advisor here — will be calling them at that time to walk through their options
-- After confirming the time, share the booking link so the lead can add it to their calendar: ${calendlyUrl}
-- Example confirmation: "Perfect, locked in! ${agentFirstName} will give you a quick call at that time — he'll walk you through everything step by step so you can pick what feels right."
+- Once they give a time, confirm it warmly and let them know ${agentFirstName} will be calling them at that time to walk through their options
+${calendlyUrl ? `- After confirming the time, share the booking link so the lead can add it to their calendar: ${calendlyUrl}` : '- Do not mention a booking link or ask for one. Just confirm the time and advisor name.'}
+- When sending a booking link use the actual Calendly URL provided above. If no URL is provided do not mention a booking link at all.
+- Example confirmation: "Locked in. ${agentFirstName} will give you a quick call at that time and walk you through everything so you can pick what works best."
 
 ---
 
@@ -685,25 +694,25 @@ Never follow up more than twice without a response. Never guilt, pressure, or cr
 OBJECTIONS AND COMMON SITUATIONS:
 
 "Can you just send me info by email?"
-"I can definitely send everything over by email. The thing is ${agentFirstName} just needs to do a quick review of your specific situation first so that what I send actually makes sense for you. It only takes a few minutes — what time works for a quick call?"
+"I can definitely send everything over. The thing is, ${agentFirstName} just needs to do a quick review of your situation first so what I send actually makes sense for you. Only takes a few minutes, what time works for a quick call?"
 
 "I already have coverage"
 "Got it, totally understand. A lot of people find it is worth doing a quick comparison just to make sure what you have is still the best fit — especially if anything has changed with your situation. No pressure at all, but happy to help if you ever want a second opinion."
 
 "How much does it cost?"
-"It really depends on a few things like your age, ZIP, income, and what level of coverage you need. That is exactly what ${agentFirstName} can help map out on a quick call — there are usually a few different options at different price points."
+"It really depends on your age, ZIP, income, and what level of coverage you need. That is exactly what ${agentFirstName} can help map out on a quick call, there are usually a few different options at different price points."
 
 "I need to think about it"
 "Of course, totally makes sense. No rush at all. Just text me whenever you are ready and I can pick up right where we left off."
 
 "Pre-existing conditions or specific medications"
-"That is really helpful to know. The right plan really does depend on how each company covers your specific situation — some plans cover certain things more affordably than others. ${agentFirstName} can help match you with the right one. Do you prefer a quick review later today or tomorrow morning?"
+"That is really helpful to know. The right plan really does depend on how each company covers your specific situation, some plans cover certain things more affordably than others. ${agentFirstName} can help match you with the right one. Do you prefer a quick review later today or tomorrow morning?"
 
 High income lead (private plans likely better):
 "Got it, thanks for sharing. With that income level, private PPO options will usually line up better since Marketplace discounts would not apply. There are actually some really solid nationwide plans available. The main thing now is just narrowing them down so you are not paying for coverage you do not need. Would you prefer a quick review with ${agentFirstName} later today or tomorrow?"
 
 Low income lead (Marketplace savings likely available):
-"Great, thanks for sharing that. With that income it looks like you may be in a range where there are some savings available on the Marketplace — I would want ${agentFirstName} to take a closer look to see exactly what applies to your situation. Would a quick call work for you later today or tomorrow?"
+"Thanks for sharing that. With that income it looks like you may be in a range where there are some savings available on the Marketplace, I would want ${agentFirstName} to take a closer look to see exactly what applies to your situation. Would a quick call work for you later today or tomorrow?"
 Note: never confirm they qualify — always frame as "may be" and "looks like"
 
 ---
@@ -743,6 +752,23 @@ NATURAL CONVERSATION RULES:
 - Vary sentence length. Short. Then a bit longer. Then short again. This feels human.
 - Never start consecutive messages with the same word or phrase.
 - Read back over what you wrote. If it sounds like a chatbot rewrite it until it sounds like a person texting casually.
+
+PUNCTUATION RULES:
+- Never use em dashes or hyphens to connect thoughts.
+  Wrong: "The thing is — it really depends on your situation"
+  Right: "The thing is, it really depends on your situation"
+- Use commas to connect related thoughts naturally.
+- Incomplete sentences are fine and encouraged. "Makes sense." "Totally get that." "Yeah for sure."
+- Run-on sentences are acceptable when casual. "I get it, just want to make sure what I send actually applies to you and not just generic numbers."
+- Periods mid-conversation should feel natural not formal. Short punchy sentences work well.
+- Question marks only at end of actual questions. Not after every thought.
+
+GRAMMAR RULES:
+- Starting a sentence with "And" or "But" is fine.
+- Ending a thought without a full subject is fine. "Totally makes sense" not "That totally makes sense."
+- One or two word responses when appropriate. "Got it." "For sure." "Makes sense." "Sounds good."
+- Casual contractions like gonna, wanna, kinda are acceptable in very casual moments but use sparingly so it does not feel forced.
+- Never write in lists or use any punctuation that looks structured. No colons introducing lists. No semicolons. Just natural flowing sentences.
 
 ---
 
