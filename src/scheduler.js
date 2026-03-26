@@ -91,7 +91,10 @@ const generateFollowupMessage = async (lead, history, profile, followupContext) 
 
 Rules: never be pushy, maximum 1-2 sentences, use the lead's first name once if appropriate, do not repeat phrases from previous messages, sound like a real person texting.`
 
-    const messagesToSend = history.length > 0 ? history.slice(-20) : [{ role: 'user', content: 'Hi' }]
+    const rawMessages = history.length > 0 ? history : [{ role: 'user', content: 'Hi' }]
+    const messagesToSend = rawMessages.length > 12
+      ? [...rawMessages.slice(0, 2), ...rawMessages.slice(-10)]
+      : rawMessages
 
     if (messagesToSend.length === 0 || messagesToSend[messagesToSend.length - 1].role === 'assistant') {
       messagesToSend.push({
