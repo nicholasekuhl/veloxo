@@ -324,9 +324,9 @@ function saveSlotModal(){
   const r1v=parseFloat(document.getElementById('slot-av-r1').value)||0
   const r2v=parseFloat(document.getElementById('slot-av-r2').value)||0
   const r3v=parseFloat(document.getElementById('slot-av-r3').value)||0
-  if(r1v) setAV(newName,'r1',r1v); else if(avScores[newName]) delete avScores[newName].r1
-  if(r2v) setAV(newName,'r2',r2v); else if(avScores[newName]) delete avScores[newName].r2
-  if(r3v) setAV(newName,'r3',r3v); else if(avScores[newName]) delete avScores[newName].r3
+  setAV(newName,'r1',r1v)
+  setAV(newName,'r2',r2v)
+  setAV(newName,'r3',r3v)
 
   closeSlotModal(); scheduleSave(); render(); renderLeaderboard()
 }
@@ -391,10 +391,26 @@ function getAV(name,round){return parseFloat(avScores[name]?.[round]||0)||0}
 function setAV(name,round,val){if(!avScores[name])avScores[name]={};avScores[name][round]=val}
 function totalAV(name){return getAV(name,'r1')+getAV(name,'r2')+getAV(name,'r3')}
 function getState(){return{teams,avScores,bracket,seedingTeams,byeTeam,finals}}
+
+// Migrate old flat AV format { name: number } → new nested { name: { r1: number } }
+function migrateAvScores(raw){
+  if(!raw) return {}
+  const out={}
+  Object.entries(raw).forEach(([name,val])=>{
+    if(typeof val==='number'){
+      // Old format — treat the number as r1 AV
+      out[name]={r1:val,r2:0,r3:0}
+    } else if(typeof val==='object'&&val!==null){
+      out[name]=val
+    }
+  })
+  return out
+}
+
 function loadState(s){
   if(!s)return
   if(s.teams)teams=s.teams
-  if(s.avScores)avScores=s.avScores
+  if(s.avScores)avScores=migrateAvScores(s.avScores)
   if(s.bracket){
     // Sanitize: ensure bye slot is clean
     if(s.bracket[2]&&s.bracket[2][5]){
@@ -558,8 +574,14 @@ function makeAVInput(name,round){
   av.type='number';av.min='0';av.step='any'
   av.placeholder=round.toUpperCase()+' AV $'
   av.value=getAV(name,round)||''
+  const save=e=>{
+    const val=parseFloat(e.target.value)||0
+    setAV(name,round,val)
+    scheduleSave();renderLeaderboard()
+  }
   av.addEventListener('click',e=>e.stopPropagation())
-  av.addEventListener('change',e=>{setAV(name,round,parseFloat(e.target.value)||0);scheduleSave();renderLeaderboard()})
+  av.addEventListener('change',save)
+  av.addEventListener('blur',save)
   return av
 }
 
