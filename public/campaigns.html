@@ -249,14 +249,14 @@
     const rateOf = (c) => {
       const leads = c.campaign_leads || []
       if (!leads.length) return -1
-      const replied = leads.filter(l => l.leads?.has_replied).length
+      const replied = leads.filter(l => ['replied','booked','sold'].includes(l.leads?.status)).length
       return replied / leads.length
     }
     const bestId = sorted.reduce((best, c) => rateOf(c) > rateOf(best) ? c : best, sorted[0]).id
     tbody.innerHTML = sorted.map((c, idx) => {
       const leads = c.campaign_leads || []
       const enrolled = leads.length
-      const replied = leads.filter(l => l.leads?.has_replied).length
+      const replied = leads.filter(l => ['replied','booked','sold'].includes(l.leads?.status)).length
       const replyRate = enrolled > 0 ? Math.round((replied / enrolled) * 100) : null
       const isBest = c.id === bestId && replyRate !== null && replyRate > 0 && sorted.length > 1
       const quickCount = [c.message_1, c.message_2, c.message_3].filter(Boolean).length

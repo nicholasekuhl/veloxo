@@ -685,7 +685,7 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
     console.log('Appointment created:', appointment?.id, 'at', appointment?.scheduled_at)
 
     const apptTime = new Date(scheduledAt).toLocaleString('en-US', {
-      month: 'short', day: 'numeric',
+      weekday: 'short', month: 'short', day: 'numeric',
       hour: 'numeric', minute: '2-digit',
       hour12: true, timeZone: tz
     })
@@ -727,6 +727,12 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
           twilio_sid: confirmResult.sid,
           status: 'sent'
         })
+      }
+
+      if (profile?.notify_appointment_sms !== false && profile?.personal_phone) {
+        const notificationBody = `TextApp: New appointment booked!\nLead: ${lead.first_name || ''} ${lead.last_name || ''}\nPhone: ${lead.phone}\nTime: ${apptTime}\nCalendly: ${profile.calendly_url || 'N/A'}`
+        sendSMS(profile.personal_phone, notificationBody, process.env.FORWARDING_NUMBER)
+          .catch(err => console.error('bookAppointment: agent SMS notification error:', err.message))
       }
     }
   } catch (err) {

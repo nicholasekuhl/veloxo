@@ -342,8 +342,10 @@
       </div>
       <input type="file" id="modal-file-input" accept=".csv,.xlsx,.xls">
       <div class="form-group">
-        <label>Bucket Name (required)</label>
-        <input type="text" id="import-bucket" placeholder="e.g. Lead Vendor - March 2026">
+        <label>Assign to Bucket (optional)</label>
+        <select id="import-bucket-id">
+          <option value="">No bucket</option>
+        </select>
       </div>
       <div class="form-row">
         <div class="form-group">

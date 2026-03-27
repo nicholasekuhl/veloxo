@@ -208,7 +208,7 @@
               <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Lead replies will be forwarded to your personal cell from your TextApp number.</div>
             </div>
           </div>
-          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
             <label class="toggle" style="margin-top:2px;">
               <input type="checkbox" id="inapp-notif-enabled" checked>
               <span class="toggle-slider"></span>
@@ -216,6 +216,16 @@
             <div>
               <div style="font-size:13px;font-weight:500;color:#374151;">Show notification bell in the app</div>
               <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Red badge on the bell icon when leads reply.</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
+            <label class="toggle" style="margin-top:2px;">
+              <input type="checkbox" id="appt-notif-enabled" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:#374151;">Text me when an appointment is booked</div>
+              <div style="font-size:12px;color:#9ca3af;margin-top:2px;">Sends a summary to your personal cell when AI books an appointment with a lead.</div>
             </div>
           </div>
           <div id="notif-settings-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
@@ -918,7 +928,7 @@
             const violRate = pn.violation_rate != null ? pn.violation_rate + '%' : '—'
             const violRateColor = pn.violation_rate >= 15 ? '#dc2626' : pn.violation_rate >= 10 ? '#d97706' : 'inherit'
 
-            const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
+            const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DC','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
             const stateOptions = `<option value="">Unassigned</option>` + US_STATES.map(s => `<option value="${s}"${pn.state === s ? ' selected' : ''}>${s}</option>`).join('')
 
             return `<tr style="border-bottom:1px solid var(--color-border-light);">
@@ -1138,7 +1148,7 @@
   const US_STATES = [
     {n:'Alabama',a:'AL'},{n:'Alaska',a:'AK'},{n:'Arizona',a:'AZ'},{n:'Arkansas',a:'AR'},
     {n:'California',a:'CA'},{n:'Colorado',a:'CO'},{n:'Connecticut',a:'CT'},{n:'Delaware',a:'DE'},
-    {n:'Florida',a:'FL'},{n:'Georgia',a:'GA'},{n:'Hawaii',a:'HI'},{n:'Idaho',a:'ID'},
+    {n:'District of Columbia',a:'DC'},{n:'Florida',a:'FL'},{n:'Georgia',a:'GA'},{n:'Hawaii',a:'HI'},{n:'Idaho',a:'ID'},
     {n:'Illinois',a:'IL'},{n:'Indiana',a:'IN'},{n:'Iowa',a:'IA'},{n:'Kansas',a:'KS'},
     {n:'Kentucky',a:'KY'},{n:'Louisiana',a:'LA'},{n:'Maine',a:'ME'},{n:'Maryland',a:'MD'},
     {n:'Massachusetts',a:'MA'},{n:'Michigan',a:'MI'},{n:'Minnesota',a:'MN'},{n:'Mississippi',a:'MS'},
@@ -1346,7 +1356,8 @@
       const body = {
         personal_phone: document.getElementById('profile-personal-phone').value.trim() || null,
         sms_notifications_enabled: document.getElementById('sms-notif-enabled').checked,
-        inapp_notifications_enabled: document.getElementById('inapp-notif-enabled').checked
+        inapp_notifications_enabled: document.getElementById('inapp-notif-enabled').checked,
+        notify_appointment_sms: document.getElementById('appt-notif-enabled').checked
       }
       const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()

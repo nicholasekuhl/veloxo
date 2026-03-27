@@ -272,6 +272,7 @@ const uploadLeads = async (req, res) => {
     const fileType = req.file.mimetype
     const fileBuffer = req.file.buffer
     const bucket = req.body.bucket || null
+    const bucketId = req.body.bucket_id || null
     const autopilot = req.body.autopilot === 'true'
     const campaignId = req.body.campaign_id || null
     const campaignStartDate = req.body.campaign_start_date || null
@@ -334,6 +335,7 @@ const uploadLeads = async (req, res) => {
       })
     }
 
+    if (bucketId) newLeads.forEach(l => { l.bucket_id = bucketId })
     const { data, error } = await supabase.from('leads').insert(newLeads).select()
     if (error) throw error
 

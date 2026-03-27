@@ -54,7 +54,7 @@ const getMe = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { agent_name, agency_name, calendly_url, timezone, compliance_footer, compliance_footer_enabled, personal_phone, sms_notifications_enabled, inapp_notifications_enabled, agent_nickname } = req.body
+    const { agent_name, agency_name, calendly_url, timezone, compliance_footer, compliance_footer_enabled, personal_phone, sms_notifications_enabled, inapp_notifications_enabled, agent_nickname, notify_appointment_sms } = req.body
 
     const updates = { updated_at: new Date().toISOString() }
     if (agent_name !== undefined) updates.agent_name = agent_name
@@ -67,6 +67,7 @@ const updateProfile = async (req, res) => {
     if (personal_phone !== undefined) updates.personal_phone = personal_phone
     if (sms_notifications_enabled !== undefined) updates.sms_notifications_enabled = sms_notifications_enabled
     if (inapp_notifications_enabled !== undefined) updates.inapp_notifications_enabled = inapp_notifications_enabled
+    if (notify_appointment_sms !== undefined) updates.notify_appointment_sms = notify_appointment_sms
 
     const { data, error } = await supabase
       .from('user_profiles').update(updates).eq('id', req.user.id).select().single()

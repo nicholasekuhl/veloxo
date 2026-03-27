@@ -7,7 +7,7 @@ const getCampaigns = async (req, res) => {
       .select(`
         *,
         campaign_messages (id, day_number, send_time, message_body),
-        campaign_leads (id, status, leads(has_replied))
+        campaign_leads (id, status, leads(status))
       `)
       .eq('user_id', req.user.id)
       .order('created_at', { ascending: false })

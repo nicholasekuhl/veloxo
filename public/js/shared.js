@@ -120,6 +120,8 @@ const loadProfile = async () => {
     if (smsNotif) smsNotif.checked = p.sms_notifications_enabled !== false
     const inappNotif = document.getElementById('inapp-notif-enabled')
     if (inappNotif) inappNotif.checked = p.inapp_notifications_enabled !== false
+    const apptNotif = document.getElementById('appt-notif-enabled')
+    if (apptNotif) apptNotif.checked = p.notify_appointment_sms !== false
     const afterHours = document.getElementById('ai-afterhours-response')
     if (afterHours) afterHours.value = p.ai_afterhours_response || 'queue'
     if (typeof loadChecklist === 'function') loadChecklist(p)
@@ -365,7 +367,7 @@ const KW_CHIPS = [
 
 const kwChipsRowHTML = (taExpr) => {
   const chips = KW_CHIPS.map(([label, val]) =>
-    `<button type="button" class="kw-chip" onclick="kwChipFlash(this);insertAtCursor(${taExpr},${JSON.stringify(val)})">${label}</button>`
+    `<button type="button" class="kw-chip" onclick="kwChipFlash(this);insertAtCursor(${taExpr},'${val}')">${label}</button>`
   ).join('')
   return `<div class="kw-chips"><span class="kw-chips-label">Insert variable:</span>${chips}</div>`
 }
@@ -379,6 +381,7 @@ const renderSidebar = () => {
   const a = (href) => (p === href || p.endsWith(href)) ? ' active' : ''
 
   const SVG_LEADS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`
+  const SVG_BUCKETS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`
   const SVG_CONV = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
   const SVG_CAMP = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
   const SVG_STATS = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`
@@ -394,6 +397,7 @@ const renderSidebar = () => {
   <a href="/leads.html" class="sidebar-logo">Text<span>App</span></a>
   <nav class="sidebar-nav">
     <a href="/leads.html" class="sidebar-nav-item${a('/leads.html')}">${SVG_LEADS}Leads</a>
+    <a href="/buckets.html" class="sidebar-nav-item${a('/buckets.html')}">${SVG_BUCKETS}Buckets</a>
     <a href="/conversations.html" class="sidebar-nav-item${a('/conversations.html')}">${SVG_CONV}Conversations</a>
     <a href="/campaigns.html" class="sidebar-nav-item${a('/campaigns.html')}">${SVG_CAMP}Campaigns</a>
     <a href="/stats.html" class="sidebar-nav-item${a('/stats.html')}">${SVG_STATS}Stats</a>

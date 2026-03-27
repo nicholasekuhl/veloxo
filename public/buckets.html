@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buckets — TextApp</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <style>
+    .buckets-layout {
+      display: flex;
+      height: calc(100vh - 0px);
+      overflow: hidden;
+    }
+    .buckets-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      background: var(--color-surface-subtle);
+      overflow-y: auto;
+    }
+    .buckets-sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      gap: 8px;
+    }
+    .buckets-main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+    .buckets-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      gap: 8px;
+    }
+    .folder-group {
+      margin-bottom: 4px;
+    }
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      transition: background 0.1s;
+      user-select: none;
+    }
+    .folder-item:hover { background: var(--color-border-light); }
+    .folder-item.active { background: var(--color-primary-light); color: var(--color-primary); }
+    .folder-chevron {
+      font-size: 10px;
+      color: var(--color-text-secondary);
+      transition: transform 0.15s;
+      margin-left: auto;
+    }
+    .folder-chevron.open { transform: rotate(90deg); }
+    .bucket-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px 7px 28px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--color-text);
+      transition: background 0.1s;
+    }
+    .bucket-item:hover { background: var(--color-border-light); }
+    .bucket-item.active { background: var(--color-primary-light); color: var(--color-primary); }
+    .bucket-color-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .bucket-count-badge {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+    .detail-card {
+      background: white;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      max-width: 520px;
+    }
+    .detail-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--color-text);
+    }
+    .color-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.selected { border-color: var(--color-text); }
+    .section-divider { height: 1px; background: var(--color-border); margin: 16px 0; }
+  </style>
+</head>
+<body>
+<div id="sidebar-root"></div>
+
+<div class="main-content">
+  <div class="buckets-layout">
+    <div class="buckets-sidebar">
+      <div class="buckets-sidebar-header">
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openNewFolderModal()">+ New Folder</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1;" onclick="openNewBucketModal()">+ New Bucket</button>
+      </div>
+      <div id="bucket-tree" style="padding: 8px;"></div>
+    </div>
+    <div class="buckets-main">
+      <div id="bucket-detail">
+        <div class="buckets-empty">
+          <div style="font-size:32px;">📂</div>
+          <div>Select a bucket or folder to view details</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW FOLDER MODAL -->
+<div class="modal-overlay" id="new-folder-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>New Folder</h2>
+      <button class="modal-close" onclick="closeNewFolderModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Folder Name</label>
+      <input type="text" id="new-folder-name" placeholder="e.g. Bulk Leads, March Imports..." onkeydown="if(event.key==='Enter')saveNewFolder()">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNewFolderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewFolder()">Create Folder</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW BUCKET MODAL -->
+<div class="modal-overlay" id="new-bucket-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>New Bucket</h2>
+      <button class="modal-close" onclick="closeNewBucketModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Bucket Name</label>
+      <input type="text" id="new-bucket-name" placeholder="e.g. New Leads, My Bucket..." onkeydown="if(event.key==='Enter')saveNewBucket()">
+    </div>
+    <div class="form-group">
+      <label>Folder (optional)</label>
+      <select id="new-bucket-folder">
+        <option value="">Top level (no folder)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Color</label>
+      <div class="color-swatches" id="new-bucket-colors"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeNewBucketModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewBucket()">Create Bucket</button>
+    </div>
+  </div>
+</div>
+
+<script src="/toast.js"></script>
+<script src="/js/shared.js"></script>
+<script>
+  const BUCKET_COLORS = ['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#64748b','#1a1a2e']
+
+  let allBuckets = []
+  let selectedItemId = null
+  let selectedItemType = null // 'bucket' | 'folder'
+  let newBucketColor = BUCKET_COLORS[0]
+
+  const loadBuckets = async () => {
+    try {
+      const res = await fetch('/buckets')
+      const data = await res.json()
+      allBuckets = data.buckets || []
+      renderTree()
+      if (selectedItemId) renderDetail(selectedItemId, selectedItemType)
+    } catch (err) {
+      console.error('Failed to load buckets:', err)
+    }
+  }
+
+  const renderTree = () => {
+    const container = document.getElementById('bucket-tree')
+    if (!container) return
+
+    const folders = allBuckets.filter(b => b.is_folder)
+    const topLevel = allBuckets.filter(b => !b.is_folder && !b.parent_id)
+
+    let html = ''
+
+    for (const folder of folders) {
+      const childBuckets = allBuckets.filter(b => b.parent_id === folder.id)
+      const isActive = selectedItemId === folder.id && selectedItemType === 'folder'
+      html += `<div class="folder-group">
+        <div class="folder-item${isActive ? ' active' : ''}" onclick="selectItem('${folder.id}','folder')">
+          <span>📂</span>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${folder.name}</span>
+          <span class="bucket-count-badge">${childBuckets.length}</span>
+          <span class="folder-chevron open">▶</span>
+        </div>
+        <div class="folder-children">`
+      for (const b of childBuckets) {
+        const isActiveBucket = selectedItemId === b.id && selectedItemType === 'bucket'
+        html += `<div class="bucket-item${isActiveBucket ? ' active' : ''}" onclick="selectItem('${b.id}','bucket')">
+          <div class="bucket-color-dot" style="background:${b.color}"></div>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${b.name}</span>
+        </div>`
+      }
+      html += `</div></div>`
+    }
+
+    for (const b of topLevel) {
+      const isActive = selectedItemId === b.id && selectedItemType === 'bucket'
+      const icon = b.is_system ? '🔒' : '📁'
+      html += `<div class="bucket-item${isActive ? ' active' : ''}" onclick="selectItem('${b.id}','bucket')">
+        <div class="bucket-color-dot" style="background:${b.is_system ? '#22c55e' : b.color}"></div>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${icon} ${b.name}</span>
+      </div>`
+    }
+
+    if (!html) html = `<div style="padding:16px;font-size:13px;color:var(--color-text-secondary);text-align:center;">No buckets yet.<br>Create one to get started.</div>`
+    container.innerHTML = html
+  }
+
+  const selectItem = (id, type) => {
+    selectedItemId = id
+    selectedItemType = type
+    renderTree()
+    renderDetail(id, type)
+  }
+
+  const renderDetail = (id, type) => {
+    const item = allBuckets.find(b => b.id === id)
+    if (!item) return
+    const container = document.getElementById('bucket-detail')
+
+    const folders = allBuckets.filter(b => b.is_folder && b.id !== id)
+    const folderOptions = `<option value="">Top level (no folder)</option>` +
+      folders.map(f => `<option value="${f.id}"${item.parent_id === f.id ? ' selected' : ''}>${f.name}</option>`).join('')
+
+    const COLORS = BUCKET_COLORS
+    const colorSwatches = COLORS.map(c =>
+      `<div class="color-swatch${item.color === c ? ' selected' : ''}" style="background:${c};" onclick="updateItemColor('${id}','${c}',this)"></div>`
+    ).join('')
+
+    if (type === 'folder') {
+      const childBuckets = allBuckets.filter(b => b.parent_id === id)
+      container.innerHTML = `<div class="detail-card">
+        <div class="detail-title">📂 Folder</div>
+        <div class="form-group">
+          <label>Folder Name</label>
+          <input type="text" id="detail-name" value="${item.name.replace(/"/g,'&quot;')}" style="width:100%;">
+        </div>
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:16px;">${childBuckets.length} bucket${childBuckets.length !== 1 ? 's' : ''} in this folder</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="saveDetailName('${id}','folder')">Save Name</button>
+          ${!item.is_system ? `<button class="btn btn-danger" onclick="deleteItem('${id}','folder')">Delete Folder</button>` : ''}
+        </div>
+      </div>`
+    } else {
+      container.innerHTML = `<div class="detail-card">
+        <div class="detail-title">📁 Bucket</div>
+        <div class="form-group">
+          <label>Bucket Name</label>
+          <input type="text" id="detail-name" value="${item.name.replace(/"/g,'&quot;')}" style="width:100%;" ${item.is_system ? 'disabled' : ''}>
+        </div>
+        <div class="form-group">
+          <label>Color</label>
+          <div class="color-swatches">${colorSwatches}</div>
+        </div>
+        <div class="form-group">
+          <label>Move to Folder</label>
+          <select id="detail-folder" ${item.is_system ? 'disabled' : ''}>${folderOptions}</select>
+        </div>
+        <div class="section-divider"></div>
+        <div style="display:flex;gap:8px;">
+          ${!item.is_system ? `<button class="btn btn-primary" onclick="saveDetailBucket('${id}')">Save Changes</button>` : ''}
+          ${!item.is_system ? `<button class="btn btn-danger" onclick="deleteItem('${id}','bucket')">Delete Bucket</button>` : ''}
+        </div>
+      </div>`
+    }
+  }
+
+  const saveDetailName = async (id, type) => {
+    const name = document.getElementById('detail-name')?.value.trim()
+    if (!name) return toast.error('Error', 'Name is required')
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      const idx = allBuckets.findIndex(b => b.id === id)
+      if (idx >= 0) allBuckets[idx] = data.bucket
+      toast.success('Saved', 'Name updated')
+      renderTree()
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  const saveDetailBucket = async (id) => {
+    const name = document.getElementById('detail-name')?.value.trim()
+    const parentId = document.getElementById('detail-folder')?.value || null
+    if (!name) return toast.error('Error', 'Name is required')
+    const item = allBuckets.find(b => b.id === id)
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color: item?.color, parent_id: parentId })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      const idx = allBuckets.findIndex(b => b.id === id)
+      if (idx >= 0) allBuckets[idx] = data.bucket
+      toast.success('Saved', 'Bucket updated')
+      renderTree()
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  const updateItemColor = async (id, color, el) => {
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to save')
+      const idx = allBuckets.findIndex(b => b.id === id)
+      if (idx >= 0) allBuckets[idx] = data.bucket
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'))
+      el.classList.add('selected')
+      renderTree()
+      toast.success('Color saved', '')
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  const deleteItem = async (id, type) => {
+    const item = allBuckets.find(b => b.id === id)
+    if (!item) return
+    const label = type === 'folder' ? `folder "${item.name}" and move its buckets to top level` : `bucket "${item.name}"`
+    if (!confirm(`Delete ${label}?`)) return
+    try {
+      const res = await fetch(`/buckets/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error((await res.json()).error || 'Delete failed')
+      allBuckets = allBuckets.filter(b => b.id !== id)
+      if (type === 'folder') allBuckets.forEach(b => { if (b.parent_id === id) b.parent_id = null })
+      selectedItemId = null
+      selectedItemType = null
+      renderTree()
+      document.getElementById('bucket-detail').innerHTML = `<div class="buckets-empty"><div style="font-size:32px;">📂</div><div>Select a bucket or folder to view details</div></div>`
+      toast.success('Deleted', `${type === 'folder' ? 'Folder' : 'Bucket'} removed`)
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  // New Folder
+  const openNewFolderModal = () => {
+    document.getElementById('new-folder-name').value = ''
+    document.getElementById('new-folder-modal').classList.add('open')
+    setTimeout(() => document.getElementById('new-folder-name').focus(), 50)
+  }
+  const closeNewFolderModal = () => document.getElementById('new-folder-modal').classList.remove('open')
+  const saveNewFolder = async () => {
+    const name = document.getElementById('new-folder-name').value.trim()
+    if (!name) return toast.error('Error', 'Folder name is required')
+    try {
+      const res = await fetch('/buckets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, is_folder: true, color: '#6366f1' })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create')
+      allBuckets.push(data.bucket)
+      closeNewFolderModal()
+      renderTree()
+      selectItem(data.bucket.id, 'folder')
+      toast.success('Folder created', name)
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  // New Bucket
+  const openNewBucketModal = () => {
+    document.getElementById('new-bucket-name').value = ''
+    newBucketColor = BUCKET_COLORS[0]
+    const folderSel = document.getElementById('new-bucket-folder')
+    folderSel.innerHTML = '<option value="">Top level (no folder)</option>' +
+      allBuckets.filter(b => b.is_folder).map(f => `<option value="${f.id}">${f.name}</option>`).join('')
+    if (selectedItemType === 'folder') folderSel.value = selectedItemId
+    const colorsEl = document.getElementById('new-bucket-colors')
+    colorsEl.innerHTML = BUCKET_COLORS.map(c =>
+      `<div class="color-swatch${c === newBucketColor ? ' selected' : ''}" style="background:${c};" onclick="newBucketPickColor('${c}',this)"></div>`
+    ).join('')
+    document.getElementById('new-bucket-modal').classList.add('open')
+    setTimeout(() => document.getElementById('new-bucket-name').focus(), 50)
+  }
+  const closeNewBucketModal = () => document.getElementById('new-bucket-modal').classList.remove('open')
+  const newBucketPickColor = (c, el) => {
+    newBucketColor = c
+    document.querySelectorAll('#new-bucket-colors .color-swatch').forEach(s => s.classList.remove('selected'))
+    el.classList.add('selected')
+  }
+  const saveNewBucket = async () => {
+    const name = document.getElementById('new-bucket-name').value.trim()
+    const parentId = document.getElementById('new-bucket-folder').value || null
+    if (!name) return toast.error('Error', 'Bucket name is required')
+    try {
+      const res = await fetch('/buckets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color: newBucketColor, parent_id: parentId, is_folder: false })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create')
+      allBuckets.push(data.bucket)
+      closeNewBucketModal()
+      renderTree()
+      selectItem(data.bucket.id, 'bucket')
+      toast.success('Bucket created', name)
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  const init = async () => {
+    renderSidebar()
+    await loadProfile()
+    await loadBuckets()
+  }
+
+  document.addEventListener('DOMContentLoaded', init)
+</script>
+</body>
+</html>

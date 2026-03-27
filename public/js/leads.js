@@ -17,6 +17,8 @@ let campaignSortKey = 'created_at'
 let campaignSortDir = -1
 let selectedDispColor = '#6366f1'
 let activeBucket = ''
+let activeFolderId = ''
+let collapsedFolders = {}
 let activeCampaignQuickFilter = ''
 let activeFilters = {}
 let smsTargetLeadId = null
@@ -105,15 +107,66 @@ const renderMsPills = (key) => {
 // ===== BUCKETS =====
 const selectBucket = (bucketId) => {
   activeBucket = bucketId
+  activeFolderId = ''
   renderBucketPills()
   filterLeads()
+}
+
+const selectFolder = (folderId) => {
+  activeFolderId = activeFolderId === folderId ? '' : folderId
+  activeBucket = ''
+  renderBucketPills()
+  filterLeads()
+}
+
+const toggleFolderCollapse = (folderId, e) => {
+  e.stopPropagation()
+  collapsedFolders[folderId] = !collapsedFolders[folderId]
+  renderBucketPills()
 }
 
 const renderBucketPills = () => {
   const container = document.getElementById('bucket-tabs')
   if (!container) return
-  let html = `<div class="bucket-tab${activeBucket === '' ? ' active' : ''}" onclick="selectBucket('')">All Leads <span class="count">${allLeads.length}</span></div>`
-  for (const b of allBuckets) {
+
+  const folders = allBuckets.filter(b => b.is_folder)
+  const topLevel = allBuckets.filter(b => !b.is_folder && !b.parent_id)
+
+  let html = `<div class="bucket-tab${activeBucket === '' && activeFolderId === '' ? ' active' : ''}" onclick="selectBucket('')">All Leads <span class="count">${allLeads.length}</span></div>`
+
+  // Render folders with their child buckets
+  for (const folder of folders) {
+    const childBuckets = allBuckets.filter(b => b.parent_id === folder.id)
+    const folderLeadCount = allLeads.filter(l => childBuckets.some(b => b.id === l.bucket_id)).length
+    const isActiveFolder = activeFolderId === folder.id
+    const isCollapsed = collapsedFolders[folder.id]
+    const chevron = isCollapsed ? '▶' : '▼'
+    const folderBg = isActiveFolder ? '#6366f1' : '#f0f0ff'
+    const folderColor = isActiveFolder ? 'white' : '#6366f1'
+
+    html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
+      <div class="bucket-tab" style="background:${folderBg};color:${folderColor};border-color:#c7d2fe;" onclick="selectFolder('${folder.id}')">
+        📂 ${folder.name} <span class="count" style="opacity:0.8">${folderLeadCount}</span>
+        <span style="font-size:9px;margin-left:4px;opacity:0.7;" onclick="toggleFolderCollapse('${folder.id}',event)">${chevron}</span>
+      </div>`
+
+    if (!isCollapsed) {
+      for (const b of childBuckets) {
+        const count = allLeads.filter(l => l.bucket_id === b.id).length
+        const isActive = activeBucket === b.id
+        const bucketColor = b.color
+        const bg = isActive ? bucketColor : bucketColor + '18'
+        const color = isActive ? 'white' : bucketColor
+        const border = isActive ? bucketColor : bucketColor + '40'
+        const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
+        html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};margin-left:4px;" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+      }
+    }
+    html += `</div>`
+  }
+
+  // Render top-level buckets (no folder)
+  for (const b of topLevel) {
     const count = allLeads.filter(l => l.bucket_id === b.id).length
     const isActive = activeBucket === b.id
     const bucketColor = b.is_system ? '#22c55e' : b.color
@@ -160,7 +213,10 @@ const filterLeads = () => {
 
   let filtered = allLeads
 
-  if (activeBucket) filtered = filtered.filter(l => l.bucket_id === activeBucket)
+  if (activeFolderId) {
+    const folderBucketIds = allBuckets.filter(b => b.parent_id === activeFolderId).map(b => b.id)
+    filtered = filtered.filter(l => folderBucketIds.includes(l.bucket_id))
+  } else if (activeBucket) filtered = filtered.filter(l => l.bucket_id === activeBucket)
   else if (sfBucket) filtered = filtered.filter(l => l.bucket_id === sfBucket)
   if (search) filtered = filtered.filter(l => [l.first_name, l.last_name, l.phone, l.email, l.state, l.zip_code].some(v => v?.toLowerCase().includes(search)))
   if (status) filtered = filtered.filter(l => l.status === status)
@@ -204,6 +260,7 @@ const resetFilters = () => {
   renderMsPills('disposition')
   renderMsPills('exclude-disposition')
   activeBucket = ''
+  activeFolderId = ''
   activeCampaignQuickFilter = ''
   document.getElementById('campaign-quick-input').value = ''
   document.getElementById('campaign-clear-btn').style.display = 'none'
@@ -1125,7 +1182,6 @@ const renderMappingUI = () => {
 
 const advanceToMapping = async () => {
   if (!importFile) return showStep1Status('Please select a file first', 'error')
-  if (!document.getElementById('import-bucket').value.trim()) return showStep1Status('Please enter a bucket name', 'error')
   showStep1Status('Parsing file headers...', 'loading')
   document.getElementById('upload-next-btn').disabled = true
   try {
@@ -1239,7 +1295,10 @@ const advanceToRiskPreview = async () => {
 const openUploadModal = () => {
   importFile = null; importHeaders = []; importPreview = []
   document.getElementById('modal-file-name').textContent = ''
-  document.getElementById('import-bucket').value = ''
+  const bucketSelect = document.getElementById('import-bucket-id')
+  if (bucketSelect) {
+    bucketSelect.innerHTML = '<option value="">No bucket</option>' + allBuckets.map(b => `<option value="${b.id}">${b.name}</option>`).join('')
+  }
   document.getElementById('import-autopilot').checked = false
   document.getElementById('step1-status-bar').className = 'status-bar'
   document.getElementById('step1-status-bar').textContent = ''
@@ -1296,13 +1355,13 @@ const submitImport = async (riskFilter = 'all') => {
   const columnMap = {}
   document.querySelectorAll('.map-select').forEach(sel => { if (sel.value) columnMap[sel.dataset.field] = sel.value })
   if (!columnMap.phone) return showImportStatus('Please map the Phone column — it is required', 'error')
-  const bucket = document.getElementById('import-bucket').value.trim()
+  const bucketId = document.getElementById('import-bucket-id')?.value || ''
   const autopilot = document.getElementById('import-autopilot').checked
   const campaignId = document.getElementById('import-campaign').value
   const campaignStartDate = document.getElementById('import-campaign-start').value
   const formData = new FormData()
   formData.append('file', importFile)
-  formData.append('bucket', bucket)
+  if (bucketId) formData.append('bucket_id', bucketId)
   formData.append('autopilot', autopilot.toString())
   formData.append('risk_filter', riskFilter)
   if (campaignId) formData.append('campaign_id', campaignId)
