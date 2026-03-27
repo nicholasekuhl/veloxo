@@ -162,7 +162,7 @@ async function doLogin() {
   const err = document.getElementById('login-err')
   err.textContent = ''
   try {
-    const res  = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
+    const res  = await fetch('/bracket/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
     const data = await res.json()
     if (!res.ok) { err.textContent = data.error||'Wrong password'; return }
     adminToken = data.token
@@ -230,7 +230,7 @@ let saveTimer = null
 
 async function loadBracket() {
   try {
-    const res  = await fetch('/api/state')
+    const res  = await fetch('/bracket/state')
     const data = await res.json()
     if (data.state) loadState(data.state)
     else initBracket()
@@ -243,7 +243,7 @@ async function saveBracket() {
   const status = document.getElementById('save-status')
   status.textContent = 'Saving…'
   try {
-    const res = await fetch('/api/save', {
+    const res = await fetch('/bracket/save', {
       method:'POST',
       headers:{'Content-Type':'application/json','x-bracket-token':adminToken},
       body: JSON.stringify({ state: getState() })
