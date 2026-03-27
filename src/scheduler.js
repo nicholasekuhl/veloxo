@@ -305,7 +305,7 @@ const processScheduledMessages = async () => {
             await mailer.sendMail({
               from: process.env.SMTP_USER,
               to: adminEmail,
-              subject: 'TextApp Scheduler Alert — Gap Detected',
+              subject: 'TextApp Scheduler Alert — heartbeat stale',
               text: `The scheduler has recovered after a ${gapMin}-minute gap.\n\nLast heartbeat: ${healthRow.last_heartbeat}\nCurrent time: ${now.toISOString()}`
             })
           } catch (mailErr) {

@@ -1,4 +1,5 @@
 const supabase = require('../db')
+const { getMasterClient } = require('../twilio')
 
 const STATUS_MAP = { queued: 'sending', sending: 'sending', sent: 'sent', delivered: 'delivered', undelivered: 'failed', failed: 'failed' }
 
@@ -88,6 +89,7 @@ const getDeliveryStats = async (req, res) => {
       today
     })
   } catch (err) {
+    console.error('getDeliveryStats error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -128,6 +130,7 @@ const getOverview = async (req, res) => {
       total_campaigns: campaigns?.length || 0,
     })
   } catch (err) {
+    console.error('getOverview error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -176,6 +179,7 @@ const getMessageStats = async (req, res) => {
 
     res.json({ daily, heatmap: Object.values(heatmapMap) })
   } catch (err) {
+    console.error('getMessageStats error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -224,6 +228,7 @@ const getCampaignStats = async (req, res) => {
       })
     })
   } catch (err) {
+    console.error('getCampaignStats error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -233,19 +238,20 @@ const getLeadFunnel = async (req, res) => {
     const userId = req.user.id
     const { data: leads, error } = await supabase
       .from('leads')
-      .select('status, is_sold, is_blocked, has_replied, last_contacted_at')
+      .select('status, is_sold, is_blocked, has_replied, first_message_sent')
       .eq('user_id', userId)
 
     if (error) throw error
 
     const total = leads?.length || 0
-    const contacted = leads?.filter(l => l.last_contacted_at).length || 0
+    const contacted = leads?.filter(l => l.first_message_sent || l.status !== 'new').length || 0
     const replied = leads?.filter(l => l.has_replied).length || 0
     const sold = leads?.filter(l => l.is_sold).length || 0
     const blocked = leads?.filter(l => l.is_blocked).length || 0
 
     res.json({ funnel: { total, contacted, replied, sold, blocked } })
   } catch (err) {
+    console.error('getLeadFunnel error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -279,6 +285,7 @@ const getActivityStats = async (req, res) => {
       }))
     })
   } catch (err) {
+    console.error('getActivityStats error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
@@ -342,8 +349,59 @@ const getSoldStats = async (req, res) => {
       recent: allSold.slice(0, 20)
     })
   } catch (err) {
+    console.error('getSoldStats error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
   }
 }
 
-module.exports = { getDeliveryStats, getOverview, getMessageStats, getCampaignStats, getLeadFunnel, getActivityStats, getSoldStats }
+const getTwilioDelivery = async (req, res) => {
+  try {
+    const userId = req.user.id
+
+    const { data: phoneNumbers, error: pnError } = await supabase
+      .from('phone_numbers')
+      .select('phone_number, friendly_name')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+
+    if (pnError) throw pnError
+    if (!phoneNumbers || !phoneNumbers.length) return res.json({ numbers: [] })
+
+    const client = getMasterClient()
+    const CARRIER_CODES = new Set([30003, 30004, 30006, 30007])
+    const results = []
+
+    for (const { phone_number, friendly_name } of phoneNumbers) {
+      try {
+        const messages = await client.messages.list({ from: phone_number, limit: 100 })
+        const total = messages.length
+        const delivered = messages.filter(m => m.status === 'delivered').length
+        const failed = messages.filter(m => m.status === 'failed').length
+        const undelivered = messages.filter(m => m.status === 'undelivered').length
+        const carrier_errors = messages.filter(m => m.errorCode && CARRIER_CODES.has(parseInt(m.errorCode))).length
+
+        results.push({
+          phone_number,
+          friendly_name: friendly_name || phone_number,
+          total,
+          delivered,
+          failed,
+          undelivered,
+          delivery_rate: total > 0 ? parseFloat(((delivered / total) * 100).toFixed(1)) : null,
+          failure_rate: total > 0 ? parseFloat((((failed + undelivered) / total) * 100).toFixed(1)) : null,
+          carrier_error_rate: total > 0 ? parseFloat(((carrier_errors / total) * 100).toFixed(1)) : null,
+        })
+      } catch (e) {
+        console.error(`getTwilioDelivery fetch error for ${phone_number}:`, e.message)
+        results.push({ phone_number, friendly_name: friendly_name || phone_number, error: e.message })
+      }
+    }
+
+    res.json({ numbers: results })
+  } catch (err) {
+    console.error('getTwilioDelivery error:', err.message, err.stack)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getDeliveryStats, getOverview, getMessageStats, getCampaignStats, getLeadFunnel, getActivityStats, getSoldStats, getTwilioDelivery }
