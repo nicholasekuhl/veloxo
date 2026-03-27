@@ -6,231 +6,143 @@
 <title>44-Team Tournament Bracket</title>
 <style>
   :root {
-    --bg: #0f1117;
-    --bg2: #1a1d27;
-    --bg3: #22263a;
-    --border: #2e3450;
-    --border2: #3d4466;
-    --text: #e8eaf0;
-    --text2: #8b91a8;
-    --text3: #555c7a;
-    --green: #22c55e;
-    --green-bg: #0d2d1e;
-    --green-border: #166534;
-    --blue: #3b82f6;
-    --blue-bg: #0d1b3e;
-    --blue-border: #1e3a8a;
-    --red: #ef4444;
-    --red-bg: #2d0d0d;
-    --red-border: #7f1d1d;
-    --amber: #f59e0b;
-    --amber-bg: #2d1d00;
-    --gold: #fbbf24;
-    --silver: #94a3b8;
-    --bronze: #cd7c2f;
+    --bg:#0f1117;--bg2:#1a1d27;--bg3:#22263a;
+    --border:#2e3450;--border2:#3d4466;
+    --text:#e8eaf0;--text2:#8b91a8;--text3:#555c7a;
+    --green:#22c55e;--green-bg:#0d2d1e;--green-bd:#166534;
+    --blue:#3b82f6;--blue-bg:#0d1b3e;--blue-bd:#1e3a8a;
+    --red:#ef4444;--red-bg:#2d0d0d;--red-bd:#7f1d1d;
+    --gold:#fbbf24;--gold-bg:#2d1d00;
+    --silver:#94a3b8;--bronze:#cd7c2f;--amber:#f59e0b;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 13px;
-    min-height: 100vh;
-  }
-  header {
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  header h1 { font-size: 18px; font-weight: 600; color: var(--text); }
-  header p  { font-size: 12px; color: var(--text2); margin-top: 2px; }
-  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  button {
-    background: var(--bg3);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    color: var(--text);
-    padding: 6px 14px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background .15s, border-color .15s;
-  }
-  button:hover { background: var(--border); border-color: var(--text3); }
-  button.primary { border-color: var(--blue); color: var(--blue); }
-  button.primary:hover { background: var(--blue-bg); }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;min-height:100vh}
 
-  .main { overflow-x: auto; padding: 24px; }
-  .rounds { display: flex; gap: 0; align-items: flex-start; min-width: 1280px; }
+  /* Header */
+  header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+  header h1{font-size:17px;font-weight:600}
+  header p{font-size:11px;color:var(--text2);margin-top:2px}
+  .hbtns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mode-badge{font-size:11px;padding:3px 10px;border-radius:4px;border:1px solid}
+  .mode-badge.admin{background:var(--gold-bg);border-color:var(--amber);color:var(--gold)}
+  .mode-badge.view{background:var(--bg3);border-color:var(--border2);color:var(--text2)}
+  button{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 13px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s}
+  button:hover{background:var(--border)}
+  button.btn-blue{border-color:var(--blue-bd);color:var(--blue)}
+  button.btn-blue:hover{background:var(--blue-bg)}
+  button.btn-green{border-color:var(--green-bd);color:var(--green)}
+  button.btn-green:hover{background:var(--green-bg)}
+  button.btn-red{border-color:var(--red-bd);color:var(--red)}
+  button.btn-red:hover{background:var(--red-bg)}
+  #save-status{font-size:11px;color:var(--text3);min-width:60px}
 
-  .round-col { display: flex; flex-direction: column; min-width: 152px; padding: 0 5px; }
-  .round-head {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-  .round-head .rtitle {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text2);
-    text-transform: uppercase;
-    letter-spacing: .06em;
-  }
-  .round-head .rsub {
-    font-size: 10px;
-    color: var(--text3);
-    margin-top: 2px;
-  }
-
-  .match-wrap { display: flex; flex-direction: column; justify-content: center; position: relative; }
-  .match-num { font-size: 9px; color: var(--text3); text-align: right; padding: 0 2px 2px; }
-
-  .slot {
-    display: flex; align-items: center; height: 26px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0 8px;
-    margin: 1px 0;
-    cursor: pointer;
-    background: var(--bg2);
-    transition: background .12s, border-color .12s;
-    gap: 6px;
-    overflow: hidden;
-    position: relative;
-  }
-  .slot:hover { background: var(--bg3); border-color: var(--border2); }
-  .slot.winner { background: var(--green-bg); border-color: var(--green-border); }
-  .slot.winner .sname { color: var(--green); font-weight: 500; }
-  .slot.av-bye { background: var(--blue-bg); border-color: var(--blue-border); cursor: default; border-style: dashed; }
-  .slot.av-bye .sname { color: var(--blue); font-style: italic; }
-  .slot.bye-slot { opacity: .4; cursor: default; background: var(--bg); border-style: dashed; }
-  .slot.empty { cursor: default; }
-  .slot.empty .sname { color: var(--text3); }
-  .snum { font-size: 9px; color: var(--text3); min-width: 16px; flex-shrink: 0; }
-  .sname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-
-  /* Seeding column */
-  .seed-col { min-width: 210px; padding: 0 8px; }
-  .seed-panel {
-    background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 12px;
-    margin-top: 32px;
-  }
-  .seed-panel h3 { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: .05em; }
-  .seed-row {
-    display: flex; align-items: center; gap: 8px;
-    height: 30px; border-radius: 5px; padding: 0 10px; margin: 3px 0;
-    border: 1px solid var(--border);
-  }
-  .seed-row.top2 { background: var(--green-bg); border-color: var(--green-border); }
-  .seed-row.mid2 { background: var(--bg3); border-color: var(--border2); }
-  .seed-row.bot2 { background: var(--red-bg); border-color: var(--red-border); opacity: .7; }
-  .seed-rank { font-size: 11px; font-weight: 700; min-width: 28px; }
-  .top2 .seed-rank { color: var(--gold); }
-  .mid2 .seed-rank { color: var(--silver); }
-  .bot2 .seed-rank { color: var(--red); }
-  .seed-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-  .seed-badge { font-size: 9px; padding: 2px 6px; border-radius: 3px; white-space: nowrap; }
-  .badge-top { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-  .badge-mid { background: var(--bg); color: var(--text2); border: 1px solid var(--border); }
-  .badge-out { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-  .seed-divider { border: none; border-top: 1px dashed var(--border2); margin: 4px 0; }
-
-  .rank-btn {
-    margin-top: 10px; width: 100%; border-color: var(--blue);
-    color: var(--blue); font-size: 11px;
-  }
-  .rank-btn:hover { background: var(--blue-bg); }
-
-  /* Finals */
-  .finals-col { min-width: 180px; padding: 0 8px; display: flex; flex-direction: column; gap: 12px; justify-content: center; }
-  .final-card {
-    background: var(--bg2); border: 1px solid var(--border2);
-    border-radius: 10px; padding: 12px;
-  }
-  .final-card h3 { font-size: 11px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
-  .final-result {
-    margin-top: 8px; padding: 6px 10px; border-radius: 5px;
-    font-size: 13px; font-weight: 600; min-height: 30px;
-    background: var(--bg3); color: var(--text3);
-    border: 1px solid var(--border);
-  }
-  .final-result.gold-result { background: var(--amber-bg); border-color: var(--amber); color: var(--gold); }
-  .final-result.silver-result { background: var(--bg3); border-color: var(--silver); color: var(--silver); }
-  .final-result.bronze-result { background: #1e1208; border-color: var(--bronze); color: var(--bronze); }
-  .elim-slot {
-    display: flex; align-items: center; height: 26px; padding: 0 8px; margin: 2px 0;
-    border-radius: 4px; background: var(--red-bg); border: 1px solid var(--red-border);
-    font-size: 12px; color: var(--red); opacity: .6;
-  }
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:26px;width:320px;max-width:92vw}
+  .modal h2{font-size:15px;font-weight:600;margin-bottom:16px}
+  .modal input{width:100%;padding:9px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;margin-bottom:10px}
+  .modal input:focus{outline:none;border-color:var(--blue)}
+  .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+  .modal-err{font-size:11px;color:var(--red);min-height:16px;margin-bottom:6px}
+  .hidden{display:none!important}
 
   /* AV Panel */
-  .av-panel {
-    background: var(--blue-bg); border: 1px solid var(--blue-border);
-    border-radius: 8px; padding: 12px 16px; margin: 0 24px 16px;
-    display: none;
-  }
-  .av-panel h3 { font-size: 12px; font-weight: 600; color: var(--blue); margin-bottom: 10px; }
-  .av-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px; }
-  .av-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
-  .av-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text2); }
-  .av-row input {
-    width: 90px; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--blue-border);
-    background: var(--bg); color: var(--text); font-size: 12px; font-family: inherit; text-align: right;
-  }
-  .av-note { font-size: 10px; color: var(--text3); margin-top: 8px; }
+  .av-panel{background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:8px;padding:12px 16px;margin:0 20px 14px}
+  .av-panel h3{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:10px}
+  .av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+  .av-row{display:flex;align-items:center;gap:8px;font-size:12px}
+  .av-row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
+  .av-row input{width:90px;padding:4px 8px;border-radius:4px;border:1px solid var(--blue-bd);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;text-align:right}
 
-  /* Edit panel */
-  .edit-panel {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: 8px; padding: 14px 16px; margin: 0 24px 16px; display: none;
-  }
-  .edit-panel h3 { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 10px; }
-  .edit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 5px; }
-  .edit-row { display: flex; align-items: center; gap: 6px; }
-  .edit-row span { font-size: 10px; color: var(--text3); width: 22px; text-align: right; flex-shrink: 0; }
-  .edit-row input {
-    flex: 1; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border2);
-    background: var(--bg3); color: var(--text); font-size: 12px; font-family: inherit;
-  }
-  .edit-row input:focus { outline: none; border-color: var(--blue); }
+  /* Bracket */
+  .main{overflow-x:auto;padding:20px}
+  .rounds{display:flex;align-items:flex-start;min-width:1260px}
+  .round-col{display:flex;flex-direction:column;min-width:150px;padding:0 4px}
+  .round-head{text-align:center;margin-bottom:10px}
+  .rtitle{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+  .rsub{font-size:9px;color:var(--text3);margin-top:2px}
+  .match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative}
+  .match-num{font-size:9px;color:var(--text3);text-align:right;padding:0 2px 1px}
+  .ref-lbl{font-size:8px;color:var(--amber)}
 
-  /* Ref label for match assignees */
-  .ref-who { font-size: 9px; color: var(--amber); margin-left: 2px; }
+  .slot{display:flex;align-items:center;height:26px;border:1px solid var(--border);border-radius:4px;padding:0 7px;margin:1px 0;background:var(--bg2);gap:5px;overflow:hidden;transition:background .12s,border-color .12s}
+  .slot.clickable{cursor:pointer}
+  .slot.clickable:hover{background:var(--bg3);border-color:var(--border2)}
+  .slot.winner{background:var(--green-bg);border-color:var(--green-bd)}
+  .slot.winner .sname{color:var(--green);font-weight:500}
+  .slot.av-bye{background:var(--blue-bg);border-color:var(--blue-bd);border-style:dashed}
+  .slot.av-bye .sname{color:var(--blue);font-style:italic}
+  .slot.empty .sname{color:var(--text3)}
+  .snum{font-size:9px;color:var(--text3);min-width:15px;flex-shrink:0}
+  .sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+  .slot input.inline-edit{border:none;background:transparent;font-size:12px;color:var(--text);font-family:inherit;flex:1;outline:none;min-width:0}
+
+  /* Seeding */
+  .seed-col{min-width:205px;padding:0 6px}
+  .seed-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-top:30px}
+  .seed-panel h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .seed-row{display:flex;align-items:center;gap:7px;height:32px;border-radius:5px;padding:0 10px;margin:3px 0;border:1px solid var(--border)}
+  .seed-row.top2{background:var(--green-bg);border-color:var(--green-bd)}
+  .seed-row.mid2{background:var(--bg3);border-color:var(--border2)}
+  .seed-row.bot2{background:var(--red-bg);border-color:var(--red-bd);opacity:.7}
+  .seed-rank{font-size:11px;font-weight:700;min-width:26px}
+  .top2 .seed-rank{color:var(--gold)}
+  .mid2 .seed-rank{color:var(--silver)}
+  .bot2 .seed-rank{color:var(--red)}
+  .seed-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+  .seed-badge{font-size:9px;padding:2px 6px;border-radius:3px;white-space:nowrap}
+  .badge-top{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
+  .badge-mid{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+  .badge-out{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
+  .seed-divider{border:none;border-top:1px dashed var(--border2);margin:3px 0}
+  .rank-btn{margin-top:8px;width:100%;font-size:11px;border-color:var(--blue);color:var(--blue)}
+  .rank-btn:hover{background:var(--blue-bg)}
+
+  /* Finals */
+  .finals-col{min-width:175px;padding:0 8px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .final-card{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px}
+  .final-card h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
+  .final-result{margin-top:6px;padding:5px 10px;border-radius:5px;font-size:12px;font-weight:600;min-height:28px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+  .final-result.gold{background:var(--gold-bg);border-color:var(--amber);color:var(--gold)}
+  .final-result.silver{background:var(--bg3);border-color:var(--silver);color:var(--silver)}
+  .final-result.bronze{background:#1e1208;border-color:var(--bronze);color:var(--bronze)}
+  .elim-slot{display:flex;align-items:center;height:26px;padding:0 8px;margin:2px 0;border-radius:4px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:12px;color:var(--red);opacity:.6}
 </style>
 </head>
 <body>
 
+<!-- Login Modal -->
+<div class="modal-overlay hidden" id="login-modal">
+  <div class="modal">
+    <h2>🔐 Admin Login</h2>
+    <div class="modal-err" id="login-err"></div>
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password"/>
+    <div class="modal-btns">
+      <button onclick="closeLogin()">Cancel</button>
+      <button class="btn-blue" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1>44-Team Tournament Bracket</h1>
-    <p>Click a team to advance them as winner &nbsp;·&nbsp; Double-click a Round 1 name to rename</p>
+    <p id="header-sub">Live bracket — updates automatically</p>
   </div>
-  <div class="btns">
-    <button onclick="toggleEdit()">✏️ Edit team names</button>
-    <button class="primary" onclick="toggleAV()">📊 Enter AV scores</button>
-    <button onclick="resetAll()">↺ Reset bracket</button>
+  <div class="hbtns">
+    <span class="mode-badge view" id="mode-badge">👁 View only</span>
+    <button class="btn-blue hidden admin-only" onclick="toggleAV()">📊 AV Scores</button>
+    <button class="hidden admin-only" onclick="autoRankSeeding()">⚡ Auto-rank</button>
+    <button class="btn-green hidden admin-only" onclick="saveBracket()">💾 Save</button>
+    <span id="save-status"></span>
+    <button class="btn-red hidden admin-only" onclick="logoutAdmin()">Logout</button>
+    <button class="btn-blue" id="admin-login-btn" onclick="openLogin()">🔐 Admin</button>
   </div>
 </header>
 
-<div class="av-panel" id="av-panel">
-  <h3>Sales Volume (AV) Scores — used for seeding round ranking &amp; byes</h3>
+<div class="av-panel hidden admin-only" id="av-panel">
+  <h3>Sales Volume (AV) Scores — used for seeding round ranking</h3>
   <div class="av-grid" id="av-grid"></div>
-  <p class="av-note">Enter scores then click "Auto-rank by AV" in the Seeding Round panel to slot teams automatically.</p>
-</div>
-
-<div class="edit-panel" id="edit-panel">
-  <h3>Edit All Team Names</h3>
-  <div class="edit-grid" id="edit-grid"></div>
 </div>
 
 <div class="main">
@@ -238,333 +150,364 @@
 </div>
 
 <script>
-// ── Match referee assignments from PDF ──────────────────────────────────
-const matchRefs = {
-  0:'Austin',1:'Austin',2:'Austin',3:'Austin',4:'Austin/Stacks',
-  5:'Stacks',6:'Stacks',7:'Stacks',8:'Stacks',9:'Stacks',
-  10:'Jared',11:'Jared',12:'Jared',13:'Jared',14:'Jared',15:'Jared',
-  16:'David',17:'David',18:'David',19:'David',20:'David',21:'David'
-};
+// ── Auth ──────────────────────────────────────────────────────────────────
+let adminToken = localStorage.getItem('bracket_token') || null
+let isAdmin = !!adminToken
 
-// ── State ────────────────────────────────────────────────────────────────
-let teams = Array.from({length:44},(_,i)=>`Team ${i+1}`);
-let avScores = Array(44).fill(0);
-let bracket = [];
-let seedingTeams = Array(6).fill('');
-let seedingAV = Array(6).fill(0);
-let finals = { top:{a:'',b:'',winner:null}, third:{a:'',b:'',winner:null}, champion:'', thirdPlace:'' };
+function openLogin()  { document.getElementById('login-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('login-pw').focus(),50) }
+function closeLogin() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-err').textContent='' }
 
-function initBracket(){
-  finals = { top:{a:'',b:'',winner:null}, third:{a:'',b:'',winner:null}, champion:'', thirdPlace:'' };
-  seedingTeams = Array(6).fill('');
-  seedingAV = Array(6).fill(0);
+async function doLogin() {
+  const pw  = document.getElementById('login-pw').value
+  const err = document.getElementById('login-err')
+  err.textContent = ''
+  try {
+    const res  = await fetch('/api/login', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw}) })
+    const data = await res.json()
+    if (!res.ok) { err.textContent = data.error||'Wrong password'; return }
+    adminToken = data.token
+    localStorage.setItem('bracket_token', adminToken)
+    isAdmin = true
+    closeLogin()
+    document.getElementById('login-pw').value = ''
+    applyAdminMode()
+    render()
+  } catch(e) { err.textContent = 'Network error' }
+}
+document.getElementById('login-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin() })
+
+function logoutAdmin() {
+  adminToken=null; isAdmin=false
+  localStorage.removeItem('bracket_token')
+  applyAdminMode(); render()
+}
+
+function applyAdminMode() {
+  const badge = document.getElementById('mode-badge')
+  const loginBtn = document.getElementById('admin-login-btn')
+  if (isAdmin) {
+    badge.textContent='⚡ Admin mode'; badge.className='mode-badge admin'
+    loginBtn.classList.add('hidden')
+    document.querySelectorAll('.admin-only').forEach(el=>el.classList.remove('hidden'))
+  } else {
+    badge.textContent='👁 View only'; badge.className='mode-badge view'
+    loginBtn.classList.remove('hidden')
+    document.querySelectorAll('.admin-only').forEach(el=>el.classList.add('hidden'))
+  }
+}
+
+// ── State ─────────────────────────────────────────────────────────────────
+let teams       = Array.from({length:44},(_,i)=>`Team ${i+1}`)
+let avScores    = {}
+let bracket     = []
+let seedingTeams= Array(6).fill('')
+let finals      = { top:{a:'',b:'',winner:null}, third:{a:'',b:'',winner:null}, champion:'', thirdPlace:'' }
+
+const REFS = {0:'Austin',1:'Austin',2:'Austin',3:'Austin',4:'Austin/Stacks',5:'Stacks',6:'Stacks',7:'Stacks',8:'Stacks',9:'Stacks',10:'Jared',11:'Jared',12:'Jared',13:'Jared',14:'Jared',15:'Jared',16:'David',17:'David',18:'David',19:'David',20:'David',21:'David'}
+
+function initBracket() {
+  finals = {top:{a:'',b:'',winner:null},third:{a:'',b:'',winner:null},champion:'',thirdPlace:''}
+  seedingTeams = Array(6).fill('')
   bracket = [
-    // R0: 22 matches
-    Array.from({length:22},(_,i)=>({a:{name:teams[i*2]}, b:{name:teams[i*2+1]}, winner:null})),
-    // R1: 11 matches
+    Array.from({length:22},(_,i)=>({a:{name:teams[i*2]},b:{name:teams[i*2+1]},winner:null})),
     Array.from({length:11},()=>({a:{name:''},b:{name:''},winner:null})),
-    // R2: 5 real + idx5 = AV bye
-    Array.from({length:6},(_,i)=>i===5
-      ? {a:{name:'',avBye:true},b:{name:'—',bye:true},winner:null}
-      : {a:{name:''},b:{name:''},winner:null})
-  ];
+    Array.from({length:6},(_,i)=>i===5?{a:{name:'',avBye:true},b:{name:'—',bye:true},winner:null}:{a:{name:''},b:{name:''},winner:null})
+  ]
 }
 
-// ── Win propagation ──────────────────────────────────────────────────────
-function winnerName(m){ return m.winner===0?m.a.name:m.b.name; }
-
-function clickSlot(ri,mi,side){
-  const m = bracket[ri][mi];
-  const s = side===0?m.a:m.b;
-  if(!s||s.avBye||s.bye||!s.name) return;
-  if(m.winner===side){ m.winner=null; clearDown(ri,mi,side); }
-  else { m.winner=side; pushWin(ri,mi); }
-  render();
+function getState()    { return { teams, avScores, bracket, seedingTeams, finals } }
+function loadState(s)  {
+  if(!s) return
+  if(s.teams)        teams        = s.teams
+  if(s.avScores)     avScores     = s.avScores
+  if(s.bracket)      bracket      = s.bracket
+  if(s.seedingTeams) seedingTeams = s.seedingTeams
+  if(s.finals)       finals       = s.finals
 }
 
-function pushWin(ri,mi){
-  const m=bracket[ri][mi]; if(m.winner===null) return;
-  const name=winnerName(m);
-  if(ri===0){
-    const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b';
-    bracket[1][nmi][ns].name=name;
-    if(bracket[1][nmi].winner!==null){ bracket[1][nmi].winner=null; clearSeedDown(Math.floor(nmi/2)); }
-  } else if(ri===1){
-    if(mi<=9){
-      const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b';
-      bracket[2][nmi][ns].name=name;
-      if(bracket[2][nmi].winner!==null){ bracket[2][nmi].winner=null; seedingTeams[nmi]=''; resetFinals(); }
+// ── Persistence ───────────────────────────────────────────────────────────
+let saveTimer = null
+
+async function loadBracket() {
+  try {
+    const res  = await fetch('/api/state')
+    const data = await res.json()
+    if (data.state) loadState(data.state)
+    else initBracket()
+  } catch(e) { initBracket() }
+  render()
+}
+
+async function saveBracket() {
+  if (!isAdmin) return
+  const status = document.getElementById('save-status')
+  status.textContent = 'Saving…'
+  try {
+    const res = await fetch('/api/save', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-bracket-token':adminToken},
+      body: JSON.stringify({ state: getState() })
+    })
+    if (res.status===401) { isAdmin=false; adminToken=null; localStorage.removeItem('bracket_token'); applyAdminMode(); status.textContent='Session expired'; return }
+    status.textContent = '✓ Saved'
+    setTimeout(()=>status.textContent='', 2500)
+  } catch(e) { status.textContent = 'Save failed' }
+}
+
+function scheduleSave() {
+  if (!isAdmin) return
+  clearTimeout(saveTimer)
+  saveTimer = setTimeout(saveBracket, 1500)
+}
+
+// Poll every 8s so viewers see live updates
+setInterval(async () => {
+  if (isAdmin) return
+  try {
+    const res  = await fetch('/api/state')
+    const data = await res.json()
+    if (data.state) { loadState(data.state); render() }
+  } catch(e) {}
+}, 8000)
+
+// ── Bracket logic ─────────────────────────────────────────────────────────
+function winnerName(m) { return m.winner===0 ? m.a.name : m.b.name }
+
+function clickSlot(ri, mi, side) {
+  if (!isAdmin) return
+  const m = bracket[ri][mi], s = side===0 ? m.a : m.b
+  if (!s || s.avBye || s.bye || !s.name) return
+  if (m.winner===side) { m.winner=null; clearDown(ri,mi,side) }
+  else                 { m.winner=side; pushWin(ri,mi) }
+  scheduleSave(); render()
+}
+
+function pushWin(ri, mi) {
+  const m = bracket[ri][mi]; if (m.winner===null) return
+  const name = winnerName(m)
+  if (ri===0) {
+    const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
+    bracket[1][nmi][ns].name = name
+    if (bracket[1][nmi].winner!==null) { bracket[1][nmi].winner=null; clearSeed(Math.floor(nmi/2)) }
+  } else if (ri===1) {
+    if (mi<=9) {
+      const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
+      bracket[2][nmi][ns].name = name
+      if (bracket[2][nmi].winner!==null) { bracket[2][nmi].winner=null; clearSeed(nmi) }
     } else {
-      bracket[2][5].a.name=name;
-      seedingTeams[5]=name;
+      bracket[2][5].a.name = name; seedingTeams[5] = name
     }
-  } else if(ri===2){
-    seedingTeams[mi]=name;
-    seedingAV[mi]=avScores[teams.indexOf(name)]||0;
+  } else if (ri===2) {
+    seedingTeams[mi] = name
   }
 }
 
-function clearDown(ri,mi,side){
-  if(ri===0){
-    const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b';
-    bracket[1][nmi][ns].name=''; bracket[1][nmi].winner=null;
-    clearSeedDown(Math.floor(nmi/2));
-  } else if(ri===1){
-    if(mi<=9){
-      const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b';
-      bracket[2][nmi][ns].name=''; bracket[2][nmi].winner=null;
-      seedingTeams[nmi]='';
-    } else { bracket[2][5].a.name=''; seedingTeams[5]=''; }
-    resetFinals();
-  } else if(ri===2){
-    seedingTeams[mi]=''; resetFinals();
+function clearDown(ri, mi, side) {
+  if (ri===0) {
+    const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
+    bracket[1][nmi][ns].name=''; bracket[1][nmi].winner=null
+    clearSeed(Math.floor(nmi/2)); resetFinals()
+  } else if (ri===1) {
+    if (mi<=9) {
+      const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
+      bracket[2][nmi][ns].name=''; bracket[2][nmi].winner=null
+      clearSeed(nmi)
+    } else { bracket[2][5].a.name=''; seedingTeams[5]='' }
+    resetFinals()
+  } else if (ri===2) { clearSeed(mi); resetFinals() }
+}
+
+function clearSeed(i)  { seedingTeams[i]='' }
+function resetFinals() { finals={top:{a:'',b:'',winner:null},third:{a:'',b:'',winner:null},champion:'',thirdPlace:''} }
+
+function autoRankSeeding() {
+  if (!isAdmin) return
+  const entries = seedingTeams.map((n,i)=>({n,av:parseFloat(avScores[n]||0)})).filter(e=>e.n)
+  entries.sort((a,b)=>b.av-a.av)
+  for (let i=0;i<6;i++) seedingTeams[i] = entries[i] ? entries[i].n : ''
+  finals.top.a   = seedingTeams[0]||''; finals.top.b   = seedingTeams[1]||''
+  finals.third.a = seedingTeams[2]||''; finals.third.b = seedingTeams[3]||''
+  finals.top.winner=null; finals.third.winner=null; finals.champion=''; finals.thirdPlace=''
+  scheduleSave(); render()
+}
+
+function clickFinal(type, side) {
+  if (!isAdmin) return
+  const m = type==='top' ? finals.top : finals.third
+  const name = side===0 ? m.a : m.b; if (!name) return
+  if (m.winner===side) { m.winner=null; if(type==='top') finals.champion=''; else finals.thirdPlace='' }
+  else { m.winner=side; const w=side===0?m.a:m.b; if(type==='top') finals.champion=w; else finals.thirdPlace=w }
+  scheduleSave(); render()
+}
+
+function editName(ri, mi, side, el, nm) {
+  if (!isAdmin) return
+  const so = side===0 ? bracket[ri][mi].a : bracket[ri][mi].b
+  nm.style.display = 'none'
+  const inp = document.createElement('input'); inp.className='inline-edit'
+  inp.value=so.name; inp.maxLength=26
+  el.appendChild(inp); inp.focus(); inp.select()
+  const done = () => {
+    const v = inp.value.trim()||so.name
+    so.name=v; teams[mi*2+side]=v
+    nm.style.display=''; inp.remove()
+    scheduleSave(); render()
   }
+  inp.addEventListener('blur', done)
+  inp.addEventListener('keydown', e => { if(e.key==='Enter') inp.blur(); e.stopPropagation() })
 }
 
-function clearSeedDown(smi){
-  seedingTeams[smi]=''; resetFinals();
-}
+// ── Render ────────────────────────────────────────────────────────────────
+const COL_H   = 840
+const R_TITLE = ['Round 1','Round 2','Round 3']
+const R_SUB   = ['22 matches — all 44 teams','11 matches','5 matches + Highest AV bye']
+const M_OFF   = [1, 23, 34]
 
-function resetFinals(){
-  finals={top:{a:'',b:'',winner:null},third:{a:'',b:'',winner:null},champion:'',thirdPlace:''};
-}
+function render() {
+  const wrap = document.getElementById('rounds'); wrap.innerHTML=''
 
-function autoRankSeeding(){
-  const entries = seedingTeams
-    .map((n,i)=>({n, av:avScores[teams.indexOf(n)]||seedingAV[i]||0, orig:i}))
-    .filter(e=>e.n);
-  entries.sort((a,b)=>b.av-a.av);
-  for(let i=0;i<6;i++) seedingTeams[i]=entries[i]?entries[i].n:'';
-  applySeeding();
-  render();
-}
+  // Rounds 0-2
+  ;[0,1,2].forEach(ri => {
+    const col = document.createElement('div'); col.className='round-col'
+    col.innerHTML=`<div class="round-head"><div class="rtitle">${R_TITLE[ri]}</div><div class="rsub">${R_SUB[ri]}</div></div>`
+    const n = bracket[ri].length
+    const slotH = Math.floor((COL_H-48)/n)
 
-function applySeeding(){
-  finals.top.a=seedingTeams[0]||''; finals.top.b=seedingTeams[1]||'';
-  finals.third.a=seedingTeams[2]||''; finals.third.b=seedingTeams[3]||'';
-  finals.top.winner=null; finals.third.winner=null;
-  finals.champion=''; finals.thirdPlace='';
-}
+    bracket[ri].forEach((m,mi) => {
+      const grp = document.createElement('div'); grp.className='match-wrap'; grp.style.height=slotH+'px'
+      const ml = document.createElement('div'); ml.className='match-num'
+      ml.innerHTML=`M${M_OFF[ri]+mi}${ri===0&&REFS[mi]?` <span class="ref-lbl">${REFS[mi]}</span>`:''}`
+      grp.appendChild(ml)
 
-function clickFinal(type,side){
-  const m=type==='top'?finals.top:finals.third;
-  const name=side===0?m.a:m.b; if(!name) return;
-  if(m.winner===side){ m.winner=null; if(type==='top')finals.champion=''; else finals.thirdPlace=''; }
-  else { m.winner=side; const w=side===0?m.a:m.b; if(type==='top')finals.champion=w; else finals.thirdPlace=w; }
-  render();
-}
-
-// ── Render ───────────────────────────────────────────────────────────────
-const COL_H = 860;
-const R_TITLES = ['Round 1','Round 2','Round 3'];
-const R_SUBS   = ['22 matches — all 44 teams play','11 matches','5 matches + Highest AV bye'];
-const M_OFF    = [1,23,34];
-
-function render(){
-  const wrap=document.getElementById('rounds'); wrap.innerHTML='';
-
-  [0,1,2].forEach(ri=>{
-    const col=document.createElement('div'); col.className='round-col';
-    const hd=document.createElement('div'); hd.className='round-head';
-    hd.innerHTML=`<div class="rtitle">${R_TITLES[ri]}</div><div class="rsub">${R_SUBS[ri]}</div>`;
-    col.appendChild(hd);
-
-    const n=bracket[ri].length;
-    const slotH=Math.floor((COL_H-50)/n);
-
-    bracket[ri].forEach((m,mi)=>{
-      const grp=document.createElement('div');
-      grp.className='match-wrap'; grp.style.height=slotH+'px';
-
-      const ml=document.createElement('div'); ml.className='match-num';
-      ml.textContent='M'+(M_OFF[ri]+mi);
-      if(ri===0&&matchRefs[mi]){ const ref=document.createElement('span'); ref.className='ref-who'; ref.textContent=matchRefs[mi]; ml.appendChild(ref); }
-      grp.appendChild(ml);
-
-      [0,1].forEach(side=>{
-        const so=side===0?m.a:m.b;
-        const el=document.createElement('div'); el.className='slot';
-        if(so.avBye) el.classList.add('av-bye');
-        else if(so.bye) el.classList.add('bye-slot');
-        else if(m.winner===side) el.classList.add('winner');
-        else if(!so.name) el.classList.add('empty');
-
-        if(ri===0&&!so.avBye&&!so.bye){
-          const sn=document.createElement('span'); sn.className='snum'; sn.textContent=mi*2+side+1; el.appendChild(sn);
+      ;[0,1].forEach(side => {
+        const so = side===0 ? m.a : m.b
+        const el = document.createElement('div'); el.className='slot'
+        if (so.avBye) { el.classList.add('av-bye') }
+        else if (!so.bye) {
+          if (m.winner===side) el.classList.add('winner')
+          else if (!so.name)   el.classList.add('empty')
+          if (isAdmin) {
+            el.classList.add('clickable')
+            el.addEventListener('click', ()=>clickSlot(ri,mi,side))
+            if (ri===0) el.addEventListener('dblclick', e=>{ e.stopPropagation(); editName(ri,mi,side,el,nm) })
+          }
         }
-        const nm=document.createElement('span'); nm.className='sname';
-        nm.textContent=so.avBye?'Highest AV — auto-advances':so.bye?'BYE':(so.name||(ri===0?'—':'TBD'));
-        el.appendChild(nm);
-
-        if(!so.avBye&&!so.bye){
-          if(ri===0) el.addEventListener('dblclick',()=>editInline(ri,mi,side,el,nm));
-          el.addEventListener('click',()=>clickSlot(ri,mi,side));
+        if (ri===0&&!so.avBye&&!so.bye) {
+          const sn=document.createElement('span'); sn.className='snum'; sn.textContent=mi*2+side+1; el.appendChild(sn)
         }
-        grp.appendChild(el);
-      });
-      col.appendChild(grp);
-    });
-    wrap.appendChild(col);
-  });
+        const nm=document.createElement('span'); nm.className='sname'
+        nm.textContent = so.avBye ? 'Highest AV — auto-advances' : so.bye ? 'BYE' : (so.name||(ri===0?'—':'TBD'))
+        el.appendChild(nm)
+        grp.appendChild(el)
+      })
+      col.appendChild(grp)
+    })
+    wrap.appendChild(col)
+  })
 
-  // ── Seeding column ─────────────────────────────────────────────────────
-  const sc=document.createElement('div'); sc.className='round-col seed-col';
-  const shd=document.createElement('div'); shd.className='round-head';
-  shd.innerHTML='<div class="rtitle">Seeding Round</div><div class="rsub">6 teams ranked by AV volume</div>';
-  sc.appendChild(shd);
+  // Seeding round
+  const sc = document.createElement('div'); sc.className='round-col seed-col'
+  sc.innerHTML=`<div class="round-head"><div class="rtitle">Seeding Round</div><div class="rsub">6 teams ranked by AV volume</div></div>`
+  const sp = document.createElement('div'); sp.className='seed-panel'
+  const filled = seedingTeams.filter(t=>t).length
+  sp.innerHTML=`<h3>${filled<6?filled+'/6 teams placed':'All 6 teams ranked'}</h3>`
 
-  const sp=document.createElement('div'); sp.className='seed-panel';
-  const filled=seedingTeams.filter(t=>t).length;
-  const sh3=document.createElement('div');
-  sh3.style.cssText='font-size:11px;font-weight:600;color:#8b91a8;margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em';
-  sh3.textContent=filled<6?`${filled} / 6 teams placed`:'All 6 teams ranked';
-  sp.appendChild(sh3);
+  const GL = [
+    {r:'1st',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd'},
+    {r:'2nd',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd'},
+    {r:'3rd',cls:'mid2',badge:'badge-mid',txt:'→ 3rd place'},
+    {r:'4th',cls:'mid2',badge:'badge-mid',txt:'→ 3rd place'},
+    {r:'5th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
+    {r:'6th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
+  ]
+  GL.forEach((g,i) => {
+    if (i===2||i===4) { const d=document.createElement('hr'); d.className='seed-divider'; sp.appendChild(d) }
+    const row=document.createElement('div'); row.className='seed-row '+g.cls
+    row.innerHTML=`<span class="seed-rank">${g.r}</span><span class="seed-name">${seedingTeams[i]||'—'}</span><span class="seed-badge ${g.badge}">${g.txt}</span>`
+    sp.appendChild(row)
+  })
+  if (isAdmin) {
+    const rb=document.createElement('button'); rb.className='rank-btn'; rb.textContent='⚡ Auto-rank by AV score'; rb.onclick=autoRankSeeding; sp.appendChild(rb)
+  }
+  sc.appendChild(sp); wrap.appendChild(sc)
 
-  const groupLabels=[
-    {rank:'1st',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd match'},
-    {rank:'2nd',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd match'},
-    {rank:'3rd',cls:'mid2',badge:'badge-mid',txt:'→ 3rd place match'},
-    {rank:'4th',cls:'mid2',badge:'badge-mid',txt:'→ 3rd place match'},
-    {rank:'5th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
-    {rank:'6th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
-  ];
-
-  groupLabels.forEach((g,i)=>{
-    if(i===2){ const d=document.createElement('hr'); d.className='seed-divider'; sp.appendChild(d); }
-    if(i===4){ const d=document.createElement('hr'); d.className='seed-divider'; sp.appendChild(d); }
-    const row=document.createElement('div'); row.className='seed-row '+g.cls;
-    const rk=document.createElement('span'); rk.className='seed-rank'; rk.textContent=g.rank;
-    const nm=document.createElement('span'); nm.className='seed-name'; nm.textContent=seedingTeams[i]||'—';
-    const bd=document.createElement('span'); bd.className='seed-badge '+g.badge; bd.textContent=g.txt;
-    row.appendChild(rk); row.appendChild(nm); row.appendChild(bd);
-    sp.appendChild(row);
-  });
-
-  const rb=document.createElement('button'); rb.className='rank-btn';
-  rb.textContent='⚡ Auto-rank by AV score';
-  rb.onclick=autoRankSeeding;
-  sp.appendChild(rb);
-
-  sc.appendChild(sp);
-  wrap.appendChild(sc);
-
-  // ── Finals column ──────────────────────────────────────────────────────
-  const fc=document.createElement('div'); fc.className='finals-col';
+  // Finals
+  const fc = document.createElement('div'); fc.className='finals-col'
 
   // 1st/2nd
-  const topCard=document.createElement('div'); topCard.className='final-card';
-  topCard.innerHTML='<h3>🥇 1st &amp; 2nd Place Match</h3>';
-  ['a','b'].forEach((s,i)=>{
-    const el=document.createElement('div'); el.className='slot';
-    const name=finals.top[s];
-    if(!name) el.classList.add('empty');
-    if(finals.top.winner===i) el.classList.add('winner');
-    const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||'Seed 1 or 2 — TBD';
-    el.appendChild(nm); el.addEventListener('click',()=>clickFinal('top',i));
-    topCard.appendChild(el);
-  });
-  const cr=document.createElement('div'); cr.className='final-result'+(finals.champion?' gold-result':'');
-  cr.textContent=finals.champion?'🏆 '+finals.champion:'Champion —';
-  topCard.appendChild(cr);
-  fc.appendChild(topCard);
-
-  // 2nd place display
-  if(finals.top.winner!==null){
-    const loser=finals.top.winner===0?finals.top.b:finals.top.a;
-    const sr=document.createElement('div'); sr.className='final-result silver-result';
-    sr.style.marginTop='-4px'; sr.textContent='🥈 '+loser;
-    topCard.appendChild(sr);
+  const topCard=document.createElement('div'); topCard.className='final-card'
+  topCard.innerHTML='<h3>🥇 1st &amp; 2nd Place Match</h3>'
+  ;['a','b'].forEach((s,i) => {
+    const el=document.createElement('div'); el.className='slot'+(isAdmin?' clickable':'')
+    const name=finals.top[s]
+    if (!name) el.classList.add('empty')
+    if (finals.top.winner===i) el.classList.add('winner')
+    const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||`Seed ${i+1} — TBD`
+    el.appendChild(nm)
+    if (isAdmin) el.addEventListener('click',()=>clickFinal('top',i))
+    topCard.appendChild(el)
+  })
+  const cr=document.createElement('div'); cr.className='final-result'+(finals.champion?' gold':'')
+  cr.textContent=finals.champion?'🏆 '+finals.champion:'Champion —'
+  topCard.appendChild(cr)
+  if (finals.top.winner!==null) {
+    const sr=document.createElement('div'); sr.className='final-result silver'
+    sr.textContent='🥈 '+(finals.top.winner===0?finals.top.b:finals.top.a); topCard.appendChild(sr)
   }
+  fc.appendChild(topCard)
 
-  // 3rd place
-  const thCard=document.createElement('div'); thCard.className='final-card';
-  thCard.innerHTML='<h3>🥉 3rd Place Match</h3>';
-  ['a','b'].forEach((s,i)=>{
-    const el=document.createElement('div'); el.className='slot';
-    const name=finals.third[s];
-    if(!name) el.classList.add('empty');
-    if(finals.third.winner===i) el.classList.add('winner');
-    const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||'Seed 3 or 4 — TBD';
-    el.appendChild(nm); el.addEventListener('click',()=>clickFinal('third',i));
-    thCard.appendChild(el);
-  });
-  const tr=document.createElement('div'); tr.className='final-result'+(finals.thirdPlace?' bronze-result':'');
-  tr.textContent=finals.thirdPlace?'🥉 '+finals.thirdPlace:'3rd Place —';
-  thCard.appendChild(tr);
-  fc.appendChild(thCard);
+  // 3rd
+  const thCard=document.createElement('div'); thCard.className='final-card'
+  thCard.innerHTML='<h3>🥉 3rd Place Match</h3>'
+  ;['a','b'].forEach((s,i) => {
+    const el=document.createElement('div'); el.className='slot'+(isAdmin?' clickable':'')
+    const name=finals.third[s]
+    if (!name) el.classList.add('empty')
+    if (finals.third.winner===i) el.classList.add('winner')
+    const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||`Seed ${i+3} — TBD`
+    el.appendChild(nm)
+    if (isAdmin) el.addEventListener('click',()=>clickFinal('third',i))
+    thCard.appendChild(el)
+  })
+  const tr=document.createElement('div'); tr.className='final-result'+(finals.thirdPlace?' bronze':'')
+  tr.textContent=finals.thirdPlace?'🥉 '+finals.thirdPlace:'3rd Place —'
+  thCard.appendChild(tr)
+  fc.appendChild(thCard)
 
   // Eliminated
-  const elimCard=document.createElement('div'); elimCard.className='final-card';
-  elimCard.innerHTML='<h3>❌ Eliminated — 5th &amp; 6th</h3>';
-  [4,5].forEach(i=>{
-    const el=document.createElement('div'); el.className='elim-slot';
-    el.textContent=(seedingTeams[i]||(i===4?'5th seed':'6th seed'));
-    elimCard.appendChild(el);
-  });
-  fc.appendChild(elimCard);
+  const elimCard=document.createElement('div'); elimCard.className='final-card'
+  elimCard.innerHTML='<h3>❌ Eliminated — 5th &amp; 6th</h3>'
+  ;[4,5].forEach(i=>{ const el=document.createElement('div'); el.className='elim-slot'; el.textContent=seedingTeams[i]||(i===4?'5th seed':'6th seed'); elimCard.appendChild(el) })
+  fc.appendChild(elimCard)
 
-  wrap.appendChild(fc);
-
-  buildAVGrid();
+  wrap.appendChild(fc)
+  buildAVGrid()
 }
 
-function editInline(ri,mi,side,el,nm){
-  const m=bracket[ri][mi]; const so=side===0?m.a:m.b;
-  nm.style.display='none';
-  const inp=document.createElement('input');
-  inp.style.cssText='border:none;background:transparent;font-size:12px;color:#e8eaf0;font-family:inherit;flex:1;outline:none;width:100%';
-  inp.value=so.name; inp.maxLength=24;
-  el.appendChild(inp); inp.focus(); inp.select();
-  const done=()=>{ const v=inp.value.trim()||so.name; so.name=v; teams[mi*2+side]=v; nm.style.display=''; inp.remove(); render(); buildEditGrid(); };
-  inp.addEventListener('blur',done);
-  inp.addEventListener('keydown',e=>{ if(e.key==='Enter') inp.blur(); });
+function buildAVGrid() {
+  if (!isAdmin) return
+  const grid=document.getElementById('av-grid'); if(!grid) return
+  grid.innerHTML=''
+  const show = seedingTeams.filter(t=>t).length>0 ? seedingTeams.filter(t=>t) : teams
+  show.forEach(name => {
+    const row=document.createElement('div'); row.className='av-row'
+    const sp=document.createElement('span'); sp.textContent=name
+    const inp=document.createElement('input'); inp.type='number'; inp.min='0'
+    inp.value=avScores[name]||0
+    inp.addEventListener('change', e=>{ avScores[name]=parseFloat(e.target.value)||0; scheduleSave() })
+    row.appendChild(sp); row.appendChild(inp); grid.appendChild(row)
+  })
 }
 
-function buildAVGrid(){
-  const grid=document.getElementById('av-grid'); if(!grid) return;
-  grid.innerHTML='';
-  const relevant=seedingTeams.filter(t=>t);
-  const show=relevant.length>0?relevant:teams.slice(0,44);
-  show.forEach(name=>{
-    const ti=teams.indexOf(name); if(ti<0) return;
-    const row=document.createElement('div'); row.className='av-row';
-    const sp=document.createElement('span'); sp.textContent=name;
-    const inp=document.createElement('input');
-    inp.type='number'; inp.min='0'; inp.value=avScores[ti]||0; inp.placeholder='AV score';
-    inp.addEventListener('change',e=>{ avScores[ti]=parseFloat(e.target.value)||0; });
-    row.appendChild(sp); row.appendChild(inp); grid.appendChild(row);
-  });
+function toggleAV() {
+  const p=document.getElementById('av-panel')
+  p.classList.toggle('hidden')
+  if (!p.classList.contains('hidden')) buildAVGrid()
 }
 
-function buildEditGrid(){
-  const grid=document.getElementById('edit-grid'); if(!grid) return;
-  grid.innerHTML='';
-  teams.forEach((t,i)=>{
-    const row=document.createElement('div'); row.className='edit-row';
-    row.innerHTML=`<span>${i+1}</span>`;
-    const inp=document.createElement('input'); inp.value=t;
-    inp.addEventListener('change',e=>{
-      teams[i]=e.target.value.trim()||teams[i];
-      bracket[0][Math.floor(i/2)][i%2===0?'a':'b'].name=teams[i];
-      render();
-    });
-    row.appendChild(inp); grid.appendChild(row);
-  });
-}
-
-function toggleEdit(){
-  const p=document.getElementById('edit-panel');
-  p.style.display=p.style.display==='block'?'none':'block';
-  if(p.style.display==='block') buildEditGrid();
-}
-function toggleAV(){
-  const p=document.getElementById('av-panel');
-  p.style.display=p.style.display==='block'?'none':'block';
-  if(p.style.display==='block') buildAVGrid();
-}
-function resetAll(){ initBracket(); render(); }
-
-initBracket(); render();
+// Boot
+applyAdminMode()
+loadBracket()
 </script>
 </body>
 </html>
