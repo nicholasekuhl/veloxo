@@ -62,24 +62,33 @@
   /* Layout */
   .main{display:flex;align-items:flex-start}
   .bracket-scroll{overflow-x:auto;flex:1;padding:20px}
-  .rounds{display:flex;align-items:flex-start;min-width:1500px}
+  .rounds{display:flex;align-items:flex-start;min-width:1500px;gap:0}
 
   /* Round columns */
-  .round-col{display:flex;flex-direction:column;padding:0 4px}
-  .round-col.r0{min-width:210px}
-  .round-col.r1{min-width:190px}
-  .round-col.r2{min-width:190px}
-  .round-col.seed{min-width:225px}
-  .round-col.finals{min-width:190px;display:flex;flex-direction:column;gap:10px;justify-content:center}
-  .round-head{text-align:center;margin-bottom:10px}
+  .round-col{display:flex;flex-direction:column;padding:0}
+  .round-col.r0{min-width:220px}
+  .round-col.r1{min-width:200px}
+  .round-col.r2{min-width:200px}
+  .round-col.seed{min-width:230px}
+  .round-col.finals{min-width:195px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .round-head{text-align:center;margin-bottom:10px;padding:0 8px}
   .rtitle{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
   .rsub{font-size:9px;color:var(--text3);margin-top:2px}
-  .match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative}
-  .match-num{font-size:10px;color:var(--text3);text-align:right;padding:0 2px 2px}
-  .ref-lbl{font-size:9px;color:var(--amber)}
+  .match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative;padding:0 8px}
+  .match-num{font-size:9px;color:var(--text3);text-align:right;padding:0 2px 2px;opacity:.6}
+  .ref-lbl{font-size:8px;color:var(--amber)}
 
-  /* Slots */
-  .slot{display:flex;align-items:center;min-height:40px;border:1px solid var(--border);border-radius:5px;padding:4px 7px;margin:1px 0;background:var(--bg2);gap:5px;transition:background .12s,border-color .12s;position:relative}
+  /* Match card — 1px border top+bottom = CARD_BORDER=2 in JS */
+  .match-card{border:1px solid var(--border);border-radius:6px;overflow:hidden;background:var(--bg2)}
+  .match-card .slot{border:none;border-radius:0;margin:0;border-bottom:1px solid var(--border)}
+  .match-card .slot:last-child{border-bottom:none}
+
+  /* SVG connector column — sits between round columns, aligns to top */
+  .connector-col{flex-shrink:0;align-self:flex-start;padding-top:52px}
+  .connector-col svg line{stroke:var(--border2);stroke-width:1.5px;stroke-linecap:square}
+
+  /* Slots — height must match JS SLOT_H constant (44px) exactly */
+  .slot{display:flex;align-items:center;height:44px;box-sizing:border-box;border:none;border-radius:0;padding:4px 8px;margin:0;background:var(--bg2);gap:5px;transition:background .12s;position:relative;overflow:hidden}
   .slot.clickable{cursor:pointer}
   .slot.clickable:hover{background:var(--bg3);border-color:var(--border2)}
   .slot.winner{background:var(--green-bg);border-color:var(--green-bd)}
@@ -566,104 +575,205 @@ function renderLeaderboard(){
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
-const COL_H=1800
+// Layout constants — CSS slot height must match SLOT_H
+const SLOT_H    = 44   // px — each team row height. Must match CSS .slot { height }
+const HEADER_H  = 52   // px — round title area
+const CONN_W    = 44   // px — width of SVG connector strip between rounds
+const TOTAL_H   = 3300 // px — total bracket column content height (all rounds same)
+
 const R_TITLE=['Round 1','Round 2','Round 3']
 const R_SUB=['22 matches · all 44 teams','11 matches','5 matches + R2 highest AV bye']
 const M_OFF=[1,23,34]
+
+// Effective slot count per round for connector alignment:
+// R1: 24 (22 matches + 2 phantom = 12 pairs matching R2)
+// R2: 12 (11 matches + 1 bye = 6 pairs matching R3)
+// R3:  6 (exactly 5 matches + 1 bye slot)
+const EFFECTIVE_N = [24, 12, 6]
+
+function matchSpacing(ri) {
+  return (TOTAL_H - HEADER_H) / EFFECTIVE_N[ri]
+}
+
+// Y of the dividing line between team A and team B — the connector anchor.
+// HEADER_H is not used here; instead the connector SVG has its own CSS margin-top
+// matching the rendered round header height.
+function matchMidY(ri, mi) {
+  const sp = matchSpacing(ri)
+  // matchTop relative to content area (below header)
+  const matchTop = mi * sp + (sp - SLOT_H*2) / 2
+  return matchTop + SLOT_H  // dividing line between the two team slots
+}
 
 function makeAVInput(name,round){
   const av=document.createElement('input');av.className='av-inp'
   av.type='number';av.min='0';av.step='any'
   av.placeholder=round.toUpperCase()+' AV $'
   av.value=getAV(name,round)||''
-  const save=e=>{
-    const val=parseFloat(e.target.value)||0
-    setAV(name,round,val)
-    scheduleSave();renderLeaderboard()
-  }
+  const save=e=>{const val=parseFloat(e.target.value)||0;setAV(name,round,val);scheduleSave();renderLeaderboard()}
   av.addEventListener('click',e=>e.stopPropagation())
   av.addEventListener('change',save)
   av.addEventListener('blur',save)
   return av
 }
 
+function buildSlot(ri, mi, side, m) {
+  const so = side===0 ? m.a : m.b
+  const avRound = ['r1','r2','r3'][ri]
+  const isByePlaceholder = m.isByeSlot && side===1
+  const isByeWinner = m.isByeSlot && side===0
+  const el = document.createElement('div'); el.className='slot'
+  // Height controlled by CSS .slot { height: 44px }
+
+  if (isByePlaceholder) {
+    el.style.opacity='.3'; el.style.borderStyle='dashed'
+    const nm=document.createElement('span');nm.className='sname';nm.style.color='var(--text3)';nm.textContent='BYE';el.appendChild(nm)
+    return el
+  }
+
+  if (isByeWinner)       el.classList.add('av-bye')
+  else if (m.winner===side) el.classList.add('winner')
+  else if (!so.name)     el.classList.add('empty')
+
+  if (isAdmin && !m.isByeSlot) {
+    el.classList.add('clickable')
+    el.addEventListener('click', ()=>clickSlot(ri,mi,side))
+  }
+
+  if (ri===0) { const sn=document.createElement('span');sn.className='snum';sn.textContent=mi*2+side+1;el.appendChild(sn) }
+
+  const inner=document.createElement('div');inner.className='slot-inner'
+
+  // Name row
+  const nameRow=document.createElement('div');nameRow.className='slot-name-row'
+  const nm=document.createElement('span');nm.className='sname'
+  nm.textContent=isByeWinner&&!so.name?'Highest R2 AV — bye':(so.name||(ri===0?'—':'TBD'))
+  nameRow.appendChild(nm)
+  if (isByeWinner&&so.name) { const bb=document.createElement('span');bb.className='bye-badge';bb.textContent='R3 BYE';nameRow.appendChild(bb) }
+  inner.appendChild(nameRow)
+
+  // AV row
+  if (so.name || ri===0) {
+    const avRow=document.createElement('div');avRow.className='slot-av-row'
+    const lbl=document.createElement('span');lbl.className='av-label';lbl.textContent=avRound.toUpperCase()+':'
+    avRow.appendChild(lbl)
+    if (isAdmin) { const ai=makeAVInput(so.name||'',avRound);ai.addEventListener('click',e=>e.stopPropagation());avRow.appendChild(ai) }
+    else { const val=getAV(so.name,avRound);const d=document.createElement('span');d.className='av-display';d.textContent=val>0?'$'+val.toLocaleString():'—';avRow.appendChild(d) }
+    inner.appendChild(avRow)
+  }
+
+  el.appendChild(inner)
+
+  if (isAdmin) {
+    const gear=document.createElement('div');gear.className='slot-gear';gear.textContent='⚙'
+    gear.title='Edit team / AV / clear'
+    gear.addEventListener('click',e=>{e.stopPropagation();openSlotModal(ri,mi,side)})
+    el.appendChild(gear)
+  }
+
+  return el
+}
+
+function buildRoundCol(ri) {
+  const col = document.createElement('div'); col.className=`round-col r${ri}`
+  col.innerHTML=`<div class="round-head"><div class="rtitle">${R_TITLE[ri]}</div><div class="rsub">${R_SUB[ri]}</div></div>`
+
+  const sp = matchSpacing(ri)
+  const innerSlotH = SLOT_H * 2
+  const topPad = Math.max(4, (sp - innerSlotH) / 2)
+
+  bracket[ri].forEach((m,mi)=>{
+    const grp = document.createElement('div'); grp.className='match-wrap'
+    grp.style.height = sp + 'px'
+
+    grp.style.paddingTop = topPad + 'px'
+    // Match number label
+    const ml=document.createElement('div');ml.className='match-num'
+    ml.innerHTML=`M${M_OFF[ri]+mi}${ri===0&&REFS[mi]?` <span class="ref-lbl">${REFS[mi]}</span>`:''}`
+    grp.appendChild(ml)
+
+    // Match card wrapping both slots
+    const card = document.createElement('div'); card.className='match-card'
+    card.appendChild(buildSlot(ri,mi,0,m))
+    card.appendChild(buildSlot(ri,mi,1,m))
+    grp.appendChild(card)
+    col.appendChild(grp)
+  })
+  return col
+}
+
+// Build SVG connector between round ri and ri+1
+// Classic bracket style: horizontal stub from each match's right edge,
+// vertical bar joining consecutive pair, horizontal to next round's match center
+function buildConnectorSVG(ri) {
+  const nLeft  = bracket[ri].length
+  const nRight = bracket[ri+1] ? bracket[ri+1].length : 0
+  if (!nRight) return null
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg')
+  svg.setAttribute('width', CONN_W)
+  svg.setAttribute('height', TOTAL_H - HEADER_H + 20)
+  svg.style.cssText = 'display:block;overflow:visible;flex-shrink:0'
+
+  const C = 'var(--border-primary, #3d4466)'
+  const W = '1.5'
+
+  function line(x1,y1,x2,y2) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg','line')
+    el.setAttribute('x1',x1); el.setAttribute('y1',y1)
+    el.setAttribute('x2',x2); el.setAttribute('y2',y2)
+    el.setAttribute('stroke',C); el.setAttribute('stroke-width',W)
+    el.setAttribute('stroke-linecap','square')
+    svg.appendChild(el)
+  }
+
+  const nR = bracket[ri].length
+
+  // Each consecutive pair of left matches feeds one right match
+  // For R2(11)→R3(6): only pairs 0-9 connect (matches 0-4 in R3); match 10 is bye, skip
+  const pairCount = Math.floor(nLeft / 2)
+
+  for (let p=0; p<pairCount; p++) {
+    const lmi1 = p * 2
+    const lmi2 = p * 2 + 1
+
+    // Y centers of each match in the left round
+    const y1   = matchMidY(ri,    lmi1)
+    const y2   = matchMidY(ri,    lmi2)
+    // Y center of the target match in the right round
+    const yIn  = matchMidY(ri+1,  p)
+
+    const xL = 0         // flush with right edge of match boxes
+    const xV = CONN_W/2  // vertical bar x
+    const xR = CONN_W    // left edge of next round
+
+    // Stubs exit from the dividing line (between team boxes) of each match
+    line(xL, y1,  xV, y1)   // stub from match lmi1 divider
+    line(xL, y2,  xV, y2)   // stub from match lmi2 divider
+    line(xV, y1,  xV, y2)   // vertical bar connecting the two stubs
+    // Horizontal enters the right-round match at ITS dividing line
+    line(xV, yIn, xR, yIn)  // horizontal to next round match divider
+  }
+
+  return svg
+}
+
 function render(){
   const wrap=document.getElementById('rounds');wrap.innerHTML=''
 
-  ;[0,1,2].forEach(ri=>{
-    const col=document.createElement('div');col.className=`round-col r${ri}`
-    col.innerHTML=`<div class="round-head"><div class="rtitle">${R_TITLE[ri]}</div><div class="rsub">${R_SUB[ri]}</div></div>`
-    const n=bracket[ri].length,slotH=Math.floor((COL_H-52)/n),avRound=['r1','r2','r3'][ri]
+  // Rounds 0, 1, 2 with SVG connectors between them
+  for (let ri=0; ri<=2; ri++) {
+    wrap.appendChild(buildRoundCol(ri))
 
-    bracket[ri].forEach((m,mi)=>{
-      const grp=document.createElement('div');grp.className='match-wrap';grp.style.height=slotH+'px'
-      const ml=document.createElement('div');ml.className='match-num'
-      ml.innerHTML=`M${M_OFF[ri]+mi}${ri===0&&REFS[mi]?` <span class="ref-lbl">${REFS[mi]}</span>`:''}`
-      grp.appendChild(ml)
+    if (ri < 2 && bracket[ri+1]) {
+      const connCol = document.createElement('div'); connCol.className='connector-col'
+      const svg = buildConnectorSVG(ri)
+      if (svg) connCol.appendChild(svg)
+      wrap.appendChild(connCol)
+    }
+  }
 
-      ;[0,1].forEach(side=>{
-        const so=side===0?m.a:m.b
-        const isByePlaceholder=m.isByeSlot&&side===1
-        const isByeWinner=m.isByeSlot&&side===0
-        const el=document.createElement('div');el.className='slot'
-
-        if(isByePlaceholder){
-          el.style.opacity='.35';el.style.borderStyle='dashed'
-          const nm=document.createElement('span');nm.className='sname';nm.style.color='var(--text3)';nm.textContent='BYE';el.appendChild(nm)
-          grp.appendChild(el);return
-        }
-
-        if(isByeWinner) el.classList.add('av-bye')
-        else if(m.winner===side) el.classList.add('winner')
-        else if(!so.name) el.classList.add('empty')
-
-        if(isAdmin&&!m.isByeSlot){el.classList.add('clickable');el.addEventListener('click',()=>clickSlot(ri,mi,side))}
-
-        if(ri===0){const sn=document.createElement('span');sn.className='snum';sn.textContent=mi*2+side+1;el.appendChild(sn)}
-
-        const inner=document.createElement('div');inner.className='slot-inner'
-
-        // Name row
-        const nameRow=document.createElement('div');nameRow.className='slot-name-row'
-        const nm=document.createElement('span');nm.className='sname'
-        nm.textContent=isByeWinner&&!so.name?'Highest R2 AV — bye':(so.name||(ri===0?'—':'TBD'))
-        nameRow.appendChild(nm)
-        if(isByeWinner&&so.name){const bb=document.createElement('span');bb.className='bye-badge';bb.textContent='R3 BYE';nameRow.appendChild(bb)}
-        inner.appendChild(nameRow)
-
-        // AV row
-        if(so.name||(ri===0)){
-          const avRow=document.createElement('div');avRow.className='slot-av-row'
-          const lbl=document.createElement('span');lbl.className='av-label';lbl.textContent=avRound.toUpperCase()+':'
-          avRow.appendChild(lbl)
-          if(isAdmin){
-            const avinp=makeAVInput(so.name||'',avRound)
-            avinp.addEventListener('click',e=>e.stopPropagation())
-            avRow.appendChild(avinp)
-          } else {
-            const val=getAV(so.name,avRound)
-            const d=document.createElement('span');d.className='av-display';d.textContent=val>0?'$'+val.toLocaleString():'—';avRow.appendChild(d)
-          }
-          inner.appendChild(avRow)
-        }
-
-        el.appendChild(inner)
-
-        // Gear button — admin only
-        if(isAdmin){
-          const gear=document.createElement('div');gear.className='slot-gear';gear.textContent='⚙'
-          gear.title='Edit team / AV / clear'
-          gear.addEventListener('click',e=>{e.stopPropagation();openSlotModal(ri,mi,side)})
-          el.appendChild(gear)
-        }
-
-        grp.appendChild(el)
-      })
-      col.appendChild(grp)
-    })
-    wrap.appendChild(col)
-  })
-
+  // Seeding
   // Seeding
   const sc=document.createElement('div');sc.className='round-col seed'
   sc.innerHTML=`<div class="round-head"><div class="rtitle">Seeding Round</div><div class="rsub">Ranked by R3 AV only</div></div>`
