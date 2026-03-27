@@ -76,3 +76,7 @@ startScheduler()
 app.listen(PORT, () => {
   console.log(`TextApp server running on port ${PORT}`)
 })
+
+const bracketRouter = require('./routes/bracket')
+// add with your other routes:
+app.use('/bracket', bracketRouter)
