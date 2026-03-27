@@ -66,6 +66,24 @@
   </div>
 </div>
 
+<!-- MESSAGE PREVIEW MODAL -->
+<div class="modal-overlay" id="preview-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>Message Preview</h2>
+      <button class="modal-close" onclick="document.getElementById('preview-modal').classList.remove('open')">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:10px;">Sample variables filled in · Spintext resolved randomly</div>
+    <div id="preview-message-body" style="background:var(--color-surface-subtle);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:16px;font-size:14px;color:var(--color-text);white-space:pre-wrap;line-height:1.5;margin-bottom:12px;"></div>
+    <div id="preview-char-count" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:500;"></div>
+    <div id="preview-footer-note" style="display:none;font-size:12px;color:var(--color-primary);background:var(--color-primary-bg);padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:12px;">Compliance footer appended (first message only)</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('preview-modal').classList.remove('open')">Close</button>
+      <button class="btn btn-secondary" onclick="previewMessageStep(currentPreviewStepId)">Re-roll</button>
+    </div>
+  </div>
+</div>
+
 <!-- TAG LEADS MODAL -->
 <div class="modal-overlay" id="enroll-modal">
   <div class="modal">
@@ -98,6 +116,7 @@
   let editingCampaignId = null
   let messageStepCount = 0
   let campaignSortKey = 'created_at'
+  let currentPreviewStepId = null
   let campaignSortDir = -1
 
   const loadCampaigns = async () => {
@@ -232,7 +251,7 @@
       step.className = 'message-step'
       step.id = `step-${messageStepCount}`
       step.innerHTML = `
-        <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
+        <div class="message-step-header"><span>Message ${messageStepCount}</span><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="previewMessageStep('step-${messageStepCount}')">Preview</button><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div></div>
         <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${msg.day_number}"><label>at</label><input type="time" class="step-time" value="${msg.send_time || '10:00'}"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
         <textarea class="step-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
         <div class="char-count">${msg.message_body.length} / 160</div>
@@ -263,7 +282,7 @@
     step.className = 'message-step'
     step.id = `step-${messageStepCount}`
     step.innerHTML = `
-      <div class="message-step-header"><span>Message ${messageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div>
+      <div class="message-step-header"><span>Message ${messageStepCount}</span><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="previewMessageStep('step-${messageStepCount}')">Preview</button><button class="btn btn-danger btn-sm" onclick="removeStep('step-${messageStepCount}')">Remove</button></div></div>
       <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${messageStepCount === 1 ? 1 : messageStepCount * 3}"><label>at</label><input type="time" class="step-time" value="10:00"><span style="font-size:11px;color:#9ca3af;">lead's local time</span></div>
       <textarea class="step-body" placeholder="Hi [First Name], this is [Agent Name] with [Agency Name]..." rows="3" oninput="updateCharCount(this)"></textarea>
       <div class="char-count">0 / 160</div>
@@ -333,6 +352,63 @@
       if (data.success) { closeEnrollModal(); toast.success('Enrolled', `${data.count} lead${data.count !== 1 ? 's' : ''} added to campaign`) }
       else toast.error('Enrollment failed', data.error || 'Could not enroll leads')
     } catch (err) { toast.error('Error', 'Something went wrong') }
+  }
+
+  const SAMPLE_VARS = {
+    '[First Name]': 'Jane', '[Last Name]': 'Smith', '[Full Name]': 'Jane Smith',
+    '[Phone]': '+1 (555) 000-0001', '[Email]': 'jane.smith@email.com',
+    '[State]': 'FL', '[City]': 'Orlando', '[Zip]': '32801',
+  }
+
+  const resolveSpintext = (body) =>
+    body.replace(/\{([^{}]+)\}/g, (_, opts) => {
+      const choices = opts.split('|').map(s => s.trim()).filter(Boolean)
+      return choices.length ? choices[Math.floor(Math.random() * choices.length)] : ''
+    })
+
+  const previewMessageStep = (stepId) => {
+    const step = document.getElementById(stepId)
+    if (!step) return
+    const rawBody = step.querySelector('.step-body').value.trim()
+    if (!rawBody) return toast.error('Empty', 'Write a message before previewing')
+
+    currentPreviewStepId = stepId
+
+    const thisDay = parseInt(step.querySelector('.step-day').value)
+    const allSteps = [...document.querySelectorAll('.message-step')]
+    const minDay = Math.min(...allSteps.map(s => parseInt(s.querySelector('.step-day').value)))
+    const isFirst = thisDay <= minDay
+
+    const now = new Date()
+    const agentName = currentUser?.agent_name || 'Your Name'
+    const agencyName = currentUser?.agency_name || 'Your Agency Name'
+    const calendlyUrl = currentUser?.calendly_url || 'https://calendly.com/your-link'
+
+    let preview = resolveSpintext(rawBody)
+    Object.entries(SAMPLE_VARS).forEach(([k, v]) => {
+      preview = preview.replace(new RegExp(k.replace(/[[\]]/g, '\\$&'), 'gi'), v)
+    })
+    preview = preview
+      .replace(/\[Agent Name\]/gi, agentName)
+      .replace(/\[Agency Name\]/gi, agencyName)
+      .replace(/\[Calendly Link\]/gi, calendlyUrl)
+      .replace(/\[Date\]/gi, now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))
+      .replace(/\[Time\]/gi, now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }))
+
+    if (isFirst) {
+      const complianceEnabled = currentUser?.compliance_footer_enabled !== false
+      const footer = complianceEnabled
+        ? (currentUser?.compliance_footer || (agencyName ? `Reply STOP to opt out. ${agencyName}` : 'Reply STOP to opt out.'))
+        : agencyName
+      if (footer) preview = `${preview}\n${footer}`
+    }
+
+    const len = preview.length
+    const segments = Math.ceil(len / 160)
+    document.getElementById('preview-message-body').textContent = preview
+    document.getElementById('preview-char-count').textContent = `${len} characters · ${segments} segment${segments !== 1 ? 's' : ''}`
+    document.getElementById('preview-footer-note').style.display = isFirst ? 'block' : 'none'
+    document.getElementById('preview-modal').classList.add('open')
   }
 
   const init = async () => {

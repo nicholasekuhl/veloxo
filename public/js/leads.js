@@ -1367,6 +1367,21 @@ const openCreateLeadModal = () => {
   document.getElementById('cl-notes').value = ''
   document.getElementById('cl-autopilot').checked = false
   document.getElementById('cl-error').style.display = 'none'
+
+  // Populate campaign dropdown with active campaigns
+  const campSel = document.getElementById('cl-campaign')
+  if (campSel) {
+    const activeCampaigns = allCampaigns.filter(c => c.status === 'active')
+    campSel.innerHTML = '<option value="">No campaign</option>' +
+      activeCampaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
+  }
+
+  // Populate disposition dropdown
+  const dispSel = document.getElementById('cl-disposition')
+  if (dispSel) {
+    dispSel.innerHTML = '<option value="">No disposition</option>' +
+      allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+  }
 }
 
 const closeCreateLeadModal = () => document.getElementById('create-lead-modal').classList.remove('open')
@@ -1394,6 +1409,28 @@ const saveCreateLead = async () => {
     const res = await fetch('/leads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const data = await res.json()
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to create lead')
+    const newLeadId = data.lead.id
+
+    // Apply campaign enrollment if selected
+    const campaignId = document.getElementById('cl-campaign')?.value
+    if (campaignId) {
+      await fetch(`/campaigns/${campaignId}/enroll`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: [newLeadId], start_date: new Date().toISOString() })
+      }).catch(() => {})
+    }
+
+    // Apply disposition if selected
+    const dispositionId = document.getElementById('cl-disposition')?.value
+    if (dispositionId) {
+      await fetch('/dispositions/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: newLeadId, disposition_tag_id: dispositionId })
+      }).catch(() => {})
+    }
+
     closeCreateLeadModal()
     allLeads.unshift(data.lead)
     updateStats(allLeads)

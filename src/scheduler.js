@@ -413,7 +413,12 @@ const processScheduledMessages = async () => {
       const firstName = enrollment.leads.first_name || 'there'
       const rawBody = spintext(currentMessage.message_body).replace('[First Name]', firstName)
       const userProfile = enrollment.user_id ? profileMap[enrollment.user_id] : null
-      const messageBody = buildMessageBody(rawBody, userProfile, enrollment.leads, false)
+      let messageBody = buildMessageBody(rawBody, userProfile, enrollment.leads, false)
+      // Belt-and-suspenders: always append agency name to first campaign message if not already present
+      const agencyName = userProfile?.agency_name
+      if (!enrollment.leads.first_message_sent && agencyName && !messageBody.includes(agencyName)) {
+        messageBody = `${messageBody}\n${agencyName}`
+      }
 
       const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, enrollment.leads.state) || process.env.TWILIO_PHONE_NUMBER
       const result = await sendSMS(enrollment.leads.phone, messageBody, fromNumber)

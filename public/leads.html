@@ -536,6 +536,16 @@
       <input type="checkbox" id="cl-autopilot" style="width:auto;accent-color:#6366f1;">
       <label for="cl-autopilot" style="margin:0;cursor:pointer;">Enable Autopilot</label>
     </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Add to Campaign <span style="color:#9ca3af;">(optional)</span></label>
+        <select id="cl-campaign"><option value="">No campaign</option></select>
+      </div>
+      <div class="form-group">
+        <label>Apply Disposition <span style="color:#9ca3af;">(optional)</span></label>
+        <select id="cl-disposition"><option value="">No disposition</option></select>
+      </div>
+    </div>
     <div id="cl-error" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeCreateLeadModal()">Cancel</button>
