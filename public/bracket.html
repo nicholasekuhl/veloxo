@@ -18,7 +18,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;min-height:100vh}
 
-  /* Header */
+  /* ── Header ─────────────────────────────────────────────────────── */
   header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
   header h1{font-size:17px;font-weight:600}
   header p{font-size:11px;color:var(--text2);margin-top:2px}
@@ -36,7 +36,7 @@
   button.btn-red:hover{background:var(--red-bg)}
   #save-status{font-size:11px;color:var(--text3);min-width:60px}
 
-  /* Modal */
+  /* ── Modal ──────────────────────────────────────────────────────── */
   .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center}
   .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:26px;width:320px;max-width:92vw}
   .modal h2{font-size:15px;font-weight:600;margin-bottom:16px}
@@ -46,26 +46,22 @@
   .modal-err{font-size:11px;color:var(--red);min-height:16px;margin-bottom:6px}
   .hidden{display:none!important}
 
-  /* AV Panel */
-  .av-panel{background:var(--blue-bg);border:1px solid var(--blue-bd);border-radius:8px;padding:12px 16px;margin:0 20px 14px}
-  .av-panel h3{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:10px}
-  .av-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
-  .av-row{display:flex;align-items:center;gap:8px;font-size:12px}
-  .av-row span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
-  .av-row input{width:90px;padding:4px 8px;border-radius:4px;border:1px solid var(--blue-bd);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;text-align:right}
+  /* ── Main layout ────────────────────────────────────────────────── */
+  .main{display:flex;align-items:flex-start}
+  .bracket-scroll{overflow-x:auto;flex:1;padding:20px}
+  .rounds{display:flex;align-items:flex-start;min-width:1400px}
 
-  /* Bracket */
-  .main{overflow-x:auto;padding:20px}
-  .rounds{display:flex;align-items:flex-start;min-width:1260px}
-  .round-col{display:flex;flex-direction:column;min-width:150px;padding:0 4px}
-  .round-head{text-align:center;margin-bottom:10px}
+  /* ── Round columns ──────────────────────────────────────────────── */
+  .round-col{display:flex;flex-direction:column;min-width:185px;padding:0 4px}
+  .round-head{text-align:center;margin-bottom:12px}
   .rtitle{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
   .rsub{font-size:9px;color:var(--text3);margin-top:2px}
   .match-wrap{display:flex;flex-direction:column;justify-content:center;position:relative}
-  .match-num{font-size:11px;color:var(--text3);text-align:right;padding:0 2px 1px}
-  .ref-lbl{font-size:8px;color:var(--amber)}
+  .match-num{font-size:10px;color:var(--text3);text-align:right;padding:0 2px 2px}
+  .ref-lbl{font-size:9px;color:var(--amber)}
 
-  .slot{display:flex;align-items:center;height:36px;border:1px solid var(--border);border-radius:4px;padding:0 7px;margin:1px 0;background:var(--bg2);gap:5px;overflow:hidden;transition:background .12s,border-color .12s}
+  /* ── Slots ──────────────────────────────────────────────────────── */
+  .slot{display:flex;align-items:center;height:38px;border:1px solid var(--border);border-radius:5px;padding:0 8px;margin:1px 0;background:var(--bg2);gap:6px;overflow:hidden;transition:background .12s,border-color .12s}
   .slot.clickable{cursor:pointer}
   .slot.clickable:hover{background:var(--bg3);border-color:var(--border2)}
   .slot.winner{background:var(--green-bg);border-color:var(--green-bd)}
@@ -73,19 +69,24 @@
   .slot.av-bye{background:var(--blue-bg);border-color:var(--blue-bd);border-style:dashed}
   .slot.av-bye .sname{color:var(--blue);font-style:italic}
   .slot.empty .sname{color:var(--text3)}
-  .snum{font-size:9px;color:var(--text3);min-width:15px;flex-shrink:0}
+  .snum{font-size:10px;color:var(--text3);min-width:18px;flex-shrink:0;font-weight:500}
   .sname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
   .slot input.inline-edit{border:none;background:transparent;font-size:12px;color:var(--text);font-family:inherit;flex:1;outline:none;min-width:0}
 
-  /* Seeding */
-  .seed-col{min-width:205px;padding:0 6px}
-  .seed-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-top:30px}
-  .seed-panel h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-  .seed-row{display:flex;align-items:center;gap:7px;height:32px;border-radius:5px;padding:0 10px;margin:3px 0;border:1px solid var(--border)}
+  /* AV input beside team name (R1, admin only) */
+  .av-inp{width:74px;flex-shrink:0;padding:3px 7px;border-radius:4px;border:1px solid var(--border2);background:var(--bg3);color:var(--amber);font-size:11px;font-family:inherit;text-align:right;transition:border-color .15s}
+  .av-inp:focus{outline:none;border-color:var(--amber);background:var(--bg)}
+  .av-inp::placeholder{color:var(--text3);font-size:10px}
+
+  /* ── Seeding column ─────────────────────────────────────────────── */
+  .seed-col{min-width:215px;padding:0 6px}
+  .seed-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-top:32px}
+  .seed-panel h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+  .seed-row{display:flex;align-items:center;gap:7px;height:34px;border-radius:5px;padding:0 10px;margin:3px 0;border:1px solid var(--border)}
   .seed-row.top2{background:var(--green-bg);border-color:var(--green-bd)}
   .seed-row.mid2{background:var(--bg3);border-color:var(--border2)}
   .seed-row.bot2{background:var(--red-bg);border-color:var(--red-bd);opacity:.7}
-  .seed-rank{font-size:11px;font-weight:700;min-width:26px}
+  .seed-rank{font-size:12px;font-weight:700;min-width:28px}
   .top2 .seed-rank{color:var(--gold)}
   .mid2 .seed-rank{color:var(--silver)}
   .bot2 .seed-rank{color:var(--red)}
@@ -94,19 +95,51 @@
   .badge-top{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}
   .badge-mid{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
   .badge-out{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}
-  .seed-divider{border:none;border-top:1px dashed var(--border2);margin:3px 0}
-  .rank-btn{margin-top:8px;width:100%;font-size:11px;border-color:var(--blue);color:var(--blue)}
+  .seed-divider{border:none;border-top:1px dashed var(--border2);margin:4px 0}
+  .rank-btn{margin-top:10px;width:100%;font-size:11px;border-color:var(--blue);color:var(--blue)}
   .rank-btn:hover{background:var(--blue-bg)}
 
-  /* Finals */
-  .finals-col{min-width:175px;padding:0 8px;display:flex;flex-direction:column;gap:10px;justify-content:center}
-  .final-card{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px}
-  .final-card h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}
-  .final-result{margin-top:6px;padding:5px 10px;border-radius:5px;font-size:12px;font-weight:600;min-height:28px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
+  /* ── Finals column ──────────────────────────────────────────────── */
+  .finals-col{min-width:185px;padding:0 8px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+  .final-card{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:14px}
+  .final-card h3{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .final-result{margin-top:7px;padding:6px 10px;border-radius:5px;font-size:12px;font-weight:600;min-height:30px;background:var(--bg3);color:var(--text3);border:1px solid var(--border)}
   .final-result.gold{background:var(--gold-bg);border-color:var(--amber);color:var(--gold)}
   .final-result.silver{background:var(--bg3);border-color:var(--silver);color:var(--silver)}
   .final-result.bronze{background:#1e1208;border-color:var(--bronze);color:var(--bronze)}
-  .elim-slot{display:flex;align-items:center;height:26px;padding:0 8px;margin:2px 0;border-radius:4px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:12px;color:var(--red);opacity:.6}
+  .elim-slot{display:flex;align-items:center;height:28px;padding:0 8px;margin:2px 0;border-radius:4px;background:var(--red-bg);border:1px solid var(--red-bd);font-size:12px;color:var(--red);opacity:.6}
+
+  /* ── AV Leaderboard sidebar ─────────────────────────────────────── */
+  .lb-wrap{width:255px;flex-shrink:0;padding:20px 16px 20px 0}
+  .lb-panel{background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:16px;position:sticky;top:72px;max-height:calc(100vh - 90px);overflow-y:auto}
+  .lb-panel::-webkit-scrollbar{width:4px}
+  .lb-panel::-webkit-scrollbar-track{background:transparent}
+  .lb-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .lb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .lb-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+  .lb-count{font-size:10px;color:var(--text3)}
+  .lb-search{width:100%;padding:5px 9px;border-radius:5px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;margin-bottom:10px}
+  .lb-search:focus{outline:none;border-color:var(--blue)}
+  .lb-table{width:100%;border-collapse:collapse;font-size:12px}
+  .lb-table tr{border-bottom:1px solid var(--border)}
+  .lb-table tr:last-child{border-bottom:none}
+  .lb-table td{padding:7px 3px;vertical-align:middle}
+  .lb-rank{width:24px;font-size:11px;font-weight:700;color:var(--text3);text-align:center;padding-right:4px}
+  .lb-rank.r1{color:var(--gold);font-size:15px}
+  .lb-rank.r2{color:var(--silver);font-size:13px}
+  .lb-rank.r3{color:var(--bronze);font-size:12px}
+  .lb-name-cell{max-width:110px}
+  .lb-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:12px;font-weight:500}
+  .lb-stage{font-size:9px;color:var(--text3);margin-top:1px}
+  .lb-bar-wrap{height:2px;background:var(--border);border-radius:2px;margin-top:3px}
+  .lb-bar{height:2px;border-radius:2px;transition:width .5s ease}
+  .lb-av-cell{text-align:right;white-space:nowrap;padding-left:6px}
+  .lb-av{color:var(--amber);font-weight:600;font-size:12px}
+  .lb-av-sub{font-size:9px;color:var(--text3);margin-top:1px}
+  .lb-footer{margin-top:12px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .lb-footer-label{font-size:10px;color:var(--text2)}
+  .lb-footer-val{font-size:14px;font-weight:700;color:var(--amber)}
+  .lb-empty{font-size:11px;color:var(--text3);padding:16px 4px;text-align:center;line-height:1.7}
 </style>
 </head>
 <body>
@@ -127,12 +160,11 @@
 <header>
   <div>
     <h1>44-Team Tournament Bracket</h1>
-    <p id="header-sub">Live bracket — updates automatically</p>
+    <p>Live bracket — updates automatically for all viewers</p>
   </div>
   <div class="hbtns">
     <span class="mode-badge view" id="mode-badge">👁 View only</span>
-    <button class="btn-blue hidden admin-only" onclick="toggleAV()">📊 AV Scores</button>
-    <button class="hidden admin-only" onclick="autoRankSeeding()">⚡ Auto-rank</button>
+    <button class="btn-green hidden admin-only" onclick="autoRankSeeding()">⚡ Auto-rank by AV</button>
     <button class="btn-green hidden admin-only" onclick="saveBracket()">💾 Save</button>
     <span id="save-status"></span>
     <button class="btn-red hidden admin-only" onclick="logoutAdmin()">Logout</button>
@@ -140,19 +172,37 @@
   </div>
 </header>
 
-<div class="av-panel hidden admin-only" id="av-panel">
-  <h3>Sales Volume (AV) Scores — used for seeding round ranking</h3>
-  <div class="av-grid" id="av-grid"></div>
-</div>
-
 <div class="main">
-  <div class="rounds" id="rounds"></div>
+  <!-- Bracket (scrolls horizontally) -->
+  <div class="bracket-scroll">
+    <div class="rounds" id="rounds"></div>
+  </div>
+
+  <!-- AV Leaderboard (sticky right sidebar) -->
+  <div class="lb-wrap">
+    <div class="lb-panel">
+      <div class="lb-header">
+        <span class="lb-title">📊 AV Leaderboard</span>
+        <span class="lb-count" id="lb-count"></span>
+      </div>
+      <input class="lb-search" id="lb-search" placeholder="Search team…" oninput="renderLeaderboard()"/>
+      <table class="lb-table">
+        <tbody id="lb-body">
+          <tr><td colspan="3"><div class="lb-empty">Enter AV scores<br>next to team names<br>to rank them here</div></td></tr>
+        </tbody>
+      </table>
+      <div class="lb-footer">
+        <span class="lb-footer-label">Total AV</span>
+        <span class="lb-footer-val" id="lb-total">—</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 // ── Auth ──────────────────────────────────────────────────────────────────
 let adminToken = localStorage.getItem('bracket_token') || null
-let isAdmin = !!adminToken
+let isAdmin    = !!adminToken
 
 function openLogin()  { document.getElementById('login-modal').classList.remove('hidden'); setTimeout(()=>document.getElementById('login-pw').focus(),50) }
 function closeLogin() { document.getElementById('login-modal').classList.add('hidden'); document.getElementById('login-err').textContent='' }
@@ -172,7 +222,7 @@ async function doLogin() {
     document.getElementById('login-pw').value = ''
     applyAdminMode()
     render()
-  } catch(e) { err.textContent = 'Network error' }
+  } catch(e) { err.textContent = 'Network error — check connection' }
 }
 document.getElementById('login-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin() })
 
@@ -183,7 +233,7 @@ function logoutAdmin() {
 }
 
 function applyAdminMode() {
-  const badge = document.getElementById('mode-badge')
+  const badge    = document.getElementById('mode-badge')
   const loginBtn = document.getElementById('admin-login-btn')
   if (isAdmin) {
     badge.textContent='⚡ Admin mode'; badge.className='mode-badge admin'
@@ -197,32 +247,39 @@ function applyAdminMode() {
 }
 
 // ── State ─────────────────────────────────────────────────────────────────
-let teams       = Array.from({length:44},(_,i)=>`Team ${i+1}`)
-let avScores    = {}
-let bracket     = []
-let seedingTeams= Array(6).fill('')
-let finals      = { top:{a:'',b:'',winner:null}, third:{a:'',b:'',winner:null}, champion:'', thirdPlace:'' }
+let teams        = Array.from({length:44},(_,i)=>`Team ${i+1}`)
+let avScores     = {}   // { teamName: number }
+let bracket      = []
+let seedingTeams = Array(6).fill('')
+let finals       = { top:{a:'',b:'',winner:null}, third:{a:'',b:'',winner:null}, champion:'', thirdPlace:'' }
 
-const REFS = {0:'Austin',1:'Austin',2:'Austin',3:'Austin',4:'Austin/Stacks',5:'Stacks',6:'Stacks',7:'Stacks',8:'Stacks',9:'Stacks',10:'Jared',11:'Jared',12:'Jared',13:'Jared',14:'Jared',15:'Jared',16:'David',17:'David',18:'David',19:'David',20:'David',21:'David'}
+const REFS = {
+  0:'Austin',1:'Austin',2:'Austin',3:'Austin',4:'Austin/Stacks',
+  5:'Stacks',6:'Stacks',7:'Stacks',8:'Stacks',9:'Stacks',
+  10:'Jared',11:'Jared',12:'Jared',13:'Jared',14:'Jared',15:'Jared',
+  16:'David',17:'David',18:'David',19:'David',20:'David',21:'David'
+}
 
 function initBracket() {
-  finals = {top:{a:'',b:'',winner:null},third:{a:'',b:'',winner:null},champion:'',thirdPlace:''}
-  seedingTeams = Array(6).fill('')
+  finals        = {top:{a:'',b:'',winner:null},third:{a:'',b:'',winner:null},champion:'',thirdPlace:''}
+  seedingTeams  = Array(6).fill('')
   bracket = [
-    Array.from({length:22},(_,i)=>({a:{name:teams[i*2]},b:{name:teams[i*2+1]},winner:null})),
-    Array.from({length:11},()=>({a:{name:''},b:{name:''},winner:null})),
-    Array.from({length:6},(_,i)=>i===5?{a:{name:'',avBye:true},b:{name:'—',bye:true},winner:null}:{a:{name:''},b:{name:''},winner:null})
+    Array.from({length:22},(_,i)=>({a:{name:teams[i*2]},  b:{name:teams[i*2+1]}, winner:null})),
+    Array.from({length:11},()   =>({a:{name:''},            b:{name:''},           winner:null})),
+    Array.from({length:6}, (_,i)=>i===5
+      ?{a:{name:'',avBye:true}, b:{name:'—',bye:true}, winner:null}
+      :{a:{name:''},            b:{name:''},            winner:null})
   ]
 }
 
-function getState()    { return { teams, avScores, bracket, seedingTeams, finals } }
-function loadState(s)  {
-  if(!s) return
-  if(s.teams)        teams        = s.teams
-  if(s.avScores)     avScores     = s.avScores
-  if(s.bracket)      bracket      = s.bracket
-  if(s.seedingTeams) seedingTeams = s.seedingTeams
-  if(s.finals)       finals       = s.finals
+function getState()   { return { teams, avScores, bracket, seedingTeams, finals } }
+function loadState(s) {
+  if (!s) return
+  if (s.teams)        teams        = s.teams
+  if (s.avScores)     avScores     = s.avScores
+  if (s.bracket)      bracket      = s.bracket
+  if (s.seedingTeams) seedingTeams = s.seedingTeams
+  if (s.finals)       finals       = s.finals
 }
 
 // ── Persistence ───────────────────────────────────────────────────────────
@@ -236,6 +293,7 @@ async function loadBracket() {
     else initBracket()
   } catch(e) { initBracket() }
   render()
+  renderLeaderboard()
 }
 
 async function saveBracket() {
@@ -248,10 +306,13 @@ async function saveBracket() {
       headers:{'Content-Type':'application/json','x-bracket-token':adminToken},
       body: JSON.stringify({ state: getState() })
     })
-    if (res.status===401) { isAdmin=false; adminToken=null; localStorage.removeItem('bracket_token'); applyAdminMode(); status.textContent='Session expired'; return }
-    status.textContent = '✓ Saved'
+    if (res.status===401) {
+      isAdmin=false; adminToken=null; localStorage.removeItem('bracket_token')
+      applyAdminMode(); status.textContent='Session expired'; return
+    }
+    status.textContent='✓ Saved'
     setTimeout(()=>status.textContent='', 2500)
-  } catch(e) { status.textContent = 'Save failed' }
+  } catch(e) { status.textContent='Save failed' }
 }
 
 function scheduleSave() {
@@ -260,13 +321,13 @@ function scheduleSave() {
   saveTimer = setTimeout(saveBracket, 1500)
 }
 
-// Poll every 8s so viewers see live updates
+// Poll every 8s for viewers
 setInterval(async () => {
   if (isAdmin) return
   try {
-    const res  = await fetch('/api/state')
+    const res  = await fetch('/bracket/state')
     const data = await res.json()
-    if (data.state) { loadState(data.state); render() }
+    if (data.state) { loadState(data.state); render(); renderLeaderboard() }
   } catch(e) {}
 }, 8000)
 
@@ -275,31 +336,27 @@ function winnerName(m) { return m.winner===0 ? m.a.name : m.b.name }
 
 function clickSlot(ri, mi, side) {
   if (!isAdmin) return
-  const m = bracket[ri][mi], s = side===0 ? m.a : m.b
-  if (!s || s.avBye || s.bye || !s.name) return
+  const m=bracket[ri][mi], s=side===0?m.a:m.b
+  if (!s||s.avBye||s.bye||!s.name) return
   if (m.winner===side) { m.winner=null; clearDown(ri,mi,side) }
   else                 { m.winner=side; pushWin(ri,mi) }
-  scheduleSave(); render()
+  scheduleSave(); render(); renderLeaderboard()
 }
 
 function pushWin(ri, mi) {
-  const m = bracket[ri][mi]; if (m.winner===null) return
-  const name = winnerName(m)
+  const m=bracket[ri][mi]; if(m.winner===null) return
+  const name=winnerName(m)
   if (ri===0) {
     const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
-    bracket[1][nmi][ns].name = name
+    bracket[1][nmi][ns].name=name
     if (bracket[1][nmi].winner!==null) { bracket[1][nmi].winner=null; clearSeed(Math.floor(nmi/2)) }
   } else if (ri===1) {
     if (mi<=9) {
       const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
-      bracket[2][nmi][ns].name = name
+      bracket[2][nmi][ns].name=name
       if (bracket[2][nmi].winner!==null) { bracket[2][nmi].winner=null; clearSeed(nmi) }
-    } else {
-      bracket[2][5].a.name = name; seedingTeams[5] = name
-    }
-  } else if (ri===2) {
-    seedingTeams[mi] = name
-  }
+    } else { bracket[2][5].a.name=name; seedingTeams[5]=name }
+  } else if (ri===2) { seedingTeams[mi]=name }
 }
 
 function clearDown(ri, mi, side) {
@@ -310,8 +367,7 @@ function clearDown(ri, mi, side) {
   } else if (ri===1) {
     if (mi<=9) {
       const nmi=Math.floor(mi/2), ns=mi%2===0?'a':'b'
-      bracket[2][nmi][ns].name=''; bracket[2][nmi].winner=null
-      clearSeed(nmi)
+      bracket[2][nmi][ns].name=''; bracket[2][nmi].winner=null; clearSeed(nmi)
     } else { bracket[2][5].a.name=''; seedingTeams[5]='' }
     resetFinals()
   } else if (ri===2) { clearSeed(mi); resetFinals() }
@@ -322,39 +378,106 @@ function resetFinals() { finals={top:{a:'',b:'',winner:null},third:{a:'',b:'',wi
 
 function autoRankSeeding() {
   if (!isAdmin) return
-  const entries = seedingTeams.map((n,i)=>({n,av:parseFloat(avScores[n]||0)})).filter(e=>e.n)
+  const entries=seedingTeams.map(n=>({n,av:parseFloat(avScores[n]||0)})).filter(e=>e.n)
   entries.sort((a,b)=>b.av-a.av)
-  for (let i=0;i<6;i++) seedingTeams[i] = entries[i] ? entries[i].n : ''
-  finals.top.a   = seedingTeams[0]||''; finals.top.b   = seedingTeams[1]||''
-  finals.third.a = seedingTeams[2]||''; finals.third.b = seedingTeams[3]||''
+  for (let i=0;i<6;i++) seedingTeams[i]=entries[i]?entries[i].n:''
+  finals.top.a   =seedingTeams[0]||''; finals.top.b   =seedingTeams[1]||''
+  finals.third.a =seedingTeams[2]||''; finals.third.b =seedingTeams[3]||''
   finals.top.winner=null; finals.third.winner=null; finals.champion=''; finals.thirdPlace=''
-  scheduleSave(); render()
+  scheduleSave(); render(); renderLeaderboard()
 }
 
 function clickFinal(type, side) {
   if (!isAdmin) return
-  const m = type==='top' ? finals.top : finals.third
-  const name = side===0 ? m.a : m.b; if (!name) return
+  const m=type==='top'?finals.top:finals.third
+  const name=side===0?m.a:m.b; if(!name) return
   if (m.winner===side) { m.winner=null; if(type==='top') finals.champion=''; else finals.thirdPlace='' }
   else { m.winner=side; const w=side===0?m.a:m.b; if(type==='top') finals.champion=w; else finals.thirdPlace=w }
-  scheduleSave(); render()
+  scheduleSave(); render(); renderLeaderboard()
 }
 
 function editName(ri, mi, side, el, nm) {
   if (!isAdmin) return
-  const so = side===0 ? bracket[ri][mi].a : bracket[ri][mi].b
-  nm.style.display = 'none'
-  const inp = document.createElement('input'); inp.className='inline-edit'
-  inp.value=so.name; inp.maxLength=26
-  el.appendChild(inp); inp.focus(); inp.select()
-  const done = () => {
-    const v = inp.value.trim()||so.name
+  const so=side===0?bracket[ri][mi].a:bracket[ri][mi].b
+  nm.style.display='none'
+  const inp=document.createElement('input'); inp.className='inline-edit'
+  inp.value=so.name; inp.maxLength=28
+  const avEl=el.querySelector('.av-inp')
+  el.insertBefore(inp, avEl||null)
+  inp.focus(); inp.select()
+  const done=()=>{
+    const v=inp.value.trim()||so.name
+    if (v!==so.name && avScores[so.name]!==undefined) { avScores[v]=avScores[so.name]; delete avScores[so.name] }
     so.name=v; teams[mi*2+side]=v
     nm.style.display=''; inp.remove()
-    scheduleSave(); render()
+    scheduleSave(); render(); renderLeaderboard()
   }
   inp.addEventListener('blur', done)
-  inp.addEventListener('keydown', e => { if(e.key==='Enter') inp.blur(); e.stopPropagation() })
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter') inp.blur(); e.stopPropagation() })
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────
+function getStage(name) {
+  let depth=0
+  bracket.forEach((round,ri)=>{ round.forEach(m=>{ if(m.a.name===name||m.b.name===name) depth=Math.max(depth,ri+1) }) })
+  if (seedingTeams.includes(name)) depth=Math.max(depth,4)
+  if (finals.top.a===name||finals.top.b===name||finals.third.a===name||finals.third.b===name) depth=Math.max(depth,5)
+  if (finals.champion===name||finals.thirdPlace===name) depth=Math.max(depth,6)
+  const labels=['','R1','R2','R3','Seeding','Finals','Champion']
+  return labels[depth]||''
+}
+
+function barColor(rank, total) {
+  if (rank===0) return '#fbbf24'
+  if (rank===1) return '#94a3b8'
+  if (rank===2) return '#cd7c2f'
+  return `hsl(${220+rank*3},${60-rank}%,${55-rank*0.5}%)`
+}
+
+function renderLeaderboard() {
+  const body    = document.getElementById('lb-body')
+  const totalEl = document.getElementById('lb-total')
+  const countEl = document.getElementById('lb-count')
+  const search  = (document.getElementById('lb-search')?.value||'').toLowerCase().trim()
+  if (!body) return
+
+  const all = teams
+    .map(name=>({name, av:parseFloat(avScores[name])||0, stage:getStage(name)}))
+    .filter(e=>e.av>0)
+    .sort((a,b)=>b.av-a.av)
+
+  const filtered = search ? all.filter(e=>e.name.toLowerCase().includes(search)) : all
+  const totalAV  = all.reduce((s,e)=>s+e.av,0)
+  const maxAV    = all[0]?.av||1
+
+  if (countEl) countEl.textContent = all.length ? all.length+' teams' : ''
+  if (totalEl) totalEl.textContent = all.length ? '$'+totalAV.toLocaleString() : '—'
+
+  if (filtered.length===0) {
+    body.innerHTML=`<tr><td colspan="3"><div class="lb-empty">${search?'No teams match':'Enter AV scores next to<br>team names to rank<br>teams here'}</div></td></tr>`
+    return
+  }
+
+  body.innerHTML = filtered.map(e=>{
+    const gi   = all.indexOf(e)
+    const rc   = gi===0?'r1':gi===1?'r2':gi===2?'r3':''
+    const medal= gi===0?'🥇':gi===1?'🥈':gi===2?'🥉':(gi+1)
+    const pct  = Math.round((e.av/maxAV)*100)
+    const col  = barColor(gi, all.length)
+    return `
+      <tr>
+        <td class="lb-rank ${rc}">${medal}</td>
+        <td class="lb-name-cell">
+          <div class="lb-name" title="${e.name}">${e.name}</div>
+          ${e.stage?`<div class="lb-stage">${e.stage}</div>`:''}
+          <div class="lb-bar-wrap"><div class="lb-bar" style="width:${pct}%;background:${col}"></div></div>
+        </td>
+        <td class="lb-av-cell">
+          <div class="lb-av">$${e.av.toLocaleString()}</div>
+          <div class="lb-av-sub">annual vol.</div>
+        </td>
+      </tr>`
+  }).join('')
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
@@ -364,26 +487,27 @@ const R_SUB   = ['22 matches — all 44 teams','11 matches','5 matches + Highest
 const M_OFF   = [1, 23, 34]
 
 function render() {
-  const wrap = document.getElementById('rounds'); wrap.innerHTML=''
+  const wrap=document.getElementById('rounds'); wrap.innerHTML=''
 
-  // Rounds 0-2
-  ;[0,1,2].forEach(ri => {
-    const col = document.createElement('div'); col.className='round-col'
+  ;[0,1,2].forEach(ri=>{
+    const col=document.createElement('div'); col.className='round-col'
     col.innerHTML=`<div class="round-head"><div class="rtitle">${R_TITLE[ri]}</div><div class="rsub">${R_SUB[ri]}</div></div>`
-    const n = bracket[ri].length
-    const slotH = Math.floor((COL_H-48)/n)
+    const n=bracket[ri].length
+    const slotH=Math.floor((COL_H-52)/n)
 
-    bracket[ri].forEach((m,mi) => {
-      const grp = document.createElement('div'); grp.className='match-wrap'; grp.style.height=slotH+'px'
-      const ml = document.createElement('div'); ml.className='match-num'
+    bracket[ri].forEach((m,mi)=>{
+      const grp=document.createElement('div'); grp.className='match-wrap'; grp.style.height=slotH+'px'
+      const ml=document.createElement('div'); ml.className='match-num'
       ml.innerHTML=`M${M_OFF[ri]+mi}${ri===0&&REFS[mi]?` <span class="ref-lbl">${REFS[mi]}</span>`:''}`
       grp.appendChild(ml)
 
-      ;[0,1].forEach(side => {
-        const so = side===0 ? m.a : m.b
-        const el = document.createElement('div'); el.className='slot'
-        if (so.avBye) { el.classList.add('av-bye') }
-        else if (!so.bye) {
+      ;[0,1].forEach(side=>{
+        const so=side===0?m.a:m.b
+        const el=document.createElement('div'); el.className='slot'
+
+        if (so.avBye) {
+          el.classList.add('av-bye')
+        } else if (!so.bye) {
           if (m.winner===side) el.classList.add('winner')
           else if (!so.name)   el.classList.add('empty')
           if (isAdmin) {
@@ -392,12 +516,31 @@ function render() {
             if (ri===0) el.addEventListener('dblclick', e=>{ e.stopPropagation(); editName(ri,mi,side,el,nm) })
           }
         }
+
         if (ri===0&&!so.avBye&&!so.bye) {
           const sn=document.createElement('span'); sn.className='snum'; sn.textContent=mi*2+side+1; el.appendChild(sn)
         }
+
         const nm=document.createElement('span'); nm.className='sname'
-        nm.textContent = so.avBye ? 'Highest AV — auto-advances' : so.bye ? 'BYE' : (so.name||(ri===0?'—':'TBD'))
+        nm.textContent=so.avBye?'Highest AV — auto-advances':so.bye?'BYE':(so.name||(ri===0?'—':'TBD'))
         el.appendChild(nm)
+
+        // AV input — R1, real slots, admin only
+        if (ri===0&&!so.avBye&&!so.bye&&isAdmin) {
+          const av=document.createElement('input'); av.className='av-inp'
+          av.type='number'; av.min='0'; av.step='any'
+          av.placeholder='AV $'
+          av.title='Annual Volume'
+          av.value=avScores[so.name]||''
+          av.addEventListener('click',   e=>e.stopPropagation())
+          av.addEventListener('dblclick',e=>e.stopPropagation())
+          av.addEventListener('change',  e=>{
+            avScores[so.name]=parseFloat(e.target.value)||0
+            scheduleSave(); renderLeaderboard()
+          })
+          el.appendChild(av)
+        }
+
         grp.appendChild(el)
       })
       col.appendChild(grp)
@@ -405,14 +548,13 @@ function render() {
     wrap.appendChild(col)
   })
 
-  // Seeding round
-  const sc = document.createElement('div'); sc.className='round-col seed-col'
+  // ── Seeding ──────────────────────────────────────────────────────────
+  const sc=document.createElement('div'); sc.className='round-col seed-col'
   sc.innerHTML=`<div class="round-head"><div class="rtitle">Seeding Round</div><div class="rsub">6 teams ranked by AV volume</div></div>`
-  const sp = document.createElement('div'); sp.className='seed-panel'
-  const filled = seedingTeams.filter(t=>t).length
+  const sp=document.createElement('div'); sp.className='seed-panel'
+  const filled=seedingTeams.filter(t=>t).length
   sp.innerHTML=`<h3>${filled<6?filled+'/6 teams placed':'All 6 teams ranked'}</h3>`
-
-  const GL = [
+  const GL=[
     {r:'1st',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd'},
     {r:'2nd',cls:'top2',badge:'badge-top',txt:'→ 1st/2nd'},
     {r:'3rd',cls:'mid2',badge:'badge-mid',txt:'→ 3rd place'},
@@ -420,8 +562,8 @@ function render() {
     {r:'5th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
     {r:'6th',cls:'bot2',badge:'badge-out',txt:'Eliminated'},
   ]
-  GL.forEach((g,i) => {
-    if (i===2||i===4) { const d=document.createElement('hr'); d.className='seed-divider'; sp.appendChild(d) }
+  GL.forEach((g,i)=>{
+    if(i===2||i===4){const d=document.createElement('hr');d.className='seed-divider';sp.appendChild(d)}
     const row=document.createElement('div'); row.className='seed-row '+g.cls
     row.innerHTML=`<span class="seed-rank">${g.r}</span><span class="seed-name">${seedingTeams[i]||'—'}</span><span class="seed-badge ${g.badge}">${g.txt}</span>`
     sp.appendChild(row)
@@ -431,42 +573,41 @@ function render() {
   }
   sc.appendChild(sp); wrap.appendChild(sc)
 
-  // Finals
-  const fc = document.createElement('div'); fc.className='finals-col'
+  // ── Finals ───────────────────────────────────────────────────────────
+  const fc=document.createElement('div'); fc.className='finals-col'
 
-  // 1st/2nd
   const topCard=document.createElement('div'); topCard.className='final-card'
   topCard.innerHTML='<h3>🥇 1st &amp; 2nd Place Match</h3>'
-  ;['a','b'].forEach((s,i) => {
+  ;['a','b'].forEach((s,i)=>{
     const el=document.createElement('div'); el.className='slot'+(isAdmin?' clickable':'')
     const name=finals.top[s]
-    if (!name) el.classList.add('empty')
-    if (finals.top.winner===i) el.classList.add('winner')
+    if(!name) el.classList.add('empty')
+    if(finals.top.winner===i) el.classList.add('winner')
     const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||`Seed ${i+1} — TBD`
     el.appendChild(nm)
-    if (isAdmin) el.addEventListener('click',()=>clickFinal('top',i))
+    if(isAdmin) el.addEventListener('click',()=>clickFinal('top',i))
     topCard.appendChild(el)
   })
   const cr=document.createElement('div'); cr.className='final-result'+(finals.champion?' gold':'')
   cr.textContent=finals.champion?'🏆 '+finals.champion:'Champion —'
   topCard.appendChild(cr)
-  if (finals.top.winner!==null) {
+  if(finals.top.winner!==null){
     const sr=document.createElement('div'); sr.className='final-result silver'
-    sr.textContent='🥈 '+(finals.top.winner===0?finals.top.b:finals.top.a); topCard.appendChild(sr)
+    sr.textContent='🥈 '+(finals.top.winner===0?finals.top.b:finals.top.a)
+    topCard.appendChild(sr)
   }
   fc.appendChild(topCard)
 
-  // 3rd
   const thCard=document.createElement('div'); thCard.className='final-card'
   thCard.innerHTML='<h3>🥉 3rd Place Match</h3>'
-  ;['a','b'].forEach((s,i) => {
+  ;['a','b'].forEach((s,i)=>{
     const el=document.createElement('div'); el.className='slot'+(isAdmin?' clickable':'')
     const name=finals.third[s]
-    if (!name) el.classList.add('empty')
-    if (finals.third.winner===i) el.classList.add('winner')
+    if(!name) el.classList.add('empty')
+    if(finals.third.winner===i) el.classList.add('winner')
     const nm=document.createElement('span'); nm.className='sname'; nm.textContent=name||`Seed ${i+3} — TBD`
     el.appendChild(nm)
-    if (isAdmin) el.addEventListener('click',()=>clickFinal('third',i))
+    if(isAdmin) el.addEventListener('click',()=>clickFinal('third',i))
     thCard.appendChild(el)
   })
   const tr=document.createElement('div'); tr.className='final-result'+(finals.thirdPlace?' bronze':'')
@@ -474,38 +615,15 @@ function render() {
   thCard.appendChild(tr)
   fc.appendChild(thCard)
 
-  // Eliminated
   const elimCard=document.createElement('div'); elimCard.className='final-card'
   elimCard.innerHTML='<h3>❌ Eliminated — 5th &amp; 6th</h3>'
   ;[4,5].forEach(i=>{ const el=document.createElement('div'); el.className='elim-slot'; el.textContent=seedingTeams[i]||(i===4?'5th seed':'6th seed'); elimCard.appendChild(el) })
   fc.appendChild(elimCard)
 
   wrap.appendChild(fc)
-  buildAVGrid()
 }
 
-function buildAVGrid() {
-  if (!isAdmin) return
-  const grid=document.getElementById('av-grid'); if(!grid) return
-  grid.innerHTML=''
-  const show = seedingTeams.filter(t=>t).length>0 ? seedingTeams.filter(t=>t) : teams
-  show.forEach(name => {
-    const row=document.createElement('div'); row.className='av-row'
-    const sp=document.createElement('span'); sp.textContent=name
-    const inp=document.createElement('input'); inp.type='number'; inp.min='0'
-    inp.value=avScores[name]||0
-    inp.addEventListener('change', e=>{ avScores[name]=parseFloat(e.target.value)||0; scheduleSave() })
-    row.appendChild(sp); row.appendChild(inp); grid.appendChild(row)
-  })
-}
-
-function toggleAV() {
-  const p=document.getElementById('av-panel')
-  p.classList.toggle('hidden')
-  if (!p.classList.contains('hidden')) buildAVGrid()
-}
-
-// Boot
+// ── Boot ──────────────────────────────────────────────────────────────────
 applyAdminMode()
 loadBracket()
 </script>
