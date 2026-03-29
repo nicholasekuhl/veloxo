@@ -21,6 +21,7 @@ const notificationsRouter = require('./routes/notifications')
 const { authMiddleware, adminMiddleware } = require('./middleware/auth')
 const adminRouter = require('./routes/admin')
 const { startScheduler } = require('./scheduler')
+const { smsQueue } = require('./smsQueue')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -72,6 +73,7 @@ app.get('/health/scheduler', async (_req, res) => {
 })
 
 startScheduler()
+smsQueue.start()
 
 app.listen(PORT, () => {
   console.log(`TextApp server running on port ${PORT}`)

@@ -1,6 +1,7 @@
 const supabase = require('./db')
 const { sendSMS, buildMessageBody, pickNumberForLead } = require('./twilio')
 const { spintext } = require('./spintext')
+const { smsQueue } = require('./smsQueue')
 const nodemailer = require('nodemailer')
 const { isWithinQuietHours, checkSystemInitiatedLimit, getNextSendWindow } = require('./compliance')
 
@@ -403,66 +404,90 @@ const processQuickFollowups = async () => {
       }
 
       const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, lead.state) || process.env.TWILIO_PHONE_NUMBER
-      const result = await sendSMS(lead.phone, messageBody, fromNumber)
-      if (!result.success) {
-        console.error(`Quick follow-up step ${stepToSend} failed for lead ${lead.id}:`, result.error)
-        continue
-      }
 
-      // Ensure conversation exists and log message
-      let conversation = conv
-      if (!conversation) {
-        const { data: newConv } = await supabase
-          .from('conversations')
-          .insert({ lead_id: lead.id, status: 'active', user_id: enrollment.user_id || null })
-          .select().single()
-        conversation = newConv
-      }
-      await supabase.from('messages').insert({
-        conversation_id: conversation.id,
-        user_id: enrollment.user_id || null,
-        direction: 'outbound',
-        body: messageBody,
-        sent_at: now.toISOString(),
-        twilio_sid: result.sid,
-        status: 'sent'
+      // Enqueue — don't block the scheduler loop waiting on Twilio
+      smsQueue.add({
+        phone: lead.phone,
+        message: messageBody,
+        leadId: lead.id,
+        conversationId: conv?.id || null,
+        userId: enrollment.user_id || null,
+        fromNumber,
+        enrollmentId: enrollment.id,
+        stepToSend,
+
+        sendFn: async (job) => {
+          const result = await sendSMS(job.phone, job.message, job.fromNumber)
+          if (!result.success) throw new Error(result.error || 'sendSMS failed')
+          job._twilioSid = result.sid
+        },
+
+        onSuccess: async (job) => {
+          const sentAt = new Date().toISOString()
+
+          // Ensure conversation exists — null guard before reading .id
+          let conversation = conv
+          if (!conversation) {
+            const { data: newConv } = await supabase
+              .from('conversations')
+              .insert({ lead_id: job.leadId, status: 'active', user_id: job.userId })
+              .select().single()
+            conversation = newConv
+          }
+          if (!conversation || !conversation.id) {
+            console.error(`[quickFollowups] No conversation for lead ${job.leadId} — skipping DB log`)
+            return
+          }
+
+          await supabase.from('messages').insert({
+            conversation_id: conversation.id,
+            user_id: job.userId,
+            direction: 'outbound',
+            body: job.message,
+            sent_at: sentAt,
+            twilio_sid: job._twilioSid,
+            status: 'sent'
+          })
+
+          const leadUpdates = { updated_at: sentAt, outbound_initiated_today: (lead.outbound_initiated_today || 0) + 1 }
+          if (canUpgrade(lead.status, 'contacted')) leadUpdates.status = 'contacted'
+          if (job.stepToSend === 1 && !lead.first_message_sent) leadUpdates.first_message_sent = true
+          await supabase.from('leads').update(leadUpdates).eq('id', job.leadId)
+
+          const stepUpdates = {}
+          if (job.stepToSend === 1) {
+            stepUpdates.step_1_sent_at = sentAt
+            if (campaign.message_2 && campaign.message_2_delay_minutes) {
+              stepUpdates.next_send_at = new Date(new Date(sentAt).getTime() + campaign.message_2_delay_minutes * 60000).toISOString()
+            } else {
+              const nextDayAt = await getNextDayBasedSendAt(enrollment)
+              if (nextDayAt) stepUpdates.next_send_at = nextDayAt
+              else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
+            }
+          } else if (job.stepToSend === 2) {
+            stepUpdates.step_2_sent_at = sentAt
+            if (campaign.message_3 && campaign.message_3_delay_minutes) {
+              stepUpdates.next_send_at = new Date(new Date(enrollment.step_1_sent_at).getTime() + campaign.message_3_delay_minutes * 60000).toISOString()
+            } else {
+              const nextDayAt = await getNextDayBasedSendAt(enrollment)
+              if (nextDayAt) stepUpdates.next_send_at = nextDayAt
+              else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
+            }
+          } else if (job.stepToSend === 3) {
+            stepUpdates.step_3_sent_at = sentAt
+            const nextDayAt = await getNextDayBasedSendAt(enrollment)
+            if (nextDayAt) stepUpdates.next_send_at = nextDayAt
+            else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
+          }
+
+          await supabase.from('campaign_leads').update(stepUpdates).eq('id', job.enrollmentId)
+          console.log(`[quickFollowups] Step ${job.stepToSend} sent to lead ${job.leadId}`)
+        },
+
+        onFailure: async (job, err) => {
+          console.error(`[quickFollowups] Step ${job.stepToSend} failed for lead ${job.leadId}: ${err?.message}`)
+        },
       })
-
-      // Update lead
-      const leadUpdates = { updated_at: now.toISOString(), outbound_initiated_today: (lead.outbound_initiated_today || 0) + 1 }
-      if (canUpgrade(lead.status, 'contacted')) leadUpdates.status = 'contacted'
-      if (stepToSend === 1 && !lead.first_message_sent) leadUpdates.first_message_sent = true
-      await supabase.from('leads').update(leadUpdates).eq('id', lead.id)
-
-      // Update enrollment step tracking
-      const stepUpdates = {}
-      if (stepToSend === 1) {
-        stepUpdates.step_1_sent_at = now.toISOString()
-        if (campaign.message_2 && campaign.message_2_delay_minutes) {
-          stepUpdates.next_send_at = new Date(now.getTime() + campaign.message_2_delay_minutes * 60000).toISOString()
-        } else {
-          const nextDayAt = await getNextDayBasedSendAt(enrollment)
-          if (nextDayAt) stepUpdates.next_send_at = nextDayAt
-          else { stepUpdates.status = 'completed'; stepUpdates.completed_at = now.toISOString() }
-        }
-      } else if (stepToSend === 2) {
-        stepUpdates.step_2_sent_at = now.toISOString()
-        if (campaign.message_3 && campaign.message_3_delay_minutes) {
-          stepUpdates.next_send_at = new Date(new Date(enrollment.step_1_sent_at).getTime() + campaign.message_3_delay_minutes * 60000).toISOString()
-        } else {
-          const nextDayAt = await getNextDayBasedSendAt(enrollment)
-          if (nextDayAt) stepUpdates.next_send_at = nextDayAt
-          else { stepUpdates.status = 'completed'; stepUpdates.completed_at = now.toISOString() }
-        }
-      } else if (stepToSend === 3) {
-        stepUpdates.step_3_sent_at = now.toISOString()
-        const nextDayAt = await getNextDayBasedSendAt(enrollment)
-        if (nextDayAt) stepUpdates.next_send_at = nextDayAt
-        else { stepUpdates.status = 'completed'; stepUpdates.completed_at = now.toISOString() }
-      }
-
-      await supabase.from('campaign_leads').update(stepUpdates).eq('id', enrollment.id)
-      console.log(`Quick follow-up step ${stepToSend} sent to lead ${lead.id}`)
     }
   } catch (err) {
     console.error('processQuickFollowups error:', err.message)
@@ -810,7 +835,7 @@ const scheduleMidnightReset = () => {
 const startScheduler = () => {
   console.log('Campaign scheduler started — master Twilio account active')
   setInterval(processScheduledMessages, 60000)
-  setInterval(processQuickFollowups, 60000)
+  // setInterval(processQuickFollowups, 60000) // TEMP DISABLED
   setInterval(checkGhostedConversations, 60000)
   setInterval(restoreCoolingNumbers, 5 * 60 * 1000) // check every 5 min
   scheduleMidnightReset()
