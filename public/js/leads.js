@@ -1,4 +1,9 @@
 // ===== STATE =====
+const LEADS_PER_PAGE = 50
+let currentLeadsPage = 1
+let totalLeads = 0
+let isLoadingLeads = false
+let hasMoreLeads = false
 let allLeads = []
 let allCampaigns = []
 let unreadConvMap = {}
@@ -244,7 +249,10 @@ const filterLeads = () => {
   if (dateTo) filtered = filtered.filter(l => l.created_at && new Date(l.created_at) <= new Date(dateTo + 'T23:59:59'))
 
   const countEl = document.getElementById('leads-count')
-  if (countEl) countEl.textContent = `Showing ${filtered.length} of ${allLeads.length} leads`
+  if (countEl) {
+    const loadedNote = hasMoreLeads ? ` (${allLeads.length} of ${totalLeads} loaded)` : ''
+    countEl.textContent = `Showing ${filtered.length} leads${loadedNote}`
+  }
 
   renderLeads(filtered)
   updateActiveFilterPills()
@@ -504,18 +512,57 @@ const renderLeads = (leads) => {
 }
 
 // ===== STATS =====
+let _statsCache = null
+let _statsCacheAt = 0
+const STATS_CACHE_TTL = 60000
+
 const updateStats = (leads) => {
-  document.getElementById('stat-total').textContent = leads.length
-  document.getElementById('stat-new').textContent = leads.filter(l => l.status === 'new').length
-  document.getElementById('stat-contacted').textContent = leads.filter(l => l.status === 'contacted').length
-  document.getElementById('stat-booked').textContent = leads.filter(l => l.status === 'booked').length
-  document.getElementById('stat-autopilot').textContent = leads.filter(l => l.autopilot).length
+  // Only update from local data if we don't have a server stats cache
+  if (!_statsCache) {
+    document.getElementById('stat-total').textContent = totalLeads || leads.length
+    document.getElementById('stat-new').textContent = leads.filter(l => l.status === 'new').length
+    document.getElementById('stat-contacted').textContent = leads.filter(l => l.status === 'contacted').length
+    document.getElementById('stat-booked').textContent = leads.filter(l => l.status === 'booked').length
+    document.getElementById('stat-autopilot').textContent = leads.filter(l => l.autopilot).length
+  }
+}
+
+const loadLeadStats = async () => {
+  const now = Date.now()
+  if (_statsCache && now - _statsCacheAt < STATS_CACHE_TTL) {
+    applyLeadStats(_statsCache)
+    return
+  }
+  try {
+    const res = await fetch('/leads/stats')
+    if (!res.ok) return
+    const stats = await res.json()
+    _statsCache = stats
+    _statsCacheAt = now
+    applyLeadStats(stats)
+  } catch (err) {
+    console.error('Failed to load lead stats', err)
+  }
+}
+
+const applyLeadStats = (stats) => {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val }
+  set('stat-total', stats.total)
+  set('stat-new', stats.new)
+  set('stat-contacted', stats.contacted)
+  set('stat-booked', stats.booked)
+  set('stat-autopilot', stats.autopilot)
 }
 
 // ===== LOAD LEADS =====
 const loadLeads = async () => {
+  if (isLoadingLeads) return
+  isLoadingLeads = true
+  currentLeadsPage = 1
+  allLeads = []
+  _statsCache = null
   const grid = document.getElementById('leads-grid')
-  if (grid && !allLeads.length) {
+  if (grid) {
     grid.innerHTML = Array(6).fill(0).map(() => `
       <div class="skel-card">
         <div style="display:flex;gap:14px;align-items:flex-start;">
@@ -544,22 +591,75 @@ const loadLeads = async () => {
       </div>`).join('')
   }
   try {
-    const [leadsRes, bucketsRes] = await Promise.all([fetch('/leads'), fetch('/buckets')])
+    const [leadsRes, bucketsRes] = await Promise.all([
+      fetch(`/leads?page=1&limit=${LEADS_PER_PAGE}`),
+      fetch('/buckets')
+    ])
     const leadsData = await leadsRes.json()
     const bucketsData = await bucketsRes.json()
     if (leadsData.leads) {
       allLeads = leadsData.leads
-      updateStats(allLeads)
+      totalLeads = leadsData.total || leadsData.leads.length
+      hasMoreLeads = allLeads.length < totalLeads
       updateCampaignFilter()
     }
     if (bucketsData.buckets) allBuckets = bucketsData.buckets
     renderBucketPills()
     filterLeads()
+    renderLoadMoreButton()
+    loadLeadStats()
   } catch (err) {
     console.error(err)
     toast.error('Failed to load leads', 'Please refresh the page and try again')
     if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#9ca3af;font-size:14px;">Could not load leads.</div>'
+  } finally {
+    isLoadingLeads = false
   }
+}
+
+const loadMoreLeads = async () => {
+  if (isLoadingLeads || !hasMoreLeads) return
+  isLoadingLeads = true
+  const btn = document.getElementById('load-more-btn')
+  if (btn) btn.textContent = 'Loading...'
+  try {
+    currentLeadsPage++
+    const res = await fetch(`/leads?page=${currentLeadsPage}&limit=${LEADS_PER_PAGE}`)
+    const data = await res.json()
+    if (data.leads && data.leads.length) {
+      allLeads = allLeads.concat(data.leads)
+      totalLeads = data.total || totalLeads
+      hasMoreLeads = allLeads.length < totalLeads
+      updateStats(allLeads)
+      updateCampaignFilter()
+      filterLeads()
+    } else {
+      hasMoreLeads = false
+    }
+    renderLoadMoreButton()
+  } catch (err) {
+    console.error(err)
+    toast.error('Failed to load more leads', '')
+    currentLeadsPage--
+  } finally {
+    isLoadingLeads = false
+  }
+}
+
+const renderLoadMoreButton = () => {
+  let btn = document.getElementById('load-more-btn')
+  if (!btn) {
+    const wrapper = document.createElement('div')
+    wrapper.id = 'load-more-wrapper'
+    wrapper.style.cssText = 'text-align:center;padding:16px 0;'
+    wrapper.innerHTML = '<button id="load-more-btn" class="btn btn-secondary" style="width:auto;padding:8px 24px;" onclick="loadMoreLeads()">Load More Leads</button>'
+    const grid = document.getElementById('leads-grid')
+    if (grid && grid.parentNode) grid.parentNode.insertBefore(wrapper, grid.nextSibling)
+    btn = document.getElementById('load-more-btn')
+  }
+  const wrapper = document.getElementById('load-more-wrapper')
+  if (wrapper) wrapper.style.display = hasMoreLeads ? 'block' : 'none'
+  if (btn && hasMoreLeads) btn.textContent = `Load More Leads (${totalLeads - allLeads.length} remaining)`
 }
 
 const updateCampaignFilter = () => {

@@ -5,15 +5,20 @@ const getConversations = async (req, res) => {
     const { filter = 'all', show_blocked = 'false' } = req.query
     const showBlocked = show_blocked === 'true'
 
-    const { data, error } = await supabase
+    const page = parseInt(req.query.page) || 1
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200)
+    const offset = (page - 1) * limit
+
+    const { data, error, count } = await supabase
       .from('conversations')
       .select(`
         *,
         messages (id, direction, body, sent_at, is_ai, status, error_message),
         leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip_code, date_of_birth, product, address, bucket_id, is_blocked, is_cold, created_at)
-      `)
+      `, { count: 'exact' })
       .eq('user_id', req.user.id)
       .order('updated_at', { ascending: false })
+      .range(offset, offset + limit - 1)
     if (error) throw error
 
     let conversations = data || []
@@ -39,7 +44,7 @@ const getConversations = async (req, res) => {
       conversations = conversations.filter(c => c.updated_at >= sevenDaysAgo)
     }
 
-    res.json({ conversations })
+    res.json({ conversations, total: count, page, limit })
   } catch (err) {
     console.error('Conversations getConversations error:', err.message)
     res.status(500).json({ error: err.message })

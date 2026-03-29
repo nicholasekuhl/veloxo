@@ -2,6 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const path = require('path')
 const cookieParser = require('cookie-parser')
+const compression = require('compression')
 require('dotenv').config()
 
 const leadsRouter = require('./routes/leads')
@@ -26,11 +27,12 @@ const { smsQueue } = require('./smsQueue')
 const app = express()
 const PORT = process.env.PORT || 3000
 
+app.use(compression())
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
-app.use(express.static(path.join(__dirname, '../public')))
+app.use(express.static(path.join(__dirname, '../public'), { maxAge: '1h' }))
 
 app.use('/auth', authRouter)
 

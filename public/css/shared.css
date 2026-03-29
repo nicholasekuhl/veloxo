@@ -248,6 +248,7 @@ select.filter {
   background: var(--bg-card); border-radius: var(--radius-lg); padding: 18px 22px;
   border: 1px solid var(--border-light); box-shadow: var(--shadow-xs);
   transition: box-shadow 0.18s var(--ease), transform 0.18s var(--ease); position: relative; overflow: hidden;
+  contain: layout style; will-change: transform;
 }
 .lead-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .lead-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }

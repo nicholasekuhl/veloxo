@@ -336,8 +336,17 @@ const uploadLeads = async (req, res) => {
     }
 
     if (bucketId) newLeads.forEach(l => { l.bucket_id = bucketId })
-    const { data, error } = await supabase.from('leads').insert(newLeads).select()
-    if (error) throw error
+
+    // Insert in batches of 100 to avoid Supabase payload limits
+    const BATCH_SIZE = 100
+    const insertedLeads = []
+    for (let i = 0; i < newLeads.length; i += BATCH_SIZE) {
+      const batch = newLeads.slice(i, i + BATCH_SIZE)
+      const { data: batchData, error: batchError } = await supabase.from('leads').insert(batch).select()
+      if (batchError) throw batchError
+      insertedLeads.push(...batchData)
+    }
+    const data = insertedLeads
 
     if (campaignId && campaignStartDate && data.length > 0) {
       const { data: messages } = await supabase
@@ -372,12 +381,10 @@ const uploadLeads = async (req, res) => {
           .from('campaigns').select('name').eq('id', campaignId).single()
 
         if (campaignData.data) {
-          await Promise.all(data.map(lead =>
-            supabase.from('leads').update({
-              campaign_tags: [campaignData.data.name],
-              updated_at: new Date().toISOString()
-            }).eq('id', lead.id)
-          ))
+          await supabase.from('leads').update({
+            campaign_tags: [campaignData.data.name],
+            updated_at: new Date().toISOString()
+          }).in('id', data.map(l => l.id))
         }
       }
     }
@@ -391,13 +398,11 @@ const uploadLeads = async (req, res) => {
         .single()
 
       if (dispTag) {
-        await Promise.all(data.map(lead =>
-          supabase.from('leads').update({
-            disposition_tag_id: dispTag.id,
-            disposition_color: dispTag.color,
-            updated_at: new Date().toISOString()
-          }).eq('id', lead.id)
-        ))
+        await supabase.from('leads').update({
+          disposition_tag_id: dispTag.id,
+          disposition_color: dispTag.color,
+          updated_at: new Date().toISOString()
+        }).in('id', data.map(l => l.id))
 
         await supabase.from('lead_dispositions').insert(
           data.map(lead => ({
@@ -457,29 +462,62 @@ const uploadLeads = async (req, res) => {
 
 const getLeads = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*, campaign_leads(status), lead_dispositions(disposition_tag_id)')
-      .eq('user_id', req.user.id)
-      .order('created_at', { ascending: false })
-    if (error) throw error
+    const page = parseInt(req.query.page) || 1
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200)
+    const offset = (page - 1) * limit
 
-    // Fetch next upcoming scheduled appointment per lead
-    const { data: upcomingAppts } = await supabase
+    const [{ data, error }, { count, error: countErr }] = await Promise.all([
+      supabase
+        .from('leads')
+        .select('*, campaign_leads(status), lead_dispositions(disposition_tag_id)')
+        .eq('user_id', req.user.id)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1),
+      supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', req.user.id)
+    ])
+    if (error) throw error
+    if (countErr) throw countErr
+
+    // Fetch appointments only for the leads in this page
+    const leadIds = (data || []).map(l => l.id)
+    const { data: upcomingAppts } = leadIds.length ? await supabase
       .from('appointments')
       .select('lead_id, scheduled_at')
-      .eq('user_id', req.user.id)
+      .in('lead_id', leadIds)
       .eq('status', 'scheduled')
       .gt('scheduled_at', new Date().toISOString())
-      .order('scheduled_at', { ascending: true })
+      .order('scheduled_at', { ascending: true }) : { data: [] }
 
     const nextApptMap = {}
     for (const a of upcomingAppts || []) {
       if (!nextApptMap[a.lead_id]) nextApptMap[a.lead_id] = a.scheduled_at
     }
 
-    const leads = data.map(l => ({ ...l, next_appointment: nextApptMap[l.id] || null }))
-    res.json({ leads })
+    const leads = (data || []).map(l => ({ ...l, next_appointment: nextApptMap[l.id] || null }))
+    res.json({ leads, total: count, page, limit })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const getLeadStats = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .select('status, autopilot')
+      .eq('user_id', req.user.id)
+    if (error) throw error
+    const stats = {
+      total: data.length,
+      new: data.filter(l => l.status === 'new').length,
+      contacted: data.filter(l => l.status === 'contacted').length,
+      booked: data.filter(l => l.status === 'booked').length,
+      autopilot: data.filter(l => l.autopilot).length
+    }
+    res.json(stats)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -1218,4 +1256,4 @@ const riskCheck = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride }
+module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride }
