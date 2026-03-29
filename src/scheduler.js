@@ -647,7 +647,6 @@ const processScheduledMessages = async () => {
       }
 
       const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, enrollment.leads.state) || process.env.TWILIO_PHONE_NUMBER
-      messagesSent++
       smsQueue.add({
         phone: enrollment.leads.phone,
         message: messageBody,
@@ -724,6 +723,7 @@ const processScheduledMessages = async () => {
               next_send_at: nextSendAt
             }).eq('id', job.enrollmentId)
           }
+          messagesSent++
           console.log('[scheduler] Day-based send queued successfully for lead', job.leadId)
         },
 
@@ -766,33 +766,51 @@ const processScheduledMessages = async () => {
         }
 
         const fromNumber = pickNumberForLead(sm.user_id ? phoneNumbersMap[sm.user_id] : null, sm.leads.state) || process.env.TWILIO_PHONE_NUMBER
-        const result = await sendSMS(sm.leads.phone, sm.body, fromNumber)
-        if (result.success) {
-          messagesSent++
-          await supabase.from('scheduled_messages').update({ status: 'sent', sent_at: now.toISOString() }).eq('id', sm.id)
-          // Upgrade lead status new → contacted on one-off send
-          const smLeadUpdates = { updated_at: now.toISOString() }
-          if (canUpgrade(sm.leads.status, 'contacted')) smLeadUpdates.status = 'contacted'
-          // Increment system-initiated counter only for non-AI-queued messages
-          if (!isAiQueued) {
-            smLeadUpdates.outbound_initiated_today = (sm.leads.outbound_initiated_today || 0) + 1
-          }
-          await supabase.from('leads').update(smLeadUpdates).eq('id', sm.leads.id)
-          if (sm.conversation_id) {
-            await supabase.from('messages').insert({
-              conversation_id: sm.conversation_id,
-              user_id: sm.user_id || null,
-              direction: 'outbound',
-              body: sm.body,
-              sent_at: now.toISOString(),
-              status: 'sent'
-            })
-            await supabase.from('conversations').update({ updated_at: now.toISOString() }).eq('id', sm.conversation_id)
-          }
-        } else {
-          errorsCount++
-          await supabase.from('scheduled_messages').update({ status: 'failed' }).eq('id', sm.id)
-        }
+        const smIsAiQueued = isAiQueued // capture loop var for closure
+        const smSnapshot = sm         // capture loop var for closure
+        smsQueue.add({
+          phone: sm.leads.phone,
+          message: sm.body,
+          leadId: sm.leads.id,
+          conversationId: sm.conversation_id || null,
+          userId: sm.user_id || null,
+          fromNumber,
+          scheduledMessageId: sm.id,
+
+          sendFn: async (job) => {
+            const result = await sendSMS(job.phone, job.message, job.fromNumber)
+            if (!result.success) throw new Error(result.error || 'sendSMS failed')
+          },
+
+          onSuccess: async (job) => {
+            const sentAt = new Date().toISOString()
+            messagesSent++
+            await supabase.from('scheduled_messages').update({ status: 'sent', sent_at: sentAt }).eq('id', job.scheduledMessageId)
+            const smLeadUpdates = { updated_at: sentAt }
+            if (canUpgrade(smSnapshot.leads.status, 'contacted')) smLeadUpdates.status = 'contacted'
+            if (!smIsAiQueued) {
+              smLeadUpdates.outbound_initiated_today = (smSnapshot.leads.outbound_initiated_today || 0) + 1
+            }
+            await supabase.from('leads').update(smLeadUpdates).eq('id', job.leadId)
+            if (job.conversationId) {
+              await supabase.from('messages').insert({
+                conversation_id: job.conversationId,
+                user_id: job.userId,
+                direction: 'outbound',
+                body: job.message,
+                sent_at: sentAt,
+                status: 'sent'
+              })
+              await supabase.from('conversations').update({ updated_at: sentAt }).eq('id', job.conversationId)
+            }
+          },
+
+          onFailure: async (job, err) => {
+            errorsCount++
+            console.error('[scheduler] One-off scheduled message failed for lead', job.leadId, err?.message)
+            await supabase.from('scheduled_messages').update({ status: 'failed' }).eq('id', job.scheduledMessageId)
+          },
+        })
       }
     }
 
