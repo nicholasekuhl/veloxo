@@ -2,6 +2,10 @@ const csv = require('csv-parser')
 const xlsx = require('xlsx')
 const { Readable } = require('stream')
 const supabase = require('../db')
+const { smsQueue } = require('../smsQueue')
+const { sendSMS, buildMessageBody, pickNumberForLead } = require('../twilio')
+const { spintext } = require('../spintext')
+const { isWithinQuietHours, checkSystemInitiatedLimit } = require('../compliance')
 
 const normalizePhone = (phone) => {
   if (!phone) return null
@@ -275,7 +279,7 @@ const uploadLeads = async (req, res) => {
     const bucketId = req.body.bucket_id || null
     const autopilot = req.body.autopilot === 'true'
     const campaignId = req.body.campaign_id || null
-    const campaignStartDate = req.body.campaign_start_date || null
+    const campaignStartDate = new Date().toISOString()
     const dispositionTagId = req.body.disposition_tag_id || null
     const importedAt = new Date().toISOString()
     const columnMap = req.body.column_map ? JSON.parse(req.body.column_map) : null
@@ -348,43 +352,201 @@ const uploadLeads = async (req, res) => {
     }
     const data = insertedLeads
 
-    if (campaignId && campaignStartDate && data.length > 0) {
-      const { data: messages } = await supabase
-        .from('campaign_messages')
-        .select('*')
-        .eq('campaign_id', campaignId)
-        .order('day_number', { ascending: true })
+    if (campaignId && data.length > 0) {
+      const { data: campaign } = await supabase
+        .from('campaigns')
+        .select('*, campaign_messages(*)')
+        .eq('id', campaignId)
+        .single()
 
-      if (messages && messages.length > 0) {
-        const firstMessage = messages[0]
-        const enrollments = data.map((lead) => {
-          const leadTimezone = lead.timezone || 'America/New_York'
-          const firstSendAt = calculateSendTime(
-            firstMessage.day_number,
-            firstMessage.send_time || '10:00',
-            campaignStartDate,
-            leadTimezone
-          )
-          return {
+      if (campaign) {
+        const isQuickCampaign = !!campaign.message_1
+        const dayMessages = (campaign.campaign_messages || [])
+          .sort((a, b) => a.day_number - b.day_number)
+
+        let enrollments
+        if (isQuickCampaign) {
+          enrollments = data.map((lead) => ({
             campaign_id: campaignId,
             lead_id: lead.id,
             status: 'pending',
             current_step: 0,
-            start_date: new Date(campaignStartDate).toISOString(),
-            next_send_at: firstSendAt,
+            start_date: campaignStartDate,
+            next_send_at: campaignStartDate,
             user_id: userId
-          }
-        })
-        await supabase.from('campaign_leads').insert(enrollments)
+          }))
+        } else if (dayMessages.length > 0) {
+          enrollments = data.map((lead) => {
+            const leadTimezone = lead.timezone || 'America/New_York'
+            return {
+              campaign_id: campaignId,
+              lead_id: lead.id,
+              status: 'pending',
+              current_step: 0,
+              start_date: campaignStartDate,
+              next_send_at: calculateSendTime(
+                dayMessages[0].day_number,
+                dayMessages[0].send_time || '10:00',
+                campaignStartDate,
+                leadTimezone
+              ),
+              user_id: userId
+            }
+          })
+        }
 
-        const campaignData = await supabase
-          .from('campaigns').select('name').eq('id', campaignId).single()
+        if (enrollments && enrollments.length > 0) {
+          const { data: insertedEnrollments } = await supabase
+            .from('campaign_leads')
+            .insert(enrollments)
+            .select('id, lead_id')
 
-        if (campaignData.data) {
           await supabase.from('leads').update({
-            campaign_tags: [campaignData.data.name],
-            updated_at: new Date().toISOString()
+            campaign_tags: [campaign.name],
+            updated_at: campaignStartDate
           }).in('id', data.map(l => l.id))
+
+          // Load phone numbers and user profile once for immediate sends
+          const [{ data: userPhoneNumbers }, { data: userProfile }] = await Promise.all([
+            supabase.from('phone_numbers')
+              .select('phone_number, state, is_default, sent_today, daily_limit, status')
+              .eq('user_id', userId)
+              .eq('is_active', true),
+            supabase.from('user_profiles')
+              .select('agency_name, compliance_footer, compliance_footer_enabled')
+              .eq('id', userId)
+              .single()
+          ])
+
+          // Queue initial send immediately for each lead
+          for (const lead of data) {
+            const quietCheck = isWithinQuietHours(lead.state, lead.timezone)
+            if (quietCheck.blocked) {
+              console.log(`Initial campaign send blocked (quiet hours) for lead ${lead.id}: ${quietCheck.reason}`)
+              continue
+            }
+
+            const dailyCheck = checkSystemInitiatedLimit(lead.state, lead.outbound_initiated_today || 0)
+            if (dailyCheck.blocked) {
+              console.log(`Initial campaign send blocked (daily limit) for lead ${lead.id}`)
+              continue
+            }
+
+            const rawMessage = isQuickCampaign
+              ? (campaign.message_1_spintext ? spintext(campaign.message_1) : campaign.message_1)
+              : spintext(dayMessages[0].message_body)
+
+            const firstName = lead.first_name || 'there'
+            const resolved = rawMessage.replace(/\[First Name\]/gi, firstName)
+            let messageBody = buildMessageBody(resolved, userProfile, lead, false)
+            const agencyName = userProfile?.agency_name
+            if (agencyName && !messageBody.includes(agencyName)) {
+              messageBody = messageBody + '\n' + agencyName
+            }
+
+            const fromNumber = pickNumberForLead(userPhoneNumbers, lead.state)
+            if (!fromNumber) {
+              console.log(`No phone number available for lead ${lead.id}`)
+              continue
+            }
+
+            const enrollment = (insertedEnrollments || []).find(e => e.lead_id === lead.id)
+            smsQueue.add({
+              phone: lead.phone,
+              message: messageBody,
+              leadId: lead.id,
+              conversationId: null,
+              userId,
+              fromNumber,
+              enrollmentId: enrollment?.id,
+              isQuickCampaign,
+              campaign,
+              dayMessages,
+              leadTimezone: lead.timezone || 'America/New_York',
+
+              sendFn: async (job) => {
+                const result = await sendSMS(job.phone, job.message, job.fromNumber)
+                if (!result.success) throw new Error(result.error || 'send failed')
+                job._twilioSid = result.sid
+              },
+
+              onSuccess: async (job) => {
+                const sentAt = new Date().toISOString()
+
+                let { data: conv } = await supabase
+                  .from('conversations')
+                  .select('id')
+                  .eq('lead_id', job.leadId)
+                  .single()
+
+                if (!conv) {
+                  const { data: newConv } = await supabase
+                    .from('conversations')
+                    .insert({ lead_id: job.leadId, status: 'active', user_id: job.userId })
+                    .select('id').single()
+                  conv = newConv
+                }
+
+                if (conv?.id) {
+                  await supabase.from('messages').insert({
+                    conversation_id: conv.id,
+                    user_id: job.userId,
+                    direction: 'outbound',
+                    body: job.message,
+                    sent_at: sentAt,
+                    twilio_sid: job._twilioSid,
+                    status: 'sent'
+                  })
+                }
+
+                await supabase.from('leads').update({
+                  status: 'contacted',
+                  first_message_sent: true,
+                  outbound_initiated_today: 1,
+                  updated_at: sentAt
+                }).eq('id', job.leadId)
+
+                if (job.enrollmentId) {
+                  if (job.isQuickCampaign) {
+                    const stepUpdate = { step_1_sent_at: sentAt, status: 'active' }
+                    if (job.campaign.message_2 && job.campaign.message_2_delay_minutes) {
+                      stepUpdate.next_send_at = new Date(
+                        new Date(sentAt).getTime() + job.campaign.message_2_delay_minutes * 60000
+                      ).toISOString()
+                    }
+                    await supabase.from('campaign_leads').update(stepUpdate).eq('id', job.enrollmentId)
+                  } else {
+                    const nextStep = 1
+                    if (nextStep < job.dayMessages.length) {
+                      const nextMsg = job.dayMessages[nextStep]
+                      const nextSendAt = calculateSendTime(
+                        nextMsg.day_number,
+                        nextMsg.send_time || '10:00',
+                        sentAt,
+                        job.leadTimezone
+                      )
+                      await supabase.from('campaign_leads').update({
+                        current_step: nextStep,
+                        next_send_at: nextSendAt,
+                        status: 'active'
+                      }).eq('id', job.enrollmentId)
+                    } else {
+                      await supabase.from('campaign_leads').update({
+                        status: 'completed',
+                        completed_at: sentAt
+                      }).eq('id', job.enrollmentId)
+                    }
+                  }
+                }
+
+                console.log(`Initial campaign message sent to lead ${job.leadId}`)
+              },
+
+              onFailure: async (job, err) => {
+                console.error(`Initial campaign send failed for lead ${job.leadId}: ${err?.message}`)
+              }
+            })
+          }
         }
       }
     }
@@ -452,6 +614,7 @@ const uploadLeads = async (req, res) => {
       skipped_invalid_phone: parseSkipped.length,
       skipped_rows: skippedRows,
       message: parts.join(', '),
+      campaign_sends_queued: !!(campaignId && importedCount > 0),
       leads: data
     })
   } catch (err) {

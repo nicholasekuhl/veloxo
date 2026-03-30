@@ -1403,10 +1403,6 @@ const openUploadModal = () => {
   select.innerHTML = '<option value="">No campaign</option>' + allCampaigns.map(c => `<option value="${c.id}">${c.name}</option>`).join('')
   const dispSelect = document.getElementById('import-disposition')
   dispSelect.innerHTML = '<option value="">No disposition tag</option>' + allDispositionTags.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
-  document.getElementById('import-start-wrap').style.display = 'none'
-  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
-  const pad = n => String(n).padStart(2, '0')
-  document.getElementById('import-campaign-start').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
   document.getElementById('upload-step-1').style.display = ''
   document.getElementById('upload-step-2').style.display = 'none'
   document.getElementById('upload-step-3').style.display = 'none'
@@ -1416,9 +1412,6 @@ const openUploadModal = () => {
 }
 const closeUploadModal = () => document.getElementById('upload-modal').classList.remove('open')
 
-document.getElementById('import-campaign').addEventListener('change', function() {
-  document.getElementById('import-start-wrap').style.display = this.value ? 'block' : 'none'
-})
 document.getElementById('modal-file-input').addEventListener('change', function(e) {
   if (e.target.files[0]) { importFile = e.target.files[0]; document.getElementById('modal-file-name').textContent = importFile.name }
 })
@@ -1453,14 +1446,12 @@ const submitImport = async (riskFilter = 'all') => {
   const bucketId = document.getElementById('import-bucket-id')?.value || ''
   const autopilot = document.getElementById('import-autopilot').checked
   const campaignId = document.getElementById('import-campaign').value
-  const campaignStartDate = document.getElementById('import-campaign-start').value
   const formData = new FormData()
   formData.append('file', importFile)
   if (bucketId) formData.append('bucket_id', bucketId)
   formData.append('autopilot', autopilot.toString())
   formData.append('risk_filter', riskFilter)
   if (campaignId) formData.append('campaign_id', campaignId)
-  if (campaignStartDate) formData.append('campaign_start_date', new Date(campaignStartDate).toISOString())
   const dispositionTagId = document.getElementById('import-disposition').value
   if (dispositionTagId) formData.append('disposition_tag_id', dispositionTagId)
   formData.append('column_map', JSON.stringify(columnMap))
@@ -1485,6 +1476,15 @@ const submitImport = async (riskFilter = 'all') => {
       document.getElementById('res-invalid').textContent = data.skipped_invalid_phone ?? 0
       const dlWrap = document.getElementById('import-results-download-wrap')
       dlWrap.style.display = lastSkippedRows.length > 0 ? 'block' : 'none'
+      const msgEl = document.getElementById('import-results-message')
+      if (msgEl) {
+        if (data.campaign_sends_queued) {
+          msgEl.textContent = 'Initial messages are being sent now — check Railway logs for send progress.'
+          msgEl.style.display = 'block'
+        } else {
+          msgEl.style.display = 'none'
+        }
+      }
       document.getElementById('import-results-modal').classList.add('open')
     } else {
       riskStatusEl.className = 'status-bar error'
