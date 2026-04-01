@@ -12,8 +12,7 @@ const getConversations = async (req, res) => {
     const { data, error, count } = await supabase
       .from('conversations')
       .select(`
-        *,
-        messages (id, direction, body, sent_at, is_ai, status, error_message),
+        *, from_number,
         leads (id, first_name, last_name, phone, status, timezone, autopilot, disposition_tag_id, notes, email, state, zip_code, date_of_birth, product, address, bucket_id, is_blocked, is_cold, created_at)
       `, { count: 'exact' })
       .eq('user_id', req.user.id)
@@ -27,17 +26,26 @@ const getConversations = async (req, res) => {
       conversations = conversations.filter(c => !c.leads?.is_blocked)
     }
 
+    // Fetch only the last message per conversation (much more efficient than full join)
+    if (conversations.length > 0) {
+      const convIds = conversations.map(c => c.id)
+      const { data: lastMsgs } = await supabase
+        .from('messages')
+        .select('conversation_id, body, direction, sent_at, is_ai')
+        .in('conversation_id', convIds)
+        .order('sent_at', { ascending: false })
+      const lastMsgMap = {}
+      for (const m of lastMsgs || []) {
+        if (!lastMsgMap[m.conversation_id]) lastMsgMap[m.conversation_id] = m
+      }
+      conversations = conversations.map(c => ({ ...c, last_message: lastMsgMap[c.id] || null }))
+    }
+
     const now = new Date()
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
     if (filter === 'unread') {
-      // Unread = last message is inbound (agent hasn't responded)
-      conversations = conversations.filter(c => {
-        const msgs = c.messages || []
-        if (!msgs.length) return false
-        const last = msgs[msgs.length - 1]
-        return last.direction === 'inbound'
-      })
+      conversations = conversations.filter(c => (c.unread_count || 0) > 0)
     } else if (filter === 'starred') {
       conversations = conversations.filter(c => c.is_starred)
     } else if (filter === 'recent') {

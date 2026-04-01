@@ -157,6 +157,9 @@
   let convTab = 'all'
   let convSubTab = 'all'
   let rightPanelOpen = false
+  let convPage = 1
+  let convHasMore = true
+  let convLoading = false
 
   const closeAllMenus = () => document.querySelectorAll('.actions-dropdown').forEach(d => d.classList.remove('open'))
 
@@ -240,15 +243,33 @@
     }
     try {
       const showBlocked = document.getElementById('conv3-show-blocked')?.checked ? 'true' : 'false'
-      const res = await fetch(`/conversations?show_blocked=${showBlocked}`)
+      const res = await fetch(`/conversations?page=1&limit=50&show_blocked=${showBlocked}`)
       const data = await res.json()
       allConversations = data.conversations || []
+      convPage = 1
+      convHasMore = (allConversations.length === 50)
       filterConversations(document.getElementById('conv3-search')?.value || '')
     } catch (err) {
       console.error(err)
       toast.error('Failed to load conversations', 'Please try again')
       if (list) list.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Could not load conversations.</div>'
     }
+  }
+
+  const loadMoreConversations = async () => {
+    if (convLoading || !convHasMore) return
+    convLoading = true
+    try {
+      const showBlocked = document.getElementById('conv3-show-blocked')?.checked ? 'true' : 'false'
+      const res = await fetch(`/conversations?page=${convPage}&limit=50&show_blocked=${showBlocked}`)
+      const data = await res.json()
+      const newConvs = data.conversations || []
+      convHasMore = newConvs.length === 50
+      const existingIds = new Set(allConversations.map(c => c.id))
+      newConvs.filter(c => !existingIds.has(c.id)).forEach(c => allConversations.push(c))
+      filterConversations(document.getElementById('conv3-search')?.value || '')
+    } catch (err) { console.error('loadMoreConversations error:', err) }
+    convLoading = false
   }
 
   const renderConversationList = (convs) => {
@@ -273,9 +294,8 @@
       const lead = c.leads
       const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ') : 'Unknown'
       const initials = lead ? getInitials(lead.first_name, lead.last_name) : '?'
-      const msgs = c.messages || []
-      const lastMsg = msgs[msgs.length - 1]
-      const isUnread = (c.unread_count || 0) > 0 || lastMsg?.direction === 'inbound'
+      const lastMsg = c.last_message || null
+      const isUnread = (c.unread_count || 0) > 0
       const dispTag = lead?.disposition_tag_id ? allDispositionTags.find(t => t.id === lead.disposition_tag_id) : null
       const isBlocked = lead?.is_blocked
       const isStarred = c.is_starred
@@ -307,6 +327,7 @@
             </div>
           </div>
           <div class="conv3-item-phone">${lead?.phone || ''}</div>
+          ${c.from_number ? `<div class="conv-from-number">via ${c.from_number}</div>` : ''}
           <div class="conv3-item-preview">${lastMsg?.body || 'No messages yet'}</div>
           ${[dispPill, blockedBadge, engPill].some(Boolean) ? `<div class="conv3-item-tags">${dispPill}${blockedBadge}${engPill}</div>` : ''}
         </div>
@@ -323,10 +344,7 @@
     const dispFilter = document.getElementById('conv3-disp-filter')?.value
     if (dispFilter) filtered = filtered.filter(c => c.leads?.disposition_tag_id === dispFilter)
     if (convTab === 'unread') {
-      filtered = filtered.filter(c => {
-        const msgs = c.messages || []
-        return msgs.length > 0 && msgs[msgs.length - 1].direction === 'inbound'
-      })
+      filtered = filtered.filter(c => (c.unread_count || 0) > 0)
     } else if (convTab === 'starred') {
       filtered = filtered.filter(c => c.is_starred)
     } else if (convTab === 'recent') {
@@ -338,7 +356,7 @@
         const lead = c.leads
         const name = lead ? [lead.first_name, lead.last_name].filter(Boolean).join(' ').toLowerCase() : ''
         const phone = lead?.phone || ''
-        const lastMsg = (c.messages || []).slice(-1)[0]?.body?.toLowerCase() || ''
+        const lastMsg = c.last_message?.body?.toLowerCase() || ''
         return name.includes(q) || phone.includes(q) || lastMsg.includes(q)
       })
     }
@@ -531,8 +549,9 @@
         ${contactRow('Name', [lead?.first_name, lead?.last_name].filter(Boolean).join(' ') || '—')}
         ${contactRow('Phone', lead?.phone || '—')}
         ${lead?.email ? contactRow('Email', lead.email) : ''}
-        ${lead?.state ? contactRow('State', lead.state + (lead.zip ? ' ' + lead.zip : '')) : ''}
-        ${lead?.date_of_birth ? contactRow('DOB', lead.date_of_birth) : ''}
+        ${contactRow('State', lead?.state || '—')}
+        ${contactRow('Zip Code', lead?.zip_code || '—')}
+        ${contactRow('DOB', lead?.date_of_birth || '—')}
         ${lead?.product ? contactRow('Product', lead.product) : ''}
         ${lead?.address ? contactRow('Address', lead.address) : ''}
         ${localTime ? contactRow('Local time', localTime) : ''}
@@ -667,6 +686,13 @@
             <button class="btn btn-primary btn-sm" onclick="scheduleConvMessage('${conv.id}','${lead?.id}')">Schedule</button>
           </div>
           <div class="conv3-template-picker" id="conv3-template-picker" style="display:none;position:absolute;bottom:calc(100% + 4px);left:8px;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:260px;max-height:220px;overflow-y:auto;z-index:200;" id="template-pills"></div>
+          <div class="conv3-var-buttons">
+            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[First Name]')">First Name</button>
+            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Last Name]')">Last Name</button>
+            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Zip]')">Zip</button>
+            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[State]')">State</button>
+            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[DOB]')">DOB</button>
+          </div>
           <textarea class="conv3-textarea" id="conv-input" placeholder="${isOptedOut ? 'Sending disabled — lead has opted out' : isAutopilot ? 'Autopilot active — type to override' : 'Type a message...'}" oninput="updateConvCharCount(this)" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){event.preventDefault();sendConvMessage('${conv.id}','${conv.lead_id}')}" ${!isAutopilot && !isOptedOut ? `onfocus="loadAISuggestion('${conv.id}','${conv.lead_id}')"` : ''} ${isOptedOut ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}></textarea>
           ${kwChipsRowHTML("document.getElementById('conv-input')")}
           <div class="conv3-input-toolbar">
@@ -692,10 +718,11 @@
         conv.messages = conv.messages || []
       }
 
-      // Mark conversation as read
+      // Mark conversation as read and immediately update list badge
       fetch(`/conversations/${convId}/read`, { method: 'PATCH' }).catch(() => {})
       const convInList = allConversations.find(c => c.id === convId)
       if (convInList) convInList.unread_count = 0
+      filterConversations(document.getElementById('conv3-search')?.value || '')
 
       renderMessages(conv, 'all')
       renderTemplatePills(conv.lead_id)
@@ -782,7 +809,7 @@
         }
         const existingConv = allConversations.find(c => c.id === activeConvId)
         if (existingConv) {
-          existingConv.messages = allMsgs
+          existingConv.last_message = allMsgs[allMsgs.length - 1] || null
           filterConversations(document.getElementById('conv3-search')?.value || '')
         }
       }
@@ -793,12 +820,23 @@
 
   const pollSidebar = async () => {
     if (document.hidden) return
-    await loadConversations()
+    try {
+      const showBlocked = document.getElementById('conv3-show-blocked')?.checked ? 'true' : 'false'
+      const res = await fetch(`/conversations?page=1&limit=50&show_blocked=${showBlocked}`)
+      const data = await res.json()
+      const fresh = data.conversations || []
+      // Merge: update existing conversations and prepend any new arrivals
+      const freshMap = Object.fromEntries(fresh.map(c => [c.id, c]))
+      allConversations = allConversations.map(c => freshMap[c.id] ? { ...c, ...freshMap[c.id] } : c)
+      const existingIds = new Set(allConversations.map(c => c.id))
+      fresh.filter(c => !existingIds.has(c.id)).forEach(c => allConversations.unshift(c))
+      filterConversations(document.getElementById('conv3-search')?.value || '')
+    } catch (err) { console.error('pollSidebar error:', err) }
   }
 
   const startPolling = () => {
     stopPolling()
-    pollMessagesTimer = setInterval(pollMessages, 10000)
+    pollMessagesTimer = setInterval(pollMessages, 8000)
     pollSidebarTimer = setInterval(pollSidebar, 15000)
   }
 
@@ -1093,6 +1131,16 @@
     input.style.height = '84px'
   }
 
+  const insertVarAtCursor = (textarea, text) => {
+    if (!textarea) return
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    textarea.value = textarea.value.substring(0, start) + text + textarea.value.substring(end)
+    textarea.selectionStart = textarea.selectionEnd = start + text.length
+    textarea.focus()
+    updateConvCharCount(textarea)
+  }
+
   const init = async () => {
     const authed = await checkAuth()
     if (!authed) return
@@ -1109,6 +1157,18 @@
     await loadProfile()
     await loadConversations()
     startPolling()
+    // Infinite scroll on conversation list
+    const convListEl = document.getElementById('conv3-list')
+    if (convListEl) {
+      convListEl.addEventListener('scroll', () => {
+        if (convLoading || !convHasMore) return
+        const { scrollTop, scrollHeight, clientHeight } = convListEl
+        if (scrollHeight - scrollTop - clientHeight < 200) {
+          convPage++
+          loadMoreConversations()
+        }
+      })
+    }
     loadCalBadge()
     loadNotifBadge()
     setInterval(loadNotifBadge, 30000)

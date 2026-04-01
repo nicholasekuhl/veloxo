@@ -543,7 +543,7 @@ const sendManualMessage = async (req, res) => {
     })
 
     await supabase.from('conversations')
-      .update({ updated_at: new Date().toISOString(), last_outbound_at: new Date().toISOString() })
+      .update({ updated_at: new Date().toISOString(), last_outbound_at: new Date().toISOString(), from_number: fromNumber })
       .eq('id', conversation_id)
 
     // Only upgrade status, never downgrade
