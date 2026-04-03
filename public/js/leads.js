@@ -396,10 +396,10 @@ const renderLeads = (leads) => {
     const hasActiveEnrollment = hasActiveCampaign
     const campProgress = tags.length
       ? hasActiveEnrollment && lead.campaign_day != null
-        ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]} — Day ${lead.campaign_day}</span>`
+        ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ Campaign Active — Day ${lead.campaign_day}</span>`
         : hasActiveEnrollment
-          ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ ${tags[0]}</span>`
-          : `<span class="tag" style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:600;border:1px solid #bbf7d0;">📤 Via: ${tags[0]}</span>`
+          ? `<span class="tag" style="background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;border:1px solid #bfdbfe;">⚡ Campaign Active</span>`
+          : `<span class="tag" style="background:#f0fdf4;color:#166534;font-size:10px;font-weight:600;border:1px solid #bbf7d0;">✓ Campaign Done</span>`
       : ''
     return `
       <div class="lead-card" style="border-left: 4px solid ${borderColor};">
@@ -423,7 +423,7 @@ const renderLeads = (leads) => {
               <div class="lead-meta">
                 <span>📞 ${lead.phone} <button class="copy-btn" onclick="copyToClipboard('${lead.phone}', this)" title="Copy phone">${COPY_SVG}</button></span>
                 ${lead.email ? `<span>✉️ ${lead.email} <button class="copy-btn" onclick="copyToClipboard('${lead.email}', this)" title="Copy email">${COPY_SVG}</button></span>` : ''}
-                ${lead.state ? `<span>📍 ${lead.state}</span>` : ''}
+                ${(lead.state || lead.zip_code) ? `<span>📍 ${[lead.state, lead.zip_code].filter(Boolean).join(' ')}</span>` : ''}
                 ${lead.date_of_birth ? `<span>🎂 ${lead.date_of_birth}</span>` : ''}
                 ${localTime ? `<span>🕐 ${localTime} local</span>` : ''}
                 ${lastContactHtml(lead)}

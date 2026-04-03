@@ -106,16 +106,19 @@ const getOverview = async (req, res) => {
     const prevSince = new Date(since)
     prevSince.setDate(prevSince.getDate() - days)
 
-    const [{ data: msgs }, { data: prevMsgs }, { data: leads }, { data: campaigns }] = await Promise.all([
+    const [{ data: msgs }, { data: prevMsgs }, { data: leads, error: leadsError }, { data: campaigns }, { data: inboundLeads }] = await Promise.all([
       supabase.from('messages').select('status').eq('user_id', userId).eq('direction', 'outbound').gte('sent_at', since.toISOString()),
       supabase.from('messages').select('id').eq('user_id', userId).eq('direction', 'outbound').gte('sent_at', prevSince.toISOString()).lt('sent_at', since.toISOString()),
-      supabase.from('leads').select('id, created_at, has_replied').eq('user_id', userId),
-      supabase.from('campaigns').select('id, is_active').eq('user_id', userId),
+      supabase.from('leads').select('id, created_at').eq('user_id', userId),
+      supabase.from('campaigns').select('id, status').eq('user_id', userId),
+      supabase.from('messages').select('lead_id').eq('user_id', userId).eq('direction', 'inbound'),
     ])
+
+    if (leadsError) console.error('Stats leads query error:', leadsError.message)
 
     const totalSent = msgs?.length || 0
     const delivered = msgs?.filter(m => m.status === 'delivered').length || 0
-    const replied = leads?.filter(l => l.has_replied).length || 0
+    const replied = new Set((inboundLeads || []).map(m => m.lead_id)).size
 
     res.json({
       messages_sent: totalSent,
@@ -126,7 +129,7 @@ const getOverview = async (req, res) => {
       total_leads: leads?.length || 0,
       replied_leads: replied,
       reply_rate: leads?.length > 0 ? parseFloat(((replied / leads.length) * 100).toFixed(1)) : null,
-      active_campaigns: campaigns?.filter(c => c.is_active).length || 0,
+      active_campaigns: campaigns?.filter(c => c.status === 'active').length || 0,
       total_campaigns: campaigns?.length || 0,
     })
   } catch (err) {
@@ -189,7 +192,7 @@ const getCampaignStats = async (req, res) => {
     const userId = req.user.id
     const { data: campaigns, error } = await supabase
       .from('campaigns')
-      .select('id, name, is_active, created_at')
+      .select('id, name, status, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
@@ -220,7 +223,7 @@ const getCampaignStats = async (req, res) => {
         const m = mMap[c.id] || { sent: 0, delivered: 0 }
         const e = eMap[c.id] || { total: 0, active: 0 }
         return {
-          id: c.id, name: c.name, is_active: c.is_active,
+          id: c.id, name: c.name, is_active: c.status === 'active',
           leads_enrolled: e.total, leads_active: e.active,
           messages_sent: m.sent, delivered: m.delivered,
           delivery_rate: m.sent > 0 ? parseFloat(((m.delivered / m.sent) * 100).toFixed(1)) : null,

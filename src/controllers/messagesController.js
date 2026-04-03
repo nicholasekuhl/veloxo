@@ -375,7 +375,7 @@ const processInboundMessage = async (body) => {
     }
 
     // SMS forwarding — non-blocking, never delays main flow
-    if (profile?.sms_notifications_enabled !== false && profile?.personal_phone && lead.status !== 'opted_out') {
+    if (profile?.sms_notifications_enabled === true && profile?.personal_phone && lead.status !== 'opted_out') {
       const forwardingNumber = (process.env.FORWARDING_NUMBER || '').trim()
       if (!forwardingNumber) {
         console.log('SMS forward skipped — FORWARDING_NUMBER env var not set')

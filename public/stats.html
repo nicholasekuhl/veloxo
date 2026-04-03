@@ -271,6 +271,7 @@
         fetch(`/stats/sold`),
       ])
       const [ov, msg, camp, funnel, act, sold] = await Promise.all([ovRes.json(), msgRes.json(), campRes.json(), funnelRes.json(), actRes.json(), soldRes.json()])
+      console.log('Overview data:', ov)
       renderMetrics(ov)
       renderSoldMetrics(sold)
       renderVolumeChart(msg.daily || [])
