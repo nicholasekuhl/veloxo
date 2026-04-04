@@ -16,16 +16,29 @@ const tryRefresh = async (refreshToken, res) => {
   return data.user
 }
 
+const jwksClient = require('jwks-rsa')
+
+const jwks = jwksClient({
+  jwksUri: `${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+  cache: true,
+  cacheMaxAge: 86400000 // cache for 24 hours
+})
+
 const verifyToken = (token) => {
-  try {
-    const secret = process.env.SUPABASE_JWT_SECRET
-    if (!secret) return null
-    const decoded = jwt.verify(token, secret, { algorithms: ['HS256', 'RS256', 'ES256'] })
-    return { id: decoded.sub, email: decoded.email }
-  } catch (err) {
-    console.log('JWT verify error:', err.message)
-    return null
-  }
+  return new Promise((resolve) => {
+    jwt.verify(token, (header, callback) => {
+      jwks.getSigningKey(header.kid, (err, key) => {
+        if (err) return callback(err)
+        callback(null, key.getPublicKey())
+      })
+    }, { algorithms: ['ES256', 'RS256', 'HS256'] }, (err, decoded) => {
+      if (err) {
+        console.log('JWT verify error:', err.message)
+        return resolve(null)
+      }
+      resolve({ id: decoded.sub, email: decoded.email })
+    })
+  })
 }
 
 const authMiddleware = async (req, res, next) => {
@@ -39,8 +52,7 @@ const authMiddleware = async (req, res, next) => {
     let userEmail = null
 
     if (token) {
-      const decoded = verifyToken(token)
-      console.log('JWT:', decoded ? 'LOCAL SUCCESS' : 'FAILED - using Supabase fallback')
+      const decoded = await verifyToken(token)
       if (decoded) {
         userId = decoded.id
         userEmail = decoded.email
@@ -93,7 +105,7 @@ const authMiddlewareNoTos = async (req, res, next) => {
     let userEmail = null
 
     if (token) {
-      const decoded = verifyToken(token)
+      const decoded = await verifyToken(token)
       if (decoded) {
         userId = decoded.id
         userEmail = decoded.email
