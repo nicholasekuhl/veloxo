@@ -37,9 +37,10 @@ const verifyToken = async (token) => {
         else resolve(result)
       })
     })
+    console.log('[JWT] Token verified — sub:', decoded.sub, 'email:', decoded.email, 'exp:', new Date(decoded.exp * 1000).toISOString())
     return { id: decoded.sub, email: decoded.email }
   } catch (err) {
-    console.log('JWT verify error:', err.message)
+    console.log('[JWT] verify error:', err.message)
     return null
   }
 }
@@ -49,6 +50,8 @@ const authMiddleware = async (req, res, next) => {
     const token = req.cookies?.session
     const refreshToken = req.cookies?.refresh
 
+    console.log('[JWT] authMiddleware — session cookie present:', !!token, '| refresh cookie present:', !!refreshToken)
+
     if (!token && !refreshToken) return res.status(401).json({ error: 'Not authenticated' })
 
     let userId = null
@@ -57,8 +60,11 @@ const authMiddleware = async (req, res, next) => {
     if (token) {
       const decoded = await verifyToken(token)
       if (decoded) {
+        console.log('[JWT] Token decoded successfully — userId:', decoded.id, 'email:', decoded.email)
         userId = decoded.id
         userEmail = decoded.email
+      } else {
+        console.log('[JWT] Token verification failed — will attempt refresh')
       }
     }
 
@@ -66,6 +72,7 @@ const authMiddleware = async (req, res, next) => {
     if (!userId) {
       const user = await tryRefresh(refreshToken, res)
       if (!user) return res.status(401).json({ error: 'Session expired. Please log in again.' })
+      console.log('[JWT] Refreshed session — userId:', user.id, 'email:', user.email)
       userId = user.id
       userEmail = user.email
     }
@@ -88,6 +95,7 @@ const authMiddleware = async (req, res, next) => {
       return res.status(403).json({ error: 'suspended', message: 'Your account has been suspended. Contact support for assistance.' })
     }
 
+    console.log('[JWT] Auth success — userId:', userId, 'email:', userEmail)
     req.user = { id: userId, email: userEmail, profile }
     next()
   } catch (err) {
@@ -102,6 +110,8 @@ const authMiddlewareNoTos = async (req, res, next) => {
     const token = req.cookies?.session
     const refreshToken = req.cookies?.refresh
 
+    console.log('[JWT] authMiddlewareNoTos — session cookie present:', !!token, '| refresh cookie present:', !!refreshToken)
+
     if (!token && !refreshToken) return res.status(401).json({ error: 'Not authenticated' })
 
     let userId = null
@@ -110,14 +120,18 @@ const authMiddlewareNoTos = async (req, res, next) => {
     if (token) {
       const decoded = await verifyToken(token)
       if (decoded) {
+        console.log('[JWT] Token decoded successfully — userId:', decoded.id, 'email:', decoded.email)
         userId = decoded.id
         userEmail = decoded.email
+      } else {
+        console.log('[JWT] Token verification failed — will attempt refresh')
       }
     }
 
     if (!userId) {
       const user = await tryRefresh(refreshToken, res)
       if (!user) return res.status(401).json({ error: 'Session expired. Please log in again.' })
+      console.log('[JWT] Refreshed session — userId:', user.id, 'email:', user.email)
       userId = user.id
       userEmail = user.email
     }
@@ -130,6 +144,7 @@ const authMiddlewareNoTos = async (req, res, next) => {
 
     if (profileError || !profile) return res.status(401).json({ error: 'Profile not found. Please complete setup.' })
 
+    console.log('[JWT] Auth success (noTos) — userId:', userId, 'email:', userEmail)
     req.user = { id: userId, email: userEmail, profile }
     next()
   } catch (err) {
