@@ -36,7 +36,6 @@ const login = async (req, res) => {
 
     res.cookie('session', data.session.access_token, { ...COOKIE_OPTS, maxAge: 60 * 60 * 1000 })
     res.cookie('refresh', data.session.refresh_token, { ...COOKIE_OPTS, maxAge: 30 * 24 * 60 * 60 * 1000 })
-    console.log('[JWT] Token issued — userId:', data.user.id, 'email:', data.user.email, 'expires_at:', new Date(data.session.expires_at * 1000).toISOString())
     res.json({ success: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -50,7 +49,6 @@ const logout = async (req, res) => {
 }
 
 const getMe = async (req, res) => {
-  console.log('[JWT] /auth/me — returning user:', req.user.profile.id, '|', req.user.email)
   res.json({ user: req.user.profile })
 }
 

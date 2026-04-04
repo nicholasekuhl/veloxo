@@ -291,34 +291,6 @@
     </div>
   </div>
   <div class="leads-grid" id="leads-grid"></div>
-  <div class="bulk-bar" id="bulk-actions">
-    <span id="selected-count" style="font-weight:600;font-size:13px;flex-shrink:0;"></span>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      <div style="position:relative;">
-        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-disp-dd','disp')">🏷 Add Tag ▾</button>
-        <div id="bulk-disp-dd" class="bulk-dd" style="display:none;"></div>
-      </div>
-      <div style="position:relative;">
-        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-remove-disp-dd','remove-disp')">✕ Remove Tag ▾</button>
-        <div id="bulk-remove-disp-dd" class="bulk-dd" style="display:none;"></div>
-      </div>
-      <div style="position:relative;">
-        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-camp-dd','campaign')">⚡ Campaign ▾</button>
-        <div id="bulk-camp-dd" class="bulk-dd" style="display:none;"></div>
-      </div>
-      <div style="position:relative;">
-        <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')">📁 Bucket ▾</button>
-        <div id="bulk-bucket-dd" class="bulk-dd" style="display:none;"></div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(true)">⚡ Autopilot On</button>
-      <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(false)">⏸ Autopilot Off</button>
-      <button class="btn btn-ghost btn-sm" onclick="openBulkSoldModal()">🎉 Mark as Sold</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportSelectedLeads()">⬇ Export CSV</button>
-      <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="confirmBulkBlock()">🚫 Block</button>
-      <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="openBulkDeleteModal()">🗑 Delete</button>
-      <button class="btn btn-ghost btn-sm" style="color:#9ca3af;" onclick="clearSelection()">✕ Clear</button>
-    </div>
-  </div>
 </div>
 
 <!-- UPLOAD MODAL -->
@@ -822,5 +794,34 @@
 
 <script src="/js/shared.js"></script>
 <script src="/js/leads.js"></script>
+
+<div class="bulk-bar" id="bulk-actions">
+  <span id="selected-count" style="font-weight:600;font-size:13px;flex-shrink:0;"></span>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+    <div style="position:relative;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-disp-dd','disp')">🏷 Add Tag ▾</button>
+      <div id="bulk-disp-dd" class="bulk-dd" style="display:none;"></div>
+    </div>
+    <div style="position:relative;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-remove-disp-dd','remove-disp')">✕ Remove Tag ▾</button>
+      <div id="bulk-remove-disp-dd" class="bulk-dd" style="display:none;"></div>
+    </div>
+    <div style="position:relative;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-camp-dd','campaign')">⚡ Campaign ▾</button>
+      <div id="bulk-camp-dd" class="bulk-dd" style="display:none;"></div>
+    </div>
+    <div style="position:relative;">
+      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')">📁 Bucket ▾</button>
+      <div id="bulk-bucket-dd" class="bulk-dd" style="display:none;"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(true)">⚡ Autopilot On</button>
+    <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(false)">⏸ Autopilot Off</button>
+    <button class="btn btn-ghost btn-sm" onclick="openBulkSoldModal()">🎉 Mark as Sold</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportSelectedLeads()">⬇ Export CSV</button>
+    <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="confirmBulkBlock()">🚫 Block</button>
+    <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="openBulkDeleteModal()">🗑 Delete</button>
+    <button class="btn btn-ghost btn-sm" style="color:#9ca3af;" onclick="clearSelection()">✕ Clear</button>
+  </div>
+</div>
 </body>
 </html>
