@@ -60,6 +60,7 @@
     .ami-item.ami-danger:hover { background: #fef2f2; }
     .ami-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
     .ami-divider { height: 1px; background: #f3f4f6; margin: 4px 0; }
+    #bulk-actions { display: none !important; }
     .ami-sub-item {
       display: flex;
       align-items: center;
@@ -795,25 +796,14 @@
 <script src="/js/shared.js"></script>
 <script src="/js/leads.js"></script>
 
+<!-- Hidden bulk-bar kept for JS compatibility (sub-dropdowns moved to FAB below) -->
 <div class="bulk-bar" id="bulk-actions">
   <span id="selected-count" style="font-weight:600;font-size:13px;flex-shrink:0;"></span>
   <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-    <div style="position:relative;">
-      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-disp-dd','disp')">🏷 Add Tag ▾</button>
-      <div id="bulk-disp-dd" class="bulk-dd" style="display:none;"></div>
-    </div>
-    <div style="position:relative;">
-      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-remove-disp-dd','remove-disp')">✕ Remove Tag ▾</button>
-      <div id="bulk-remove-disp-dd" class="bulk-dd" style="display:none;"></div>
-    </div>
-    <div style="position:relative;">
-      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-camp-dd','campaign')">⚡ Campaign ▾</button>
-      <div id="bulk-camp-dd" class="bulk-dd" style="display:none;"></div>
-    </div>
-    <div style="position:relative;">
-      <button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')">📁 Bucket ▾</button>
-      <div id="bulk-bucket-dd" class="bulk-dd" style="display:none;"></div>
-    </div>
+    <div style="position:relative;"><button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-disp-dd','disp')">🏷 Add Tag ▾</button></div>
+    <div style="position:relative;"><button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-remove-disp-dd','remove-disp')">✕ Remove Tag ▾</button></div>
+    <div style="position:relative;"><button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-camp-dd','campaign')">⚡ Campaign ▾</button></div>
+    <div style="position:relative;"><button class="btn btn-ghost btn-sm" onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')">📁 Bucket ▾</button></div>
     <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(true)">⚡ Autopilot On</button>
     <button class="btn btn-ghost btn-sm" onclick="confirmBulkAutopilot(false)">⏸ Autopilot Off</button>
     <button class="btn btn-ghost btn-sm" onclick="openBulkSoldModal()">🎉 Mark as Sold</button>
@@ -822,6 +812,72 @@
     <button class="btn btn-ghost btn-sm" style="color:#dc2626;" onclick="openBulkDeleteModal()">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" style="color:#9ca3af;" onclick="clearSelection()">✕ Clear</button>
   </div>
+</div>
+
+<div id="fab-bulk-wrap" style="
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: inherit;
+">
+  <!-- Sub-dropdowns repositioned here so they render outside hidden bulk-bar -->
+  <div id="bulk-disp-dd" class="bulk-dd" style="display:none; position:fixed; bottom:80px; right:24px; z-index:10000;"></div>
+  <div id="bulk-remove-disp-dd" class="bulk-dd" style="display:none; position:fixed; bottom:80px; right:24px; z-index:10000;"></div>
+  <div id="bulk-camp-dd" class="bulk-dd" style="display:none; position:fixed; bottom:80px; right:24px; z-index:10000;"></div>
+  <div id="bulk-bucket-dd" class="bulk-dd" style="display:none; position:fixed; bottom:80px; right:24px; z-index:10000;"></div>
+
+  <!-- Dropdown menu — appears above button -->
+  <div id="fab-bulk-menu" style="
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    min-width: 220px;
+    overflow: hidden;
+    padding: 6px 0;
+  ">
+    <button onclick="toggleBulkDropdown('bulk-disp-dd','disp')" class="fab-menu-item">🏷 Add Tag</button>
+    <button onclick="toggleBulkDropdown('bulk-remove-disp-dd','remove-disp')" class="fab-menu-item">✕ Remove Tag</button>
+    <button onclick="toggleBulkDropdown('bulk-camp-dd','campaign')" class="fab-menu-item">⚡ Campaign</button>
+    <button onclick="toggleBulkDropdown('bulk-bucket-dd','bucket')" class="fab-menu-item">📁 Bucket</button>
+    <div style="height:1px;background:#f3f4f6;margin:4px 0;"></div>
+    <button onclick="confirmBulkAutopilot(true)" class="fab-menu-item">⚡ Autopilot On</button>
+    <button onclick="confirmBulkAutopilot(false)" class="fab-menu-item">⏸ Autopilot Off</button>
+    <div style="height:1px;background:#f3f4f6;margin:4px 0;"></div>
+    <button onclick="openBulkSoldModal()" class="fab-menu-item">🎉 Mark as Sold</button>
+    <button onclick="exportSelectedLeads()" class="fab-menu-item">⬇ Export CSV</button>
+    <div style="height:1px;background:#f3f4f6;margin:4px 0;"></div>
+    <button onclick="confirmBulkBlock()" class="fab-menu-item fab-menu-danger">🚫 Block</button>
+    <button onclick="openBulkDeleteModal()" class="fab-menu-item fab-menu-danger">🗑 Delete</button>
+    <div style="height:1px;background:#f3f4f6;margin:4px 0;"></div>
+    <button onclick="clearSelection()" class="fab-menu-item" style="color:#9ca3af;">✕ Clear Selection</button>
+  </div>
+
+  <!-- The main FAB button -->
+  <button id="fab-bulk-btn" onclick="toggleFabMenu()" style="
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s, transform 0.1s;
+  ">
+    ✏️ Bulk Update (<span id="fab-selected-count">0</span> selected)
+  </button>
 </div>
 </body>
 </html>

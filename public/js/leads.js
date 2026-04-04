@@ -718,7 +718,31 @@ const updateBulkActions = () => {
   const n = selectedLeads.size
   if (n > 0) { bar.classList.add('visible'); count.textContent = `${n} lead${n !== 1 ? 's' : ''} selected` }
   else { bar.classList.remove('visible'); closeBulkDropdowns() }
+  const fabWrap = document.getElementById('fab-bulk-wrap')
+  const fabCount = document.getElementById('fab-selected-count')
+  if (fabWrap && fabCount) {
+    fabCount.textContent = n
+    fabWrap.style.display = n > 0 ? 'block' : 'none'
+    if (n === 0) {
+      const menu = document.getElementById('fab-bulk-menu')
+      if (menu) menu.style.display = 'none'
+    }
+  }
 }
+
+const toggleFabMenu = () => {
+  const menu = document.getElementById('fab-bulk-menu')
+  const isOpen = menu.style.display !== 'none'
+  menu.style.display = isOpen ? 'none' : 'block'
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('fab-bulk-wrap')
+  if (wrap && !wrap.contains(e.target)) {
+    const menu = document.getElementById('fab-bulk-menu')
+    if (menu) menu.style.display = 'none'
+  }
+})
 
 const clearSelection = () => {
   selectedLeads.clear()
