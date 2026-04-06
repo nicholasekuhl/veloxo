@@ -662,21 +662,9 @@ const getLeads = async (req, res) => {
 // CHANGED: uses COUNT queries via Promise.all instead of fetching all lead rows
 const getLeadStats = async (req, res) => {
   try {
-    const uid = req.user.id
-    const [total, newLeads, contacted, booked, autopilot] = await Promise.all([
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', uid),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('status', 'new'),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('status', 'contacted'),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('status', 'booked'),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', uid).eq('autopilot', true),
-    ])
-    res.json({
-      total: total.count || 0,
-      new: newLeads.count || 0,
-      contacted: contacted.count || 0,
-      booked: booked.count || 0,
-      autopilot: autopilot.count || 0,
-    })
+    const { data, error } = await supabase.rpc('get_lead_stats', { p_user_id: req.user.id })
+    if (error) throw error
+    res.json(data)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

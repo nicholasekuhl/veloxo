@@ -1054,11 +1054,11 @@ input, select, textarea { font-size: 16px; }
 }
 
 /* ── FAB BULK ACTION ─────────────────────────────────────────────────────── */
-.fab-menu-item {
+.fab-item {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 9px 16px;
+  padding: 10px 16px;
   font-size: 13px;
   color: #374151;
   background: none;
@@ -1067,9 +1067,11 @@ input, select, textarea { font-size: 16px; }
   font-family: inherit;
   transition: background 0.1s;
 }
-.fab-menu-item:hover { background: #f9fafb; }
-.fab-menu-danger { color: #dc2626 !important; }
-.fab-menu-danger:hover { background: #fef2f2 !important; }
+.fab-item:hover { background: #f9fafb; }
+.fab-danger { color: #dc2626 !important; }
+.fab-danger:hover { background: #fef2f2 !important; }
+.fab-muted { color: #9ca3af !important; }
+.fab-divider { height: 1px; background: #f3f4f6; margin: 4px 0; }
 
 /* ── SKELETON / SHIMMER ──────────────────────────────────────────────────── */
 @keyframes shimmer {

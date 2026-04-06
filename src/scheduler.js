@@ -130,6 +130,7 @@ const checkGhostedConversations = async () => {
       .not('last_outbound_at', 'is', null)
       .lte('last_outbound_at', fifteenMinAgo)
       .in('followup_stage', ['none', 'stage1', 'stage2', 'stage3'])
+      .limit(30)
 
     if (!conversations || conversations.length === 0) return
 
@@ -962,8 +963,8 @@ const guardedProcessQuickFollowups = async () => {
 
 const startScheduler = () => {
   console.log('Campaign scheduler started — master Twilio account active')
-  setInterval(guardedProcessScheduledMessages, 60000)
-  setInterval(guardedCheckGhostedConversations, 60000)
+  setInterval(guardedProcessScheduledMessages, 90000)   // every 90 seconds
+  setInterval(guardedCheckGhostedConversations, 120000) // every 2 minutes
   setInterval(guardedProcessQuickFollowups, 60000)
 
   scheduleMidnightReset()

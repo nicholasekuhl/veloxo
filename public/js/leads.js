@@ -716,32 +716,35 @@ const updateBulkActions = () => {
   const bar = document.getElementById('bulk-actions')
   const count = document.getElementById('selected-count')
   const n = selectedLeads.size
-  if (n > 0) { bar.classList.add('visible'); count.textContent = `${n} lead${n !== 1 ? 's' : ''} selected` }
+  if (n > 0) { bar.classList.add('visible'); if (count) count.textContent = `${n} lead${n !== 1 ? 's' : ''} selected` }
   else { bar.classList.remove('visible'); closeBulkDropdowns() }
-  const fabWrap = document.getElementById('fab-bulk-wrap')
-  const fabCount = document.getElementById('fab-selected-count')
-  if (fabWrap && fabCount) {
-    fabCount.textContent = n
-    fabWrap.style.display = n > 0 ? 'block' : 'none'
-    if (n === 0) {
-      const menu = document.getElementById('fab-bulk-menu')
-      if (menu) menu.style.display = 'none'
-    }
-  }
+  updateFab()
 }
 
-const toggleFabMenu = () => {
-  const menu = document.getElementById('fab-bulk-menu')
-  const isOpen = menu.style.display !== 'none'
-  menu.style.display = isOpen ? 'none' : 'block'
+function toggleFabMenu(e) {
+  if (e) e.stopPropagation()
+  const m = document.getElementById('fab-menu')
+  if (m) m.style.display = m.style.display === 'none' ? 'block' : 'none'
 }
 
-document.addEventListener('click', (e) => {
-  const wrap = document.getElementById('fab-bulk-wrap')
-  if (wrap && !wrap.contains(e.target)) {
-    const menu = document.getElementById('fab-bulk-menu')
-    if (menu) menu.style.display = 'none'
-  }
+function closeFabMenu() {
+  const m = document.getElementById('fab-menu')
+  if (m) m.style.display = 'none'
+}
+
+function updateFab() {
+  const wrap = document.getElementById('fab-wrap')
+  const count = document.getElementById('fab-count')
+  if (!wrap || !count) return
+  const n = selectedLeads.size
+  count.textContent = n
+  wrap.style.display = n > 0 ? 'block' : 'none'
+  if (n === 0) closeFabMenu()
+}
+
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('fab-wrap')
+  if (wrap && !wrap.contains(e.target)) closeFabMenu()
 })
 
 const clearSelection = () => {
@@ -1611,7 +1614,7 @@ const enrollSelectedLeads = async () => {
   } catch (err) { toast.error('Error', 'Something went wrong') }
 }
 
-const openEnrollModalForLead = (leadId) => { selectedLeads.clear(); selectedLeads.add(leadId); openEnrollModal() }
+const openEnrollModalForLead = (leadId) => { selectedLeads.clear(); selectedLeads.add(leadId); updateFab(); openEnrollModal() }
 
 // ===== BUCKET CRUD =====
 const openNewBucketModal = (id, name, color) => {
