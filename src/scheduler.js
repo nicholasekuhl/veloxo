@@ -485,7 +485,36 @@ const processQuickFollowups = async () => {
         },
 
         onFailure: async (job, err) => {
-          console.error(`[quickFollowups] Step ${job.stepToSend} failed for lead ${job.leadId}: ${err?.message}`)
+          console.error('[quickFollowups] Step', job.stepToSend, 'failed for lead', job.leadId, err?.message)
+
+          // Mark enrollment as failed so scheduler does not keep retrying this lead
+          if (job.enrollmentId) {
+            await supabase
+              .from('campaign_leads')
+              .update({
+                status: 'failed',
+                cancelled_reason: err?.message || 'send_failed'
+              })
+              .eq('id', job.enrollmentId)
+          }
+
+          // If invalid number — block the lead so no further sends are attempted
+          const isInvalidNumber = err?.message && (
+            err.message.includes('Invalid') ||
+            err.message.includes('not a mobile') ||
+            err.message.includes('opted out')
+          )
+          if (isInvalidNumber && job.leadId) {
+            await supabase
+              .from('leads')
+              .update({
+                is_blocked: true,
+                notes: 'Auto-blocked: invalid phone number',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', job.leadId)
+            console.log('[quickFollowups] Auto-blocked lead with invalid number:', job.leadId)
+          }
         },
       })
     }
@@ -729,6 +758,35 @@ const processScheduledMessages = async () => {
 
         onFailure: async (job, err) => {
           console.error('[scheduler] Day-based send failed for lead', job.leadId, err?.message)
+
+          // Mark enrollment as failed so scheduler does not keep retrying this lead
+          if (job.enrollmentId) {
+            await supabase
+              .from('campaign_leads')
+              .update({
+                status: 'failed',
+                cancelled_reason: err?.message || 'send_failed'
+              })
+              .eq('id', job.enrollmentId)
+          }
+
+          // If invalid number — block the lead so no further sends are attempted
+          const isInvalidNumber = err?.message && (
+            err.message.includes('Invalid') ||
+            err.message.includes('not a mobile') ||
+            err.message.includes('opted out')
+          )
+          if (isInvalidNumber && job.leadId) {
+            await supabase
+              .from('leads')
+              .update({
+                is_blocked: true,
+                notes: 'Auto-blocked: invalid phone number',
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', job.leadId)
+            console.log('[scheduler] Auto-blocked lead with invalid number:', job.leadId)
+          }
         },
       })
     }

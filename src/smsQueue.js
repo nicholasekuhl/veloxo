@@ -35,6 +35,10 @@ const FATAL_ERRORS = [
   'blacklisted',
   'is not a mobile number',
   'not a valid phone',
+  'Invalid To Phone Number',        // Twilio: number doesn't exist or is malformed
+  "Invalid 'To' Phone Number",      // Twilio: alternate error wording
+  'unsubscribed recipient',         // Carrier-level opt-out — retrying violates TCPA
+  'has opted out',                  // Twilio opt-out registry
 ];
 
 function isFatalError(errMsg) {
