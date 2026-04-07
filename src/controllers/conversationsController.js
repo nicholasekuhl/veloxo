@@ -17,9 +17,10 @@ const getConversations = async (req, res) => {
       `, { count: 'exact' })
       .eq('user_id', req.user.id)
       .order('updated_at', { ascending: false })
-      .range(offset, offset + limit - 1)
 
     if (req.query.lead_id) query = query.eq('lead_id', req.query.lead_id)
+
+    query = query.range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
     if (error) throw error

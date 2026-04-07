@@ -1182,9 +1182,10 @@
     console.log('[scroll] convListEl:', convListEl)
     if (convListEl) {
       convListEl.addEventListener('scroll', debounce(() => {
+        console.log('[scroll] top:', convListEl.scrollTop, 'height:', convListEl.scrollHeight, 'client:', convListEl.clientHeight)
         if (convLoading || !convHasMore || isSearchMode) return
         const { scrollTop, scrollHeight, clientHeight } = convListEl
-        if (scrollHeight - scrollTop - clientHeight < 200) {
+        if (scrollHeight - scrollTop - clientHeight < 300) {
           convPage++
           loadMoreConversations()
         }

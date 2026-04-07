@@ -1964,24 +1964,50 @@ const switchDetailTab = (tab) => {
 }
 
 const loadDetailSMS = async (leadId) => {
+  if (!leadId) return
+  const list = document.getElementById('detail-sms-list')
+  if (!list) return
+
+  list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading messages...</div>`
+
   try {
-    const res = await fetch(`/conversations?lead_id=${leadId}&limit=1`)
-    const data = await res.json()
-    const conv = (data.conversations || [])[0]
-    const container = document.getElementById('detail-sms-list')
-    if (!conv) { container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No messages yet</div>`; return }
-    const res2 = await fetch(`/conversations/${conv.id}`)
-    const data2 = await res2.json()
-    const fullConv = data2.conversation
-    if (!fullConv?.messages?.length) { container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No messages yet</div>`; return }
-    container.innerHTML = fullConv.messages.map(m => `
-      <div class="msg-history-item ${m.direction}">
-        <div class="direction">${m.direction === 'inbound' ? '← Received' : m.is_ai ? '→ AI Sent' : '→ Sent'}</div>
-        <div class="body">${m.body}</div>
-        <div class="time">${formatTime(m.sent_at)}</div>
-      </div>
-    `).join('')
-  } catch (err) { console.error(err) }
+    const convRes = await fetch('/conversations?lead_id=' + leadId + '&limit=1')
+    const convData = await convRes.json()
+    const conv = convData.conversations?.[0]
+
+    if (!conv) {
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>`
+      return
+    }
+
+    const msgRes = await fetch('/conversations/' + conv.id + '/messages')
+    const msgData = await msgRes.json()
+    const messages = msgData.messages || []
+
+    if (messages.length === 0) {
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>`
+      return
+    }
+
+    list.innerHTML = messages.map(m => {
+      const isOut = m.direction === 'outbound'
+      const time = new Date(m.sent_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      })
+      return `<div style="display:flex;justify-content:${isOut ? 'flex-end' : 'flex-start'};margin-bottom:8px;padding:0 4px;">
+        <div style="max-width:80%;background:${isOut ? '#6366f1' : '#f3f4f6'};color:${isOut ? 'white' : '#374151'};padding:8px 12px;border-radius:${isOut ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};font-size:13px;line-height:1.5;">
+          ${m.body}
+          <div style="font-size:10px;opacity:0.65;margin-top:3px;text-align:right;">${time}${m.is_ai ? ' · AI' : ''}</div>
+        </div>
+      </div>`
+    }).join('')
+
+    list.scrollTop = list.scrollHeight
+  } catch (err) {
+    console.error('loadDetailSMS error:', err.message)
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:#ef4444;font-size:13px;">Failed to load messages</div>`
+  }
 }
 
 const loadDetailTasks = async (leadId) => {
