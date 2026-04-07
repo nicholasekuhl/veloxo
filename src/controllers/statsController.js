@@ -111,24 +111,30 @@ const getOverview = async (req, res) => {
       supabase.from('messages').select('id').eq('user_id', userId).eq('direction', 'outbound').gte('sent_at', prevSince.toISOString()).lt('sent_at', since.toISOString()),
       supabase.from('leads').select('id, created_at').eq('user_id', userId),
       supabase.from('campaigns').select('id, status').eq('user_id', userId),
-      supabase.from('messages').select('lead_id').eq('user_id', userId).eq('direction', 'inbound'),
+      supabase.from('messages').select('lead_id, body').eq('user_id', userId).eq('direction', 'inbound').gte('sent_at', since.toISOString()),
     ])
 
     if (leadsError) console.error('Stats leads query error:', leadsError.message)
 
+    const OPT_OUT_WORDS = ['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']
     const totalSent = msgs?.length || 0
     const delivered = msgs?.filter(m => m.status === 'delivered').length || 0
-    const replied = new Set((inboundLeads || []).map(m => m.lead_id)).size
+    const replied = new Set(
+      (inboundLeads || [])
+        .filter(m => !OPT_OUT_WORDS.includes((m.body || '').trim().toLowerCase()))
+        .map(m => m.lead_id)
+    ).size
+    const newLeads = leads?.filter(l => new Date(l.created_at) >= since).length || 0
 
     res.json({
       messages_sent: totalSent,
       messages_sent_prev: prevMsgs?.length || 0,
       delivered,
       delivery_rate: totalSent > 0 ? parseFloat(((delivered / totalSent) * 100).toFixed(1)) : null,
-      new_leads: leads?.filter(l => new Date(l.created_at) >= since).length || 0,
+      new_leads: newLeads,
       total_leads: leads?.length || 0,
       replied_leads: replied,
-      reply_rate: leads?.length > 0 ? parseFloat(((replied / leads.length) * 100).toFixed(1)) : null,
+      reply_rate: newLeads > 0 ? parseFloat(((replied / newLeads) * 100).toFixed(1)) : null,
       active_campaigns: campaigns?.filter(c => c.status === 'active').length || 0,
       total_campaigns: campaigns?.length || 0,
     })

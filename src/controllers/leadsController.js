@@ -918,10 +918,20 @@ const unblockLead = async (req, res) => {
 
 const getOrCreateSoldBucket = async (userId) => {
   const { data: existing } = await supabase
-    .from('buckets').select('id').eq('user_id', userId).eq('is_system', true).single()
+    .from('buckets').select('id').eq('user_id', userId).eq('system_key', 'sold').single()
   if (existing) return existing.id
   const { data: created } = await supabase
-    .from('buckets').insert({ user_id: userId, name: 'Sold', color: '#22c55e', is_system: true })
+    .from('buckets').insert({ user_id: userId, name: 'Sold', color: '#22c55e', is_system: true, system_key: 'sold' })
+    .select('id').single()
+  return created?.id || null
+}
+
+const getOrCreateOptOutBucket = async (userId) => {
+  const { data: existing } = await supabase
+    .from('buckets').select('id').eq('user_id', userId).eq('system_key', 'opted_out').single()
+  if (existing) return existing.id
+  const { data: created } = await supabase
+    .from('buckets').insert({ user_id: userId, name: 'Opted Out', color: '#ef4444', is_system: true, system_key: 'opted_out' })
     .select('id').single()
   return created?.id || null
 }
@@ -1247,9 +1257,11 @@ const pauseDrips = async (req, res) => {
 const optOut = async (req, res) => {
   try {
     const now = new Date().toISOString()
+    const optOutBucketId = await getOrCreateOptOutBucket(req.user.id)
+
     const { data, error } = await supabase
       .from('leads')
-      .update({ opted_out: true, opted_out_at: now, autopilot: false, updated_at: now })
+      .update({ opted_out: true, opted_out_at: now, autopilot: false, updated_at: now, ...(optOutBucketId ? { bucket_id: optOutBucketId } : {}) })
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
       .select()
@@ -1404,4 +1416,4 @@ const riskCheck = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride }
+module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket }

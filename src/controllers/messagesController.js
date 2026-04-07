@@ -3,6 +3,7 @@ const { sendSMS, buildMessageBody, getMasterClient, getNumberForLead } = require
 const { createNotification } = require('../notifications')
 const { spintext } = require('../spintext')
 const { isWithinQuietHours, getNextSendWindow } = require('../compliance')
+const { getOrCreateOptOutBucket } = require('./leadsController')
 
 const isPositiveEngagement = (history) => {
   const recentInbound = history.filter(m => m.role === 'user').slice(-5)
@@ -275,8 +276,9 @@ const processInboundMessage = async (body) => {
 
     if (['STOP', 'STOPALL', 'UNSUBSCRIBE', 'CANCEL', 'END', 'QUIT'].includes(Body.trim().toUpperCase())) {
       const now = new Date().toISOString()
+      const optOutBucketId = await getOrCreateOptOutBucket(userId)
       await supabase.from('leads')
-        .update({ status: 'opted_out', opted_out: true, opted_out_at: now, autopilot: false, updated_at: now })
+        .update({ status: 'opted_out', opted_out: true, opted_out_at: now, autopilot: false, updated_at: now, ...(optOutBucketId ? { bucket_id: optOutBucketId } : {}) })
         .eq('phone', From).eq('user_id', userId)
       const { data: stoppedLead } = await supabase.from('leads').select('id').eq('phone', From).eq('user_id', userId).single()
       if (stoppedLead) {
