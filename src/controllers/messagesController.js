@@ -58,14 +58,11 @@ const sendInitialOutreach = async (req, res) => {
     if (lead.opted_out) return res.status(403).json({ error: 'Lead has opted out. Message not sent.' })
     if (lead.status !== 'new') return res.status(400).json({ error: 'Lead has already been contacted' })
 
-    let { data: conversation } = await supabase
-      .from('conversations').select('*').eq('lead_id', leadId).single()
-    if (!conversation) {
-      const { data: newConv, error: newConvError } = await supabase
-        .from('conversations').insert({ lead_id: leadId, status: 'active', user_id: req.user.id }).select().single()
-      if (newConvError) throw newConvError
-      conversation = newConv
-    }
+    const { data: conversation, error: convError } = await supabase
+      .from('conversations')
+      .upsert({ lead_id: leadId, user_id: req.user.id, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+      .select('*').single()
+    if (convError) throw convError
 
     const fromNumber = await getNumberForLead(req.user.id, lead.state)
     const rawBody = getInitialMessage(lead)
@@ -301,15 +298,10 @@ const processInboundMessage = async (body) => {
 
     // Blocked leads: log message but never respond
     if (lead.is_blocked) {
-      let { data: blockedConv } = await supabase
-        .from('conversations').select('id').eq('lead_id', lead.id).eq('user_id', userId).single()
-      if (!blockedConv) {
-        const { data: newConv } = await supabase
-          .from('conversations')
-          .insert({ lead_id: lead.id, status: 'active', user_id: userId })
-          .select('id').single()
-        blockedConv = newConv
-      }
+      const { data: blockedConv } = await supabase
+        .from('conversations')
+        .upsert({ lead_id: lead.id, user_id: userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+        .select('id').single()
       if (blockedConv) {
         await supabase.from('messages').insert({
           conversation_id: blockedConv.id,
@@ -348,16 +340,10 @@ const processInboundMessage = async (body) => {
       console.log(`Campaign enrollments processed on reply for lead: ${lead.id} (${activeEnrollments.length} enrollment(s))`)
     }
 
-    let { data: conversation } = await supabase
-      .from('conversations').select('*').eq('lead_id', lead.id).eq('user_id', userId).single()
-
-    if (!conversation) {
-      const { data: newConv } = await supabase
-        .from('conversations')
-        .insert({ lead_id: lead.id, status: 'active', user_id: userId })
-        .select().single()
-      conversation = newConv
-    }
+    const { data: conversation } = await supabase
+      .from('conversations')
+      .upsert({ lead_id: lead.id, user_id: userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+      .select('*').single()
 
     // Reset consecutive followups — lead responded
     if (conversation.consecutive_followups > 0) {

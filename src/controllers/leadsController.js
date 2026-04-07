@@ -467,19 +467,10 @@ const uploadLeads = async (req, res) => {
               onSuccess: async (job) => {
                 const sentAt = new Date().toISOString()
 
-                let { data: conv } = await supabase
+                const { data: conv } = await supabase
                   .from('conversations')
-                  .select('id')
-                  .eq('lead_id', job.leadId)
-                  .single()
-
-                if (!conv) {
-                  const { data: newConv } = await supabase
-                    .from('conversations')
-                    .insert({ lead_id: job.leadId, status: 'active', user_id: job.userId })
-                    .select('id').single()
-                  conv = newConv
-                }
+                  .upsert({ lead_id: job.leadId, user_id: job.userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+                  .select('id').single()
 
                 if (conv?.id) {
                   await supabase.from('messages').insert({

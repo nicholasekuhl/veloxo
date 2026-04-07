@@ -426,16 +426,11 @@ const processQuickFollowups = async () => {
         onSuccess: async (job) => {
           const sentAt = new Date().toISOString()
 
-          // Ensure conversation exists — null guard before reading .id
-          let conversation = conv
-          if (!conversation) {
-            const { data: newConv } = await supabase
-              .from('conversations')
-              .insert({ lead_id: job.leadId, status: 'active', user_id: job.userId })
-              .select().single()
-            conversation = newConv
-          }
-          if (!conversation || !conversation.id) {
+          const { data: conversation } = await supabase
+            .from('conversations')
+            .upsert({ lead_id: job.leadId, user_id: job.userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+            .select('id').single()
+          if (!conversation?.id) {
             console.error(`[quickFollowups] No conversation for lead ${job.leadId} — skipping DB log`)
             return
           }
@@ -696,19 +691,10 @@ const processScheduledMessages = async () => {
         onSuccess: async (job) => {
           const sentAt = new Date().toISOString()
 
-          let { data: conversation } = await supabase
+          const { data: conversation } = await supabase
             .from('conversations')
-            .select('*')
-            .eq('lead_id', job.leadId)
-            .single()
-
-          if (!conversation) {
-            const { data: newConv } = await supabase
-              .from('conversations')
-              .insert({ lead_id: job.leadId, status: 'active', user_id: job.userId })
-              .select().single()
-            conversation = newConv
-          }
+            .upsert({ lead_id: job.leadId, user_id: job.userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+            .select('*').single()
 
           if (!conversation?.id) {
             console.error(`[scheduler] No conversation for lead ${job.leadId} — skipping DB log`)

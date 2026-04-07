@@ -273,6 +273,7 @@
       convHasMore = newConvs.length === 50
       const existingIds = new Set(allConversations.map(c => c.id))
       newConvs.filter(c => !existingIds.has(c.id)).forEach(c => allConversations.push(c))
+      allConversations.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       console.log(`[scroll] loaded page ${convPage}, total: ${allConversations.length}, hasMore: ${convHasMore}`)
       filterConversations(document.getElementById('conv3-search')?.value || '')
     } catch (err) { console.error('loadMoreConversations error:', err) }
@@ -282,7 +283,9 @@
   const searchConversations = async (query) => {
     if (!query.trim()) {
       isSearchMode = false
-      filterConversations('')
+      convPage = 1
+      allConversations = []
+      loadMoreConversations()
       return
     }
     isSearchMode = true
@@ -806,6 +809,16 @@
     el.textContent = secs < 5 ? 'Updated just now' : `Updated ${secs}s ago`
   }
 
+  const bringConvToTop = (convId) => {
+    const list = document.getElementById('conv3-list')
+    const item = list?.querySelector('[data-conv-id="' + convId + '"]')
+    if (item && list && list.firstChild !== item) {
+      list.insertBefore(item, list.firstChild)
+      const timeEl = item.querySelector('[class*="time"], .conv3-time')
+      if (timeEl) timeEl.textContent = 'Just now'
+    }
+  }
+
   const pollMessages = async () => {
     if (!activeConvId || document.hidden || convSubTab === 'scheduled') return
     try {
@@ -833,6 +846,7 @@
           existingConv.last_message = allMsgs[allMsgs.length - 1] || null
           filterConversations(document.getElementById('conv3-search')?.value || '')
         }
+        bringConvToTop(activeConvId)
       }
       lastUpdatedTime = Date.now()
       updateLastUpdatedLabel()
@@ -1017,7 +1031,7 @@
     try {
       const res = await fetch('/messages/send-manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId, body }) })
       const data = await res.json()
-      if (data.success) { input.value = ''; updateConvCharCount(input); const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'; openConversation(convId) }
+      if (data.success) { input.value = ''; updateConvCharCount(input); const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'; bringConvToTop(convId); openConversation(convId) }
       else toast.error('Send failed', data.error || 'Could not send message')
     } catch (err) { toast.error('Error', 'Something went wrong') }
   }
