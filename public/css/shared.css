@@ -343,7 +343,7 @@ input:checked + .toggle-slider:before { transform: translateX(18px); }
    ============================================= */
 .conv3-layout { display: flex; height: calc(100vh - 48px); background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-default); overflow: hidden; box-shadow: var(--shadow-xs); }
 /* LEFT PANEL */
-.conv3-left { width: 280px; border-right: 1px solid var(--border-default); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow: hidden; }
+.conv3-left { width: 280px; border-right: 1px solid var(--border-default); display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; overflow: hidden; min-height: 0; }
 .conv3-left-header { padding: 14px 14px 0; border-bottom: 1px solid var(--border-default); }
 .conv3-left-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .conv3-left-title-row h2 { font-size: 15px; font-weight: 600; }
@@ -361,7 +361,7 @@ input:checked + .toggle-slider:before { transform: translateX(18px); }
 .conv3-filter-row:last-child { margin-bottom: 0; }
 .conv3-filter-label { font-size: 12px; color: var(--gray-500); font-weight: 500; }
 .conv3-filter-select { width: 100%; padding: 6px 10px; border: 1px solid var(--border-default); border-radius: var(--radius-sm); font-size: 12px; outline: none; background: white; margin-top: 4px; }
-.conv3-list { flex: 1; overflow-y: auto; }
+.conv3-list { flex: 1; overflow-y: auto; min-height: 0; }
 /* Sidebar items */
 .conv3-item { padding: 11px 14px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.12s; display: flex; align-items: flex-start; gap: 10px; position: relative; border-left: 3px solid transparent; }
 .conv3-item:hover { background: var(--gray-50); }
