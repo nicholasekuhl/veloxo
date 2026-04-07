@@ -316,9 +316,26 @@
       <input type="file" id="modal-file-input" accept=".csv,.xlsx,.xls">
       <div class="form-group">
         <label>Assign to Bucket (optional)</label>
-        <select id="import-bucket-id">
+        <select id="import-bucket-id" onchange="onBucketSelectChange(this)">
           <option value="">No bucket</option>
         </select>
+        <div id="new-bucket-form" style="display:none;margin-top:10px;padding:12px;background:var(--gray-50);border:1px solid var(--color-border);border-radius:var(--radius-md);">
+          <div style="margin-bottom:8px;">
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Bucket Name</label>
+            <input type="text" id="new-bucket-name" placeholder="New Leads" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;outline:none;">
+          </div>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Color</label>
+            <div id="new-bucket-colors" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            <input type="hidden" id="new-bucket-color" value="#6366f1">
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Parent Folder (optional)</label>
+            <select id="new-bucket-parent" style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;">
+              <option value="">No folder</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="form-group">
         <label>Assign to Campaign (optional)</label>

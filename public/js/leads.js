@@ -132,20 +132,37 @@ const toggleFolderCollapse = (folderId, e) => {
   renderBucketPills()
 }
 
+const renderBucketPill = (b, extraStyle = '') => {
+  const count = allLeads.filter(l => l.bucket_id === b.id).length
+  const isActive = activeBucket === b.id
+  const bucketColor = b.color
+  const bg = isActive ? bucketColor : bucketColor + '18'
+  const color = isActive ? 'white' : bucketColor
+  const border = isActive ? bucketColor : bucketColor + '40'
+  const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
+  if (b.is_system) {
+    return `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};${extraStyle}" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+  }
+  return `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};${extraStyle}" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+}
+
 const renderBucketPills = () => {
   const container = document.getElementById('bucket-tabs')
   if (!container) return
 
-  const folders = allBuckets.filter(b => b.is_folder)
-  const topLevel = allBuckets.filter(b => !b.is_folder && !b.parent_id)
+  // Only non-archived (allBuckets already excludes archived via API)
+  const depth0Folders = allBuckets.filter(b => b.is_folder && !b.parent_id)
+  const depth1Folders = allBuckets.filter(b => b.is_folder && b.parent_id)
+  const topBuckets = allBuckets.filter(b => !b.is_folder && !b.parent_id)
 
   let html = `<div class="bucket-tab${activeBucket === '' && activeFolderId === '' ? ' active' : ''}" onclick="selectBucket('')">All Leads <span class="count">${allLeads.length}</span></div>`
 
-  // Render folders with their child buckets
-  for (const folder of folders) {
-    const childBuckets = allBuckets.filter(b => b.parent_id === folder.id)
+  // Render depth-0 folders with sub-folders and buckets
+  for (const folder of depth0Folders) {
     const isCollapsed = collapsedFolders[folder.id]
     const chevron = isCollapsed ? '▶' : '▼'
+    const directBuckets = allBuckets.filter(b => !b.is_folder && b.parent_id === folder.id)
+    const subFolders = depth1Folders.filter(s => s.parent_id === folder.id)
 
     html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
       <div class="bucket-tab" style="background:#f1f5f9;color:#374151;border-color:#e2e8f0;" onclick="toggleFolderCollapse('${folder.id}',event)">
@@ -153,34 +170,33 @@ const renderBucketPills = () => {
       </div>`
 
     if (!isCollapsed) {
-      for (const b of childBuckets) {
-        const count = allLeads.filter(l => l.bucket_id === b.id).length
-        const isActive = activeBucket === b.id
-        const bucketColor = b.color
-        const bg = isActive ? bucketColor : bucketColor + '18'
-        const color = isActive ? 'white' : bucketColor
-        const border = isActive ? bucketColor : bucketColor + '40'
-        const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
-        html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};margin-left:4px;" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+      // Direct child buckets (depth 1 buckets)
+      for (const b of directBuckets) {
+        html += renderBucketPill(b, 'margin-left:4px;')
+      }
+      // Sub-folders (depth 1 folders)
+      for (const sub of subFolders) {
+        const subCollapsed = collapsedFolders[sub.id]
+        const subChevron = subCollapsed ? '▶' : '▼'
+        const subBuckets = allBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
+        html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:6px;">
+          <div class="bucket-tab" style="background:#f8fafc;color:#374151;border-color:#e2e8f0;font-size:11px;" onclick="toggleFolderCollapse('${sub.id}',event)">
+            📁 ${sub.name} <span style="font-size:9px;margin-left:4px;opacity:0.6;">${subChevron}</span>
+          </div>`
+        if (!subCollapsed) {
+          for (const b of subBuckets) {
+            html += renderBucketPill(b, 'margin-left:4px;font-size:11px;')
+          }
+        }
+        html += `</div>`
       }
     }
     html += `</div>`
   }
 
   // Render top-level buckets (no folder)
-  for (const b of topLevel) {
-    const count = allLeads.filter(l => l.bucket_id === b.id).length
-    const isActive = activeBucket === b.id
-    const bucketColor = b.is_system ? '#22c55e' : b.color
-    const bg = isActive ? bucketColor : bucketColor + '18'
-    const color = isActive ? 'white' : bucketColor
-    const border = isActive ? bucketColor : bucketColor + '40'
-    const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
-    if (b.is_system) {
-      html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
-    } else {
-      html += `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">📁 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
-    }
+  for (const b of topBuckets) {
+    html += renderBucketPill(b)
   }
   container.innerHTML = html
 
@@ -1522,12 +1538,62 @@ const advanceToRiskPreview = async () => {
   }
 }
 
+const BUCKET_PALETTE = ['#6366f1','#3b82f6','#0ea5e9','#8b5cf6','#f59e0b','#10b981','#22c55e','#ef4444','#f97316','#ec4899']
+
+const onBucketSelectChange = (sel) => {
+  const form = document.getElementById('new-bucket-form')
+  if (!form) return
+  form.style.display = sel.value === '__new__' ? '' : 'none'
+}
+
+const selectNewBucketColor = (color, el) => {
+  document.getElementById('new-bucket-color').value = color
+  document.querySelectorAll('#new-bucket-colors span').forEach(s => s.style.borderColor = 'transparent')
+  el.style.borderColor = '#000'
+}
+
 const openUploadModal = () => {
   importFile = null; importHeaders = []; importPreview = []
   document.getElementById('modal-file-name').textContent = ''
   const bucketSelect = document.getElementById('import-bucket-id')
   if (bucketSelect) {
-    bucketSelect.innerHTML = '<option value="">No bucket</option>' + allBuckets.map(b => `<option value="${b.id}">${b.name}</option>`).join('')
+    const folders = allBuckets.filter(b => b.is_folder && !b.parent_id)
+    const subFolders = allBuckets.filter(b => b.is_folder && b.parent_id)
+    const topBuckets = allBuckets.filter(b => !b.is_folder && !b.parent_id)
+    const buildOptions = (buckets, prefix = '') => buckets.map(b => `<option value="${b.id}">${prefix}${b.name}</option>`).join('')
+    let opts = '<option value="">No bucket</option>'
+    for (const folder of folders) {
+      opts += `<option disabled style="font-weight:700;color:#6b7280;">📂 ${folder.name}</option>`
+      const subs = subFolders.filter(s => s.parent_id === folder.id)
+      for (const sub of subs) {
+        opts += `<option disabled style="font-weight:600;color:#6b7280;padding-left:12px;">  └ ${sub.name}</option>`
+        const children = allBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
+        opts += buildOptions(children, '      · ')
+      }
+      const directChildren = allBuckets.filter(b => !b.is_folder && b.parent_id === folder.id)
+      opts += buildOptions(directChildren, '   · ')
+    }
+    opts += buildOptions(topBuckets)
+    opts += '<option value="__new__">+ Create new bucket...</option>'
+    bucketSelect.innerHTML = opts
+    // Hide new-bucket-form in case it was open
+    const newForm = document.getElementById('new-bucket-form')
+    if (newForm) newForm.style.display = 'none'
+    // Populate color swatches
+    const colorContainer = document.getElementById('new-bucket-colors')
+    const colorInput = document.getElementById('new-bucket-color')
+    if (colorContainer && colorInput) {
+      colorInput.value = '#6366f1'
+      colorContainer.innerHTML = BUCKET_PALETTE.map(c => `<span onclick="selectNewBucketColor('${c}',this)" style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c === '#6366f1' ? '#000' : 'transparent'};"></span>`).join('')
+    }
+    // Populate parent folder select (depth-0 folders only)
+    const parentSelect = document.getElementById('new-bucket-parent')
+    if (parentSelect) {
+      parentSelect.innerHTML = '<option value="">No folder</option>' + folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('')
+    }
+    // Default name = today's date
+    const nameInput = document.getElementById('new-bucket-name')
+    if (nameInput) nameInput.value = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
   document.getElementById('import-autopilot').checked = false
   document.getElementById('step1-status-bar').className = 'status-bar'
@@ -1578,7 +1644,29 @@ const submitImport = async (riskFilter = 'all') => {
   const columnMap = {}
   document.querySelectorAll('.map-select').forEach(sel => { if (sel.value) columnMap[sel.dataset.field] = sel.value })
   if (!columnMap.phone) return showImportStatus('Please map the Phone column — it is required', 'error')
-  const bucketId = document.getElementById('import-bucket-id')?.value || ''
+  let bucketId = document.getElementById('import-bucket-id')?.value || ''
+
+  // Create new bucket inline if selected
+  if (bucketId === '__new__') {
+    const name = document.getElementById('new-bucket-name')?.value.trim()
+    const color = document.getElementById('new-bucket-color')?.value || '#6366f1'
+    const parentId = document.getElementById('new-bucket-parent')?.value || null
+    if (!name) return showImportStatus('Please enter a name for the new bucket', 'error')
+    const riskStatusEl = document.getElementById('risk-status-bar')
+    riskStatusEl.className = 'status-bar loading'
+    riskStatusEl.textContent = 'Creating bucket...'
+    try {
+      const bRes = await fetch('/buckets', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, color, parent_id: parentId || null }) })
+      const bData = await bRes.json()
+      if (!bRes.ok) return showImportStatus(bData.error || 'Failed to create bucket', 'error')
+      bucketId = bData.bucket.id
+      allBuckets.push(bData.bucket)
+      _bucketsCache = null
+    } catch (e) {
+      return showImportStatus('Failed to create bucket: ' + e.message, 'error')
+    }
+  }
+
   const autopilot = document.getElementById('import-autopilot').checked
   const campaignId = document.getElementById('import-campaign').value
   const formData = new FormData()
