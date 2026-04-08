@@ -810,8 +810,15 @@ const loadLeads = async () => {
 const loadMoreLeads = async () => {
   if (isLoadingLeads || !hasMoreLeads) return
   isLoadingLeads = true
-  const btn = document.getElementById('load-more-btn')
-  if (btn) btn.textContent = 'Loading...'
+  let spinner = document.getElementById('scroll-spinner')
+  if (!spinner) {
+    spinner = document.createElement('div')
+    spinner.id = 'scroll-spinner'
+    spinner.style.cssText = 'text-align:center;padding:20px;color:#9ca3af;font-size:13px;'
+    spinner.textContent = 'Loading...'
+    document.getElementById('leads-grid')?.after(spinner)
+  }
+  spinner.style.display = 'block'
   try {
     currentLeadsPage++
     const res = await fetch(`/leads?page=${currentLeadsPage}&limit=${LEADS_PER_PAGE}`)
@@ -833,23 +840,15 @@ const loadMoreLeads = async () => {
     currentLeadsPage--
   } finally {
     isLoadingLeads = false
+    const sp = document.getElementById('scroll-spinner')
+    if (sp) sp.style.display = 'none'
   }
 }
 
 const renderLoadMoreButton = () => {
-  let btn = document.getElementById('load-more-btn')
-  if (!btn) {
-    const wrapper = document.createElement('div')
-    wrapper.id = 'load-more-wrapper'
-    wrapper.style.cssText = 'text-align:center;padding:16px 0;'
-    wrapper.innerHTML = '<button id="load-more-btn" class="btn btn-secondary" style="width:auto;padding:8px 24px;" onclick="loadMoreLeads()">Load More Leads</button>'
-    const grid = document.getElementById('leads-grid')
-    if (grid && grid.parentNode) grid.parentNode.insertBefore(wrapper, grid.nextSibling)
-    btn = document.getElementById('load-more-btn')
-  }
+  // Button hidden — infinite scroll handles loading
   const wrapper = document.getElementById('load-more-wrapper')
-  if (wrapper) wrapper.style.display = hasMoreLeads ? 'block' : 'none'
-  if (btn && hasMoreLeads) btn.textContent = `Load More Leads (${totalLeads - allLeads.length} remaining)`
+  if (wrapper) wrapper.style.display = 'none'
 }
 
 const updateCampaignFilter = () => {
@@ -2760,5 +2759,24 @@ const init = async () => {
   loadNotifBadge()
   setInterval(loadNotifBadge, 30000)
 }
+
+function debounceScroll(fn, delay) {
+  let timer
+  return function (...args) {
+    clearTimeout(timer)
+    timer = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
+
+window.addEventListener('scroll', debounceScroll(() => {
+  if (isLoadingLeads || !hasMoreLeads) return
+  if (isSearchActive || activeBucket || activeFolderId) return
+  const scrollTop = window.scrollY || document.documentElement.scrollTop
+  const windowHeight = window.innerHeight
+  const docHeight = document.documentElement.scrollHeight
+  if (docHeight - scrollTop - windowHeight < 400) {
+    loadMoreLeads()
+  }
+}, 150))
 
 document.addEventListener('DOMContentLoaded', init)
