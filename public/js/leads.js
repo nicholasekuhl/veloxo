@@ -214,15 +214,16 @@ const getFolderCount = (folderId, buckets) => {
 const renderBucketPill = (b, extraStyle = '') => {
   const count = b.lead_count || 0
   const isActive = activeBucket === b.id
-  const bucketColor = b.color
-  const bg = isActive ? bucketColor : bucketColor + '18'
-  const color = isActive ? 'white' : bucketColor
-  const border = isActive ? bucketColor : bucketColor + '40'
+  const c = b.color || '#6366f1'
+  const bg = isActive ? c : 'transparent'
+  const color = isActive ? '#fff' : c
+  const border = c
   const safeName = b.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')
+  const baseStyle = `background:${bg};color:${color};border-color:${border};${extraStyle}`
   if (b.is_system) {
-    return `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};${extraStyle}" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+    return `<button class="bucket-tab" data-bucket-id="${b.id}" style="${baseStyle}" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name}<span style="opacity:0.8;font-size:11px;margin-left:4px;">${count}</span></button>`
   }
-  return `<div class="bucket-tab" data-bucket-id="${b.id}" style="background:${bg};color:${color};border-color:${border};${extraStyle}" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">${b.name} <span class="count" style="opacity:0.8">${count}</span></div>`
+  return `<button class="bucket-tab" data-bucket-id="${b.id}" style="${baseStyle}" onclick="selectBucket('${b.id}')" oncontextmenu="showBucketContextMenu(event,'${b.id}','${safeName}','${b.color}')" title="Right-click to rename or delete">${b.name}<span style="opacity:0.8;font-size:11px;margin-left:4px;">${count}</span></button>`
 }
 
 const renderBucketPills = () => {
@@ -245,9 +246,10 @@ const renderBucketPills = () => {
     const folderCount = getFolderCount(folder.id, allBuckets)
 
     html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
-      <div class="bucket-tab" style="background:#f1f5f9;color:#374151;border-color:#e2e8f0;" onclick="toggleFolderCollapse('${folder.id}',event)">
-        📂 ${folder.name} <span class="count" style="opacity:0.7;margin-left:2px;">${folderCount}</span> <span style="font-size:9px;margin-left:2px;opacity:0.5;">${chevron}</span>
-      </div>`
+      <button class="bucket-tab" style="color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${folder.id}',event)">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
+        ${folder.name}<span style="opacity:0.7;font-size:11px;margin-left:2px;">${folderCount}</span><span style="font-size:10px;opacity:0.5;margin-left:2px;">${chevron}</span>
+      </button>`
 
     if (!isCollapsed) {
       // Direct child buckets (depth 1 buckets)
@@ -261,9 +263,10 @@ const renderBucketPills = () => {
         const subBuckets = allBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
         const subCount = getFolderCount(sub.id, allBuckets)
         html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:6px;">
-          <div class="bucket-tab" style="background:#f8fafc;color:#374151;border-color:#e2e8f0;font-size:11px;" onclick="toggleFolderCollapse('${sub.id}',event)">
-            📁 ${sub.name} <span class="count" style="opacity:0.7;margin-left:2px;">${subCount}</span> <span style="font-size:9px;margin-left:2px;opacity:0.5;">${subChevron}</span>
-          </div>`
+          <button class="bucket-tab" style="font-size:11px;color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${sub.id}',event)">
+            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
+            ${sub.name}<span style="opacity:0.7;font-size:10px;margin-left:2px;">${subCount}</span><span style="font-size:9px;opacity:0.5;margin-left:2px;">${subChevron}</span>
+          </button>`
         if (!subCollapsed) {
           for (const b of subBuckets) {
             html += renderBucketPill(b, 'margin-left:4px;font-size:11px;')

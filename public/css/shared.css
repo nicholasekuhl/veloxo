@@ -324,12 +324,13 @@ a.sidebar-logo:hover { opacity: 0.85; }
    ============================================= */
 .bucket-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
 .bucket-tab {
-  padding: 5px 14px; border-radius: var(--radius-full); font-size: 13px; font-weight: 500;
-  cursor: pointer; border: 1px solid var(--border-default); background: var(--bg-card);
-  color: var(--gray-500); transition: all 0.14s; white-space: nowrap;
+  padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border-default); background: transparent;
+  color: var(--color-text-secondary); transition: all 0.15s; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
 }
 .bucket-tab.active { background: var(--indigo-500); color: white; border-color: var(--indigo-500); }
-.bucket-tab:hover:not(.active) { background: var(--gray-50); color: var(--gray-700); border-color: var(--gray-200); }
+.bucket-tab:hover { opacity: 0.85; transform: scale(1.02); }
 .bucket-tab .count { font-size: 11px; opacity: 0.7; margin-left: 4px; }
 
 /* =============================================
