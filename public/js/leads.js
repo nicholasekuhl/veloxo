@@ -2210,24 +2210,15 @@ const loadDetailSMS = async (leadId) => {
   const list = document.getElementById('detail-sms-list')
   if (!list) return
 
-  list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading messages...</div>`
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
 
   try {
-    const convRes = await fetch('/conversations?lead_id=' + leadId + '&limit=1')
-    const convData = await convRes.json()
-    const conv = convData.conversations?.[0]
-
-    if (!conv) {
-      list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>`
-      return
-    }
-
-    const msgRes = await fetch('/conversations/' + conv.id + '/messages')
-    const msgData = await msgRes.json()
-    const messages = msgData.messages || []
+    const res = await fetch('/messages?lead_id=' + leadId + '&limit=100')
+    const data = await res.json()
+    const messages = data.messages || []
 
     if (messages.length === 0) {
-      list.innerHTML = `<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>`
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>'
       return
     }
 
@@ -2237,18 +2228,17 @@ const loadDetailSMS = async (leadId) => {
         month: 'short', day: 'numeric',
         hour: 'numeric', minute: '2-digit', hour12: true
       })
-      return `<div style="display:flex;justify-content:${isOut ? 'flex-end' : 'flex-start'};margin-bottom:8px;padding:0 4px;">
-        <div style="max-width:80%;background:${isOut ? '#6366f1' : '#f3f4f6'};color:${isOut ? 'white' : '#374151'};padding:8px 12px;border-radius:${isOut ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};font-size:13px;line-height:1.5;">
-          ${m.body}
-          <div style="font-size:10px;opacity:0.65;margin-top:3px;text-align:right;">${time}${m.is_ai ? ' · AI' : ''}</div>
-        </div>
-      </div>`
+      return '<div style="display:flex;justify-content:' + (isOut ? 'flex-end' : 'flex-start') + ';margin-bottom:8px;padding:0 4px;">' +
+        '<div style="max-width:80%;background:' + (isOut ? '#6366f1' : 'var(--gray-100,#f3f4f6)') + ';color:' + (isOut ? 'white' : 'var(--color-text-primary,#374151)') + ';padding:8px 12px;border-radius:' + (isOut ? '12px 12px 2px 12px' : '12px 12px 12px 2px') + ';font-size:13px;line-height:1.5;">' +
+        m.body +
+        '<div style="font-size:10px;opacity:0.65;margin-top:3px;text-align:right;">' + time + (m.is_ai ? ' · AI' : '') + '</div>' +
+        '</div></div>'
     }).join('')
 
     list.scrollTop = list.scrollHeight
   } catch (err) {
-    console.error('loadDetailSMS error:', err.message)
-    list.innerHTML = `<div style="padding:20px;text-align:center;color:#ef4444;font-size:13px;">Failed to load messages</div>`
+    console.error('loadDetailSMS:', err)
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:#ef4444;font-size:13px;">Failed to load messages</div>'
   }
 }
 

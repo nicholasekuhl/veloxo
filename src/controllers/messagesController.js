@@ -1042,4 +1042,33 @@ const handleStatusCallback = async (req, res) => {
   }
 }
 
-module.exports = { sendInitialOutreach, handleIncomingMessage, sendManualMessage, suggestReply, handleStatusCallback, isPositiveEngagement }
+const getMessagesByLead = async (req, res) => {
+  try {
+    const { lead_id, limit = 100 } = req.query
+    if (!lead_id) return res.status(400).json({ error: 'lead_id required' })
+
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('lead_id', lead_id)
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (!conv) return res.json({ messages: [] })
+
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('id, body, direction, sent_at, is_ai, status')
+      .eq('conversation_id', conv.id)
+      .order('sent_at', { ascending: true })
+      .limit(parseInt(limit))
+
+    res.json({ messages: messages || [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { sendInitialOutreach, handleIncomingMessage, sendManualMessage, suggestReply, handleStatusCallback, isPositiveEngagement, getMessagesByLead }
