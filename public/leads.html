@@ -164,10 +164,10 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding-left:2px;">
     <div style="font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;">BUCKETS</div>
     <div style="position:relative;" id="new-bucket-dropdown-wrap">
-      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 6px;border-radius:6px;font-weight:500;">+ New</button>
-      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card);border:1px solid var(--border-default);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:150px;z-index:200;overflow:hidden;padding:4px 0;">
-        <button onclick="openNewBucketModal();closeNewBucketDropdown()" style="display:block;width:100%;text-align:left;padding:9px 14px;font-size:13px;color:var(--color-text-primary,#374151);background:none;border:none;cursor:pointer;font-family:inherit;" onmouseenter="this.style.background='var(--gray-100,#f3f4f6)'" onmouseleave="this.style.background='none'">🏷 New Bucket</button>
-        <button onclick="openNewFolderModal();closeNewBucketDropdown()" style="display:block;width:100%;text-align:left;padding:9px 14px;font-size:13px;color:var(--color-text-primary,#374151);background:none;border:none;cursor:pointer;font-family:inherit;" onmouseenter="this.style.background='var(--gray-100,#f3f4f6)'" onmouseleave="this.style.background='none'">📁 New Folder</button>
+      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 8px;border-radius:6px;font-weight:500;font-family:inherit;">+ New ▾</button>
+      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card,white);border:1px solid var(--border-default,#e5e7eb);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:160px;z-index:500;padding:6px 0;overflow:hidden;">
+        <button onclick="closeNewBucketDropdown();openNewBucketModal()" class="new-dd-item">🏷 New Bucket</button>
+        <button onclick="closeNewBucketDropdown();openNewFolderModal()" class="new-dd-item">📁 New Folder</button>
       </div>
     </div>
   </div>

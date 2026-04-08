@@ -2778,7 +2778,10 @@ function closeNewBucketDropdown() {
   if (dd) dd.style.display = 'none'
 }
 
-document.addEventListener('click', () => closeNewBucketDropdown())
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('new-bucket-dropdown-wrap')
+  if (wrap && !wrap.contains(e.target)) closeNewBucketDropdown()
+})
 
 function openNewFolderModal() {
   window._creatingFolder = true
