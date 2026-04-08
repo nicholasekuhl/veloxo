@@ -5,7 +5,8 @@ const crypto = require('crypto')
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax'
+  sameSite: 'lax',
+  path: '/'
 }
 
 const getMailer = () => nodemailer.createTransport({
@@ -43,8 +44,8 @@ const login = async (req, res) => {
 }
 
 const logout = async (req, res) => {
-  res.clearCookie('session')
-  res.clearCookie('refresh')
+  res.clearCookie('session', { path: '/' })
+  res.clearCookie('refresh', { path: '/' })
   res.json({ success: true })
 }
 

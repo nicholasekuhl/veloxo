@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken')
 const COOKIE_OPTS = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax'
+  sameSite: 'lax',
+  path: '/'
 }
 
 const tryRefresh = async (refreshToken, res) => {
@@ -83,8 +84,8 @@ const authMiddleware = async (req, res, next) => {
       return res.status(403).json({ error: 'tos_required' })
     }
     if (profile.is_suspended) {
-      res.clearCookie('session')
-      res.clearCookie('refresh')
+      res.clearCookie('session', { path: '/' })
+      res.clearCookie('refresh', { path: '/' })
       return res.status(403).json({ error: 'suspended', message: 'Your account has been suspended. Contact support for assistance.' })
     }
 
