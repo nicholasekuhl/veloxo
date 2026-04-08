@@ -140,14 +140,24 @@ const patchBucket = async (req, res) => {
 
     // ── Normal field update ────────────────────────────────────────────────────
     if (existing.is_system) return res.status(403).json({ error: 'Cannot modify a system bucket' })
-    const { name, color, parent_id, sort_order } = req.body
+    const { name, color, parent_id, sort_order, depth } = req.body
     const updates = {}
     if (name !== undefined) updates.name = name.trim()
     if (color !== undefined) {
       if (!HEX_RE.test(color)) return res.status(400).json({ error: 'Invalid color' })
       updates.color = color
     }
-    if (parent_id !== undefined) updates.parent_id = parent_id || null
+    if (parent_id !== undefined) {
+      updates.parent_id = parent_id || null
+      if (parent_id) {
+        const { data: parent } = await supabase.from('buckets').select('depth').eq('id', parent_id).single()
+        updates.depth = (parent?.depth || 0) + 1
+      } else {
+        updates.depth = 0
+      }
+    } else if (depth !== undefined) {
+      updates.depth = depth
+    }
     if (sort_order !== undefined) updates.sort_order = sort_order
     const { data, error } = await supabase
       .from('buckets').update(updates).eq('id', req.params.id).eq('user_id', req.user.id)

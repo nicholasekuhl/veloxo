@@ -14,10 +14,14 @@
     .buckets-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; color:var(--color-text-secondary); font-size:14px; gap:8px; }
 
     /* ── Folder rows ── */
-    .tree-folder { display:flex; align-items:center; gap:6px; padding:7px 10px; cursor:pointer; border-radius:var(--radius-sm); font-size:13px; font-weight:600; color:#374151; transition:background 0.12s; user-select:none; margin-bottom:1px; }
+    .tree-folder { display:flex; align-items:center; gap:6px; padding:7px 10px; cursor:pointer; border-radius:var(--radius-sm); font-size:14px; font-weight:700; color:#374151; transition:background 0.12s; user-select:none; margin-bottom:1px; }
     .tree-folder:hover { background:#e9ecef; }
     .tree-folder.selected { background:var(--color-primary-light); color:var(--color-primary); }
     .tree-folder.drag-over { outline:2px dashed #6366f1; background:#eef2ff; }
+    .tree-folder.dragging { opacity:0.45; }
+    .tree-folder.depth-1 { padding-left:16px; font-weight:600; font-size:13px; }
+    .tree-folder[draggable="true"] { cursor:grab; }
+    .tree-folder[draggable="true"]:active { cursor:grabbing; }
     .tree-chevron { font-size:10px; color:#9ca3af; transition:transform 0.15s; flex-shrink:0; display:inline-block; width:10px; }
     .tree-chevron.open { transform:rotate(90deg); }
     .folder-badge { background:#e5e7eb; color:#6b7280; border-radius:20px; padding:1px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
@@ -25,6 +29,8 @@
     /* ── Bucket rows ── */
     .tree-bucket { display:flex; align-items:center; gap:7px; padding:6px 10px 6px 22px; cursor:pointer; border-radius:var(--radius-sm); font-size:13px; color:#374151; transition:background 0.12s; user-select:none; margin-bottom:1px; }
     .tree-bucket.toplevel { padding-left:10px; }
+    .tree-bucket.depth-1 { padding-left:22px; }
+    .tree-bucket.depth-2 { padding-left:32px; }
     .tree-bucket:hover { background:#f1f5f9; }
     .tree-bucket:hover .drag-handle { opacity:1; }
     .tree-bucket.selected { background:var(--color-primary-light); color:var(--color-primary); }
@@ -33,6 +39,26 @@
     .bucket-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .tree-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tree-lead-count { font-size:11px; color:#9ca3af; flex-shrink:0; white-space:nowrap; }
+
+    /* ── Archive section ── */
+    .archive-section { border-top:1px solid var(--color-border); flex-shrink:0; }
+    .archive-toggle { display:flex; align-items:center; gap:6px; padding:9px 12px; cursor:pointer; font-size:12px; font-weight:600; color:var(--color-text-secondary); user-select:none; transition:background 0.12s; }
+    .archive-toggle:hover { background:#f1f5f9; }
+    .archive-toggle-chevron { font-size:9px; margin-left:auto; transition:transform 0.15s; }
+    .archive-toggle-chevron.open { transform:rotate(90deg); }
+    .archive-list { padding:4px 8px 8px; max-height:220px; overflow-y:auto; }
+    .archive-item { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:var(--radius-sm); font-size:12px; color:#9ca3af; }
+    .archive-item-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .archive-restore-btn { font-size:11px; color:var(--color-primary); background:none; border:none; cursor:pointer; padding:1px 4px; border-radius:4px; white-space:nowrap; flex-shrink:0; }
+    .archive-restore-btn:hover { background:var(--color-primary-light); }
+
+    /* ── Context menu ── */
+    #bucket-ctx-menu { position:fixed; background:white; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:1000; min-width:160px; overflow:hidden; display:none; }
+    .ctx-item { display:flex; align-items:center; gap:8px; padding:8px 14px; font-size:13px; color:#374151; cursor:pointer; transition:background 0.1s; }
+    .ctx-item:hover { background:#f9fafb; }
+    .ctx-item.danger { color:#dc2626; }
+    .ctx-item.danger:hover { background:#fef2f2; }
+    .ctx-divider { height:1px; background:#f3f4f6; margin:2px 0; }
 
     /* ── Detail panel ── */
     .detail-card { background:white; border:1px solid var(--color-border); border-radius:var(--radius-md); padding:24px; max-width:520px; }
@@ -48,6 +74,15 @@
 </head>
 <body>
 <div id="sidebar-root"></div>
+
+<!-- Context menu -->
+<div id="bucket-ctx-menu">
+  <div class="ctx-item" id="ctx-rename" onclick="ctxRename()">✏️ Rename</div>
+  <div class="ctx-item" id="ctx-archive" onclick="ctxArchive()">📦 Archive</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item danger" id="ctx-delete" onclick="ctxDelete()">🗑 Delete</div>
+</div>
+
 <div class="container">
   <div class="buckets-layout">
     <div class="buckets-sidebar">
@@ -56,6 +91,14 @@
         <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openNewBucketModal()">● + New Bucket</button>
       </div>
       <div class="buckets-tree-scroll" id="bucket-tree"></div>
+      <div class="archive-section" id="archive-section">
+        <div class="archive-toggle" id="archive-toggle" onclick="toggleArchiveSection()">
+          <span>📦</span>
+          <span id="archive-toggle-label">Archive</span>
+          <span class="archive-toggle-chevron" id="archive-toggle-chevron">▶</span>
+        </div>
+        <div class="archive-list" id="archive-list" style="display:none;"></div>
+      </div>
     </div>
     <div class="buckets-main">
       <div id="bucket-detail">
@@ -72,13 +115,17 @@
 <div class="modal-overlay" id="new-folder-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
-      <h2>New Folder</h2>
+      <h2 id="new-folder-modal-title">New Folder</h2>
       <button class="modal-close" onclick="closeNewFolderModal()">×</button>
     </div>
-    <p style="font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;">Folders organize buckets into groups. Leads are stored in buckets, not folders.</p>
+    <p style="font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;" id="new-folder-modal-hint">Folders organize buckets into groups. Leads are stored in buckets, not folders.</p>
     <div class="form-group">
       <label>Folder Name</label>
       <input type="text" id="new-folder-name" placeholder="e.g. March Imports, Bulk Leads..." onkeydown="if(event.key==='Enter')saveNewFolder()">
+    </div>
+    <div class="form-group" id="new-folder-parent-group" style="display:none;">
+      <label>Inside Folder</label>
+      <select id="new-folder-parent"></select>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeNewFolderModal()">Cancel</button>
@@ -91,7 +138,7 @@
 <div class="modal-overlay" id="new-bucket-modal">
   <div class="modal" style="max-width:420px;">
     <div class="modal-header">
-      <h2>New Bucket</h2>
+      <h2 id="new-bucket-modal-title">New Bucket</h2>
       <button class="modal-close" onclick="closeNewBucketModal()">×</button>
     </div>
     <div class="form-group">
@@ -121,9 +168,13 @@
   const BUCKET_COLORS = ['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#64748b','#1a1a2e']
 
   let allBuckets = []
+  let archivedBuckets = []
   let selectedItemId = null
   let selectedItemType = null
   let newBucketColor = BUCKET_COLORS[0]
+  let archiveSectionOpen = false
+  let ctxTargetId = null
+  let ctxTargetType = null
 
   const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
 
@@ -137,10 +188,16 @@
   // ── Load ──────────────────────────────────────────────────────────────────────
   const loadBuckets = async () => {
     try {
-      const res = await fetch('/buckets')
+      const [res, arRes] = await Promise.all([
+        fetch('/buckets'),
+        fetch('/buckets?archived=true')
+      ])
       const data = await res.json()
+      const arData = await arRes.json()
       allBuckets = data.buckets || []
+      archivedBuckets = arData.buckets || []
       renderTree()
+      renderArchiveSection()
       if (selectedItemId) renderDetail(selectedItemId, selectedItemType)
     } catch (err) {
       console.error('Failed to load buckets:', err)
@@ -148,64 +205,40 @@
     }
   }
 
-  // ── Tree rendering ────────────────────────────────────────────────────────────
+  // ── Tree rendering (3-level recursive) ───────────────────────────────────────
   const renderTree = () => {
     const container = document.getElementById('bucket-tree')
     if (!container) return
 
-    const folders    = allBuckets.filter(b => b.is_folder)
-    const topLevel   = allBuckets.filter(b => !b.is_folder && !b.parent_id && !b.is_system)
-    const sysBuckets = allBuckets.filter(b => b.is_system)
+    // Build non-archived tree
+    const active = allBuckets // already filtered by API (is_archived=false)
 
     let html = ''
 
-    // 1. Folders with indented child buckets
-    for (const folder of folders) {
-      const children = allBuckets.filter(b => b.parent_id === folder.id)
-      const isSel    = selectedItemId === folder.id && selectedItemType === 'folder'
-      const expanded = isFolderExpanded(folder.id)
+    // Depth-0 items (no parent)
+    const depth0 = active.filter(b => !b.parent_id)
+    const depth0Folders = depth0.filter(b => b.is_folder)
+    const depth0Buckets = depth0.filter(b => !b.is_folder && !b.is_system)
+    const sysBuckets = active.filter(b => b.is_system)
 
-      html += `<div class="tree-folder${isSel ? ' selected' : ''}" data-folder-id="${folder.id}"
-                    onclick="handleFolderClick('${folder.id}')">
-        <span class="tree-chevron${expanded ? ' open' : ''}">▶</span>
-        <span>📂</span>
-        <span class="tree-name">${esc(folder.name)}</span>
-        <span class="folder-badge">${children.length}</span>
-      </div>
-      <div id="fc-${folder.id}"${expanded ? '' : ' style="display:none"'}>`
-
-      for (const b of children) {
-        const bSel = selectedItemId === b.id && selectedItemType === 'bucket'
-        html += `<div class="tree-bucket${bSel ? ' selected' : ''}" data-bucket-id="${b.id}"
-                      onclick="selectItem('${b.id}','bucket')">
-          <span class="drag-handle">⠿</span>
-          <span class="bucket-dot" style="background:${b.color}"></span>
-          <span class="tree-name">${esc(b.name)}</span>
-          <span class="tree-lead-count">${b.lead_count ?? 0} leads</span>
-        </div>`
-      }
-      html += `</div>`
+    // Depth-0 folders with recursive children
+    for (const folder of depth0Folders) {
+      html += renderFolderRow(folder, active, 0)
     }
 
-    // 2. Orphan buckets (top-level, non-system)
-    for (const b of topLevel) {
-      const bSel = selectedItemId === b.id && selectedItemType === 'bucket'
-      html += `<div class="tree-bucket toplevel${bSel ? ' selected' : ''}" data-bucket-id="${b.id}"
-                    onclick="selectItem('${b.id}','bucket')">
-        <span class="drag-handle">⠿</span>
-        <span class="bucket-dot" style="background:${b.color}"></span>
-        <span class="tree-name">${esc(b.name)}</span>
-        <span class="tree-lead-count">${b.lead_count ?? 0} leads</span>
-      </div>`
+    // Depth-0 buckets (top-level, non-system)
+    for (const b of depth0Buckets) {
+      html += renderBucketRow(b, 'toplevel')
     }
 
-    // 3. System buckets last — no drag handle
+    // System buckets last — no drag handle
     for (const b of sysBuckets) {
       const bSel = selectedItemId === b.id && selectedItemType === 'bucket'
       html += `<div class="tree-bucket toplevel${bSel ? ' selected' : ''}" data-bucket-id="${b.id}"
-                    onclick="selectItem('${b.id}','bucket')">
+                    onclick="selectItem('${b.id}','bucket')"
+                    oncontextmenu="showCtxMenu(event,'${b.id}','bucket')">
         <span style="width:14px;flex-shrink:0;"></span>
-        <span class="bucket-dot" style="background:#22c55e"></span>
+        <span class="bucket-dot" style="background:${b.color || '#22c55e'}"></span>
         <span class="tree-name">🔒 ${esc(b.name)}</span>
         <span class="tree-lead-count">${b.lead_count ?? 0} leads</span>
       </div>`
@@ -215,6 +248,170 @@
     container.innerHTML = html
     attachDragHandlers()
   }
+
+  const renderFolderRow = (folder, active, depth) => {
+    const isSel = selectedItemId === folder.id && selectedItemType === 'folder'
+    const expanded = isFolderExpanded(folder.id)
+    const directChildren = active.filter(b => b.parent_id === folder.id)
+    const childFolders = directChildren.filter(b => b.is_folder)
+    const childBuckets = directChildren.filter(b => !b.is_folder)
+    const totalDesc = countDescendants(folder.id, active)
+    const depthClass = depth > 0 ? ` depth-${depth}` : ''
+
+    let html = `<div class="tree-folder${isSel ? ' selected' : ''}${depthClass}" data-folder-id="${folder.id}" data-bucket-id="${folder.id}"
+                  onclick="handleFolderClick('${folder.id}')"
+                  oncontextmenu="showCtxMenu(event,'${folder.id}','folder')">
+      <span class="tree-chevron${expanded ? ' open' : ''}">▶</span>
+      <span>${depth === 0 ? '📁' : '📂'}</span>
+      <span class="tree-name">${esc(folder.name)}</span>
+      <span class="folder-badge">${totalDesc}</span>
+    </div>
+    <div id="fc-${folder.id}"${expanded ? '' : ' style="display:none"'}>`
+
+    if (expanded) {
+      // Depth-1 sub-folders
+      for (const sf of childFolders) {
+        html += renderFolderRow(sf, active, depth + 1)
+      }
+      // Direct child buckets
+      for (const b of childBuckets) {
+        html += renderBucketRow(b, depth === 0 ? 'depth-1' : 'depth-2')
+      }
+    }
+
+    html += `</div>`
+    return html
+  }
+
+  const renderBucketRow = (b, depthClass) => {
+    const bSel = selectedItemId === b.id && selectedItemType === 'bucket'
+    return `<div class="tree-bucket ${depthClass}${bSel ? ' selected' : ''}" data-bucket-id="${b.id}"
+                  onclick="selectItem('${b.id}','bucket')"
+                  oncontextmenu="showCtxMenu(event,'${b.id}','bucket')">
+      <span class="drag-handle">⠿</span>
+      <span class="bucket-dot" style="background:${b.color}"></span>
+      <span class="tree-name">${esc(b.name)}</span>
+      <span class="tree-lead-count">${b.lead_count ?? 0} leads</span>
+    </div>`
+  }
+
+  const countDescendants = (folderId, active) => {
+    const directChildren = active.filter(b => b.parent_id === folderId)
+    let count = directChildren.length
+    for (const c of directChildren.filter(b => b.is_folder)) {
+      count += countDescendants(c.id, active)
+    }
+    return count
+  }
+
+  // ── Archive section ───────────────────────────────────────────────────────────
+  const renderArchiveSection = () => {
+    const label = document.getElementById('archive-toggle-label')
+    if (label) label.textContent = `Archive (${archivedBuckets.length})`
+
+    const list = document.getElementById('archive-list')
+    if (!list) return
+
+    if (!archivedBuckets.length) {
+      list.innerHTML = `<div style="padding:8px 4px;font-size:12px;color:var(--color-text-secondary);">No archived items</div>`
+      return
+    }
+
+    list.innerHTML = archivedBuckets.map(b => {
+      const icon = b.is_folder ? '📂' : '●'
+      return `<div class="archive-item">
+        <span style="color:${b.color || '#9ca3af'};font-size:11px;">${icon}</span>
+        <span class="archive-item-name" title="${esc(b.name)}">${esc(b.name)}</span>
+        <button class="archive-restore-btn" onclick="restoreItem('${b.id}')">Restore</button>
+      </div>`
+    }).join('')
+  }
+
+  const toggleArchiveSection = () => {
+    archiveSectionOpen = !archiveSectionOpen
+    const list = document.getElementById('archive-list')
+    const chevron = document.getElementById('archive-toggle-chevron')
+    if (list) list.style.display = archiveSectionOpen ? 'block' : 'none'
+    if (chevron) chevron.classList.toggle('open', archiveSectionOpen)
+  }
+
+  const restoreItem = async (id) => {
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unarchive' })
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Restore failed')
+      await loadBuckets()
+      toast.success('Restored', 'Item moved back to active buckets')
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  // ── Context menu ──────────────────────────────────────────────────────────────
+  const showCtxMenu = (e, id, type) => {
+    e.preventDefault()
+    e.stopPropagation()
+    ctxTargetId = id
+    ctxTargetType = type
+    const item = allBuckets.find(b => b.id === id)
+    const menu = document.getElementById('bucket-ctx-menu')
+    menu.style.display = 'block'
+    menu.style.left = e.clientX + 'px'
+    menu.style.top = e.clientY + 'px'
+    const deleteBtn = document.getElementById('ctx-delete')
+    if (item?.is_system) deleteBtn.style.display = 'none'
+    else deleteBtn.style.display = ''
+    const archiveBtn = document.getElementById('ctx-archive')
+    if (item?.is_system) archiveBtn.style.display = 'none'
+    else archiveBtn.style.display = ''
+  }
+
+  const hideCtxMenu = () => {
+    document.getElementById('bucket-ctx-menu').style.display = 'none'
+    ctxTargetId = null
+    ctxTargetType = null
+  }
+
+  const ctxRename = () => {
+    if (!ctxTargetId) return
+    selectItem(ctxTargetId, ctxTargetType)
+    hideCtxMenu()
+    setTimeout(() => document.getElementById('detail-name')?.focus(), 100)
+  }
+
+  const ctxArchive = async () => {
+    const id = ctxTargetId
+    const type = ctxTargetType
+    hideCtxMenu()
+    if (!id) return
+    const item = allBuckets.find(b => b.id === id)
+    if (!item) return
+    if (!confirm(`Archive "${item.name}"?\n\nThis will hide it and all its contents from the main view. You can restore it from the Archive section.`)) return
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive' })
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Archive failed')
+      if (selectedItemId === id) {
+        selectedItemId = null
+        selectedItemType = null
+        document.getElementById('bucket-detail').innerHTML = `<div class="buckets-empty"><div style="font-size:32px;">📂</div><div>Select a bucket or folder to view details</div></div>`
+      }
+      await loadBuckets()
+      toast.success('Archived', `"${item.name}" moved to archive`)
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  const ctxDelete = async () => {
+    const id = ctxTargetId
+    const type = ctxTargetType
+    hideCtxMenu()
+    await deleteItem(id, type)
+  }
+
+  document.addEventListener('click', hideCtxMenu)
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtxMenu() })
 
   const handleFolderClick = (id) => {
     const expanded = isFolderExpanded(id)
@@ -230,33 +427,81 @@
     const tree = document.getElementById('bucket-tree')
     if (!tree) return
 
-    // Bucket rows: draggable (not system)
+    // Make buckets draggable
     tree.querySelectorAll('.tree-bucket[data-bucket-id]').forEach(el => {
       const bucket = allBuckets.find(b => b.id === el.dataset.bucketId)
       if (!bucket || bucket.is_system) return
       el.draggable = true
       el.addEventListener('dragstart', e => {
         e.dataTransfer.setData('bucketId', bucket.id)
+        e.dataTransfer.setData('isFolder', 'false')
         el.classList.add('dragging')
       })
       el.addEventListener('dragend', () => el.classList.remove('dragging'))
     })
 
-    // Folder rows: drop targets
+    // Make non-system folders draggable
+    tree.querySelectorAll('.tree-folder[data-bucket-id]').forEach(el => {
+      const bucket = allBuckets.find(b => b.id === el.dataset.bucketId)
+      if (!bucket || bucket.is_system) return
+      el.draggable = true
+      el.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('bucketId', bucket.id)
+        e.dataTransfer.setData('isFolder', 'true')
+        el.classList.add('dragging')
+      })
+      el.addEventListener('dragend', () => el.classList.remove('dragging'))
+    })
+
+    // Folder drop targets
     tree.querySelectorAll('.tree-folder[data-folder-id]').forEach(el => {
       const folderId = el.dataset.folderId
+      const folder = allBuckets.find(b => b.id === folderId)
       el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over') })
       el.addEventListener('dragleave', () => el.classList.remove('drag-over'))
       el.addEventListener('drop', async e => {
         e.preventDefault()
         el.classList.remove('drag-over')
         const bucketId = e.dataTransfer.getData('bucketId')
+        const isFolder = e.dataTransfer.getData('isFolder') === 'true'
         if (!bucketId) return
+
+        // Prevent dropping on itself
+        if (bucketId === folderId) return
+
+        const dragged = allBuckets.find(b => b.id === bucketId)
+        const target = allBuckets.find(b => b.id === folderId)
+        if (!dragged || !target) return
+
+        // Folders can only go into depth-0 folders (result becomes depth-1)
+        if (isFolder && (target.depth || 0) >= 1) {
+          toast.error('Max depth', 'Cannot nest folders more than 2 levels deep')
+          return
+        }
+
+        // Prevent dropping a folder into its own child
+        if (isFolder) {
+          const children = allBuckets.filter(b => b.parent_id === bucketId)
+          if (children.some(c => c.id === folderId)) {
+            toast.error('Invalid move', 'Cannot move a folder into its own subfolder')
+            return
+          }
+        }
+
+        // Enforce depth for buckets: can only drop into folder if resulting depth <= 2
+        if (!isFolder) {
+          const targetDepth = (target.depth || 0) + 1
+          if (targetDepth > 2) {
+            toast.error('Max depth', 'Cannot nest deeper than 3 levels')
+            return
+          }
+        }
+
         await moveBucket(bucketId, folderId)
       })
     })
 
-    // Tree background: drop to remove from folder
+    // Root drop target — move dragged item to top level
     tree.addEventListener('dragover', e => e.preventDefault())
     tree.addEventListener('drop', async e => {
       if (e.target.closest('.tree-folder')) return
@@ -270,14 +515,16 @@
 
   const moveBucket = async (bucketId, parentId) => {
     try {
+      const parent = parentId ? allBuckets.find(b => b.id === parentId) : null
+      const newDepth = parent ? (parent.depth || 0) + 1 : 0
       const res = await fetch(`/buckets/${bucketId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parent_id: parentId })
+        body: JSON.stringify({ parent_id: parentId || null, depth: newDepth })
       })
       if (!res.ok) throw new Error((await res.json()).error || 'Move failed')
       await loadBuckets()
-      toast.success('Moved', parentId ? 'Bucket moved into folder' : 'Bucket moved to top level')
+      toast.success('Moved', parentId ? 'Moved into folder' : 'Moved to root')
     } catch (err) { toast.error('Error', err.message) }
   }
 
@@ -293,13 +540,28 @@
     const item = allBuckets.find(b => b.id === id)
     if (!item) return
     const el = document.getElementById('bucket-detail')
-    const folders = allBuckets.filter(b => b.is_folder && b.id !== id)
-    const folderOpts = `<option value="">Top level (no folder)</option>` +
-      folders.map(f => `<option value="${f.id}"${item.parent_id === f.id ? ' selected' : ''}>${esc(f.name)}</option>`).join('')
+
+    // All non-system, non-archived folders for parent select
+    const folders = allBuckets.filter(b => b.is_folder && b.id !== id && !b.is_archived)
 
     if (type === 'folder') {
-      const children  = allBuckets.filter(b => b.parent_id === id)
+      const children = allBuckets.filter(b => b.parent_id === id)
       const canDelete = children.length === 0
+
+      // Recursively count descendants for display
+      const renderChildRows = (parentId, depth) => {
+        const kids = allBuckets.filter(b => b.parent_id === parentId)
+        return kids.map(b => {
+          const indent = depth * 12
+          const icon = b.is_folder ? '📁' : `<span style="width:10px;height:10px;border-radius:50%;background:${b.color};display:inline-block;flex-shrink:0;"></span>`
+          return `<div class="bucket-child-row" style="padding-left:${indent}px;">
+            ${icon}
+            <span style="flex:1;">${esc(b.name)}</span>
+            <span style="font-size:12px;color:var(--color-text-secondary);">${b.is_folder ? '' : (b.lead_count ?? 0) + ' leads'}</span>
+          </div>${renderChildRows(b.id, depth + 1)}`
+        }).join('')
+      }
+
       el.innerHTML = `<div class="detail-card">
         <div class="detail-title">📂 Folder</div>
         <div class="form-group">
@@ -307,24 +569,22 @@
           <input type="text" id="detail-name" value="${esc(item.name)}" style="width:100%;">
         </div>
         <div style="font-size:13px;color:var(--color-text-secondary);margin-bottom:${children.length ? '12px' : '0'};">
-          ${children.length} bucket${children.length !== 1 ? 's' : ''} in this folder
+          ${children.length} item${children.length !== 1 ? 's' : ''} in this folder
         </div>
-        ${children.length ? `<div style="margin-bottom:16px;">${children.map(b =>
-          `<div class="bucket-child-row">
-            <span style="width:10px;height:10px;border-radius:50%;background:${b.color};display:inline-block;flex-shrink:0;"></span>
-            <span style="flex:1;">${esc(b.name)}</span>
-            <span style="font-size:12px;color:var(--color-text-secondary);">${b.lead_count ?? 0} leads</span>
-          </div>`).join('')}</div>` : ''}
+        ${children.length ? `<div style="margin-bottom:16px;">${renderChildRows(id, 0)}</div>` : ''}
         <div class="section-divider"></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" onclick="saveDetailName('${id}','folder')">Save Name</button>
+          <button class="btn btn-secondary btn-sm" onclick="archiveItem('${id}')">📦 Archive</button>
           ${canDelete
             ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('${id}','folder')">Delete Folder</button>`
-            : `<span style="font-size:12px;color:#9ca3af;">Move or delete all buckets before deleting this folder.</span>`}
+            : `<span style="font-size:12px;color:#9ca3af;">Move or delete all items before deleting this folder.</span>`}
         </div>
       </div>`
 
     } else {
+      const folderOpts = `<option value="">Top level (no folder)</option>` +
+        folders.map(f => `<option value="${f.id}"${item.parent_id === f.id ? ' selected' : ''}>${esc(f.name)}</option>`).join('')
       const swatches = BUCKET_COLORS.map(c =>
         `<div class="color-swatch${item.color === c ? ' selected' : ''}" style="background:${c};" onclick="updateItemColor('${id}','${c}',this)"></div>`
       ).join('')
@@ -347,10 +607,30 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="/leads.html?bucket_id=${id}" class="btn btn-primary btn-sm">View Leads →</a>
           ${!item.is_system ? `<button class="btn btn-secondary btn-sm" onclick="saveDetailBucket('${id}')">Save Changes</button>` : ''}
+          ${!item.is_system ? `<button class="btn btn-secondary btn-sm" onclick="archiveItem('${id}')">📦 Archive</button>` : ''}
           ${!item.is_system ? `<button class="btn btn-danger btn-sm" onclick="deleteItem('${id}','bucket')">Delete Bucket</button>` : ''}
         </div>
       </div>`
     }
+  }
+
+  // ── Archive from detail panel ─────────────────────────────────────────────────
+  const archiveItem = async (id) => {
+    const item = allBuckets.find(b => b.id === id)
+    if (!item) return
+    if (!confirm(`Archive "${item.name}"?\n\nThis will hide it and all its contents from the main view.`)) return
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive' })
+      })
+      if (!res.ok) throw new Error((await res.json()).error || 'Archive failed')
+      selectedItemId = null
+      selectedItemType = null
+      document.getElementById('bucket-detail').innerHTML = `<div class="buckets-empty"><div style="font-size:32px;">📂</div><div>Select a bucket or folder to view details</div></div>`
+      await loadBuckets()
+      toast.success('Archived', `"${item.name}" moved to archive`)
+    } catch (err) { toast.error('Error', err.message) }
   }
 
   // ── API helpers ───────────────────────────────────────────────────────────────
@@ -365,7 +645,7 @@
       if (idx >= 0) allBuckets[idx] = { ...allBuckets[idx], ...data.bucket }
       toast.success('Saved', 'Name updated')
       renderTree()
-      renderDetail(id, 'folder')
+      renderDetail(id, selectedItemType)
     } catch (err) { toast.error('Error', err.message) }
   }
 
@@ -418,13 +698,30 @@
   }
 
   // ── New Folder modal ──────────────────────────────────────────────────────────
-  const openNewFolderModal  = () => { document.getElementById('new-folder-name').value = ''; document.getElementById('new-folder-modal').classList.add('open'); setTimeout(()=>document.getElementById('new-folder-name').focus(),50) }
+  const openNewFolderModal = () => {
+    document.getElementById('new-folder-name').value = ''
+    // If selected item is a depth-0 folder, offer to create sub-folder inside it
+    const parentGroup = document.getElementById('new-folder-parent-group')
+    const parentSel = document.getElementById('new-folder-parent')
+    const depth0Folders = allBuckets.filter(b => b.is_folder && (b.depth === 0 || !b.parent_id))
+    if (depth0Folders.length > 0) {
+      parentSel.innerHTML = '<option value="">Top level</option>' +
+        depth0Folders.map(f => `<option value="${f.id}"${selectedItemType === 'folder' && selectedItemId === f.id ? ' selected' : ''}>${esc(f.name)}</option>`).join('')
+      parentGroup.style.display = ''
+    } else {
+      parentGroup.style.display = 'none'
+    }
+    document.getElementById('new-folder-modal').classList.add('open')
+    setTimeout(() => document.getElementById('new-folder-name').focus(), 50)
+  }
   const closeNewFolderModal = () => document.getElementById('new-folder-modal').classList.remove('open')
+
   const saveNewFolder = async () => {
     const name = document.getElementById('new-folder-name').value.trim()
+    const parentId = document.getElementById('new-folder-parent')?.value || null
     if (!name) return toast.error('Error', 'Folder name is required')
     try {
-      const res = await fetch('/buckets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name, is_folder:true, color:'#6366f1' }) })
+      const res = await fetch('/buckets', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ name, is_folder:true, color:'#6366f1', parent_id: parentId }) })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create')
       data.bucket.lead_count = 0
@@ -437,18 +734,22 @@
   }
 
   // ── New Bucket modal ──────────────────────────────────────────────────────────
-  const openNewBucketModal  = () => {
+  const openNewBucketModal = () => {
     document.getElementById('new-bucket-name').value = ''
     newBucketColor = BUCKET_COLORS[0]
     const folderSel = document.getElementById('new-bucket-folder')
+    // Show all non-archived folders (depth 0 and depth 1)
+    const folders = allBuckets.filter(b => b.is_folder)
     folderSel.innerHTML = '<option value="">Top level (no folder)</option>' +
-      allBuckets.filter(b => b.is_folder).map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join('')
-    if (selectedItemType === 'folder') folderSel.value = selectedItemId
+      folders.map(f => {
+        const indent = (f.depth || 0) > 0 ? '  └ ' : ''
+        return `<option value="${f.id}"${selectedItemType === 'folder' && selectedItemId === f.id ? ' selected' : ''}>${indent}${esc(f.name)}</option>`
+      }).join('')
     document.getElementById('new-bucket-colors').innerHTML = BUCKET_COLORS.map(c =>
       `<div class="color-swatch${c === newBucketColor ? ' selected' : ''}" style="background:${c};" onclick="newBucketPickColor('${c}',this)"></div>`
     ).join('')
     document.getElementById('new-bucket-modal').classList.add('open')
-    setTimeout(()=>document.getElementById('new-bucket-name').focus(),50)
+    setTimeout(() => document.getElementById('new-bucket-name').focus(), 50)
   }
   const closeNewBucketModal = () => document.getElementById('new-bucket-modal').classList.remove('open')
   const newBucketPickColor  = (c, el) => {
@@ -475,7 +776,6 @@
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   const init = async () => {
-    renderSidebar()
     await loadProfile()
     await loadBuckets()
   }
