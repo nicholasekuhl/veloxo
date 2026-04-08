@@ -34,6 +34,16 @@ const FEDERAL_HOLIDAYS_2026 = [
   '2026-11-26', '2026-12-25'
 ]
 
+function isValidTimezone(tz) {
+  if (!tz) return false
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
 function isWithinQuietHours(leadState, leadTimezone) {
   const rules = STATE_RULES[leadState] || STATE_RULES.default
   const now = new Date()
@@ -171,4 +181,4 @@ function getNextSendWindow(state, timezone) {
   return fallback.toISOString()
 }
 
-module.exports = { isWithinQuietHours, getStateMaxPerDay, checkSystemInitiatedLimit, getNextSendWindow, STATE_RULES }
+module.exports = { isValidTimezone, isWithinQuietHours, getStateMaxPerDay, checkSystemInitiatedLimit, getNextSendWindow, STATE_RULES }

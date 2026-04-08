@@ -3,7 +3,7 @@ const { sendSMS, buildMessageBody, pickNumberForLead } = require('./twilio')
 const { spintext } = require('./spintext')
 const { smsQueue } = require('./smsQueue')
 const nodemailer = require('nodemailer')
-const { isWithinQuietHours, checkSystemInitiatedLimit, getNextSendWindow } = require('./compliance')
+const { isValidTimezone, isWithinQuietHours, checkSystemInitiatedLimit, getNextSendWindow } = require('./compliance')
 
 const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
@@ -41,6 +41,8 @@ const calculateSendTime = (dayNumber, sendTime, startDate, timezone) => {
     return fallback.toISOString()
   }
 }
+
+const safeTimezone = (tz) => isValidTimezone(tz) ? tz : 'America/New_York'
 
 const isInBusinessHoursForTimezone = (timezone) => {
   try {
@@ -164,10 +166,10 @@ const checkGhostedConversations = async () => {
         .single()
 
       if (!lead || !lead.autopilot || lead.opted_out || lead.is_blocked) continue
-      if (!isInBusinessHoursForTimezone(lead.timezone)) continue
+      if (!isInBusinessHoursForTimezone(safeTimezone(lead.timezone))) continue
 
       // TCPA quiet hours — hard block on follow-ups
-      const quietCheck = isWithinQuietHours(lead.state, lead.timezone)
+      const quietCheck = isWithinQuietHours(lead.state, safeTimezone(lead.timezone))
       if (quietCheck.blocked) {
         console.log(`Follow-up blocked (quiet hours): ${quietCheck.reason} — lead ${lead.id}`)
         continue
@@ -282,7 +284,7 @@ const getNextDayBasedSendAt = async (enrollment) => {
     .order('day_number', { ascending: true })
     .limit(1)
   if (!messages || messages.length === 0) return null
-  const tz = enrollment.leads?.timezone || 'America/New_York'
+  const tz = safeTimezone(enrollment.leads?.timezone)
   return calculateSendTime(messages[0].day_number, messages[0].send_time || '10:00', enrollment.start_date, tz)
 }
 
@@ -371,13 +373,13 @@ const processQuickFollowups = async () => {
       if (!stepToSend) continue
 
       // Compliance checks
-      const quietCheck = isWithinQuietHours(lead.state, lead.timezone)
+      const quietCheck = isWithinQuietHours(lead.state, safeTimezone(lead.timezone))
       if (quietCheck.blocked) {
         console.log(`Quick follow-up step ${stepToSend} blocked (quiet hours): ${quietCheck.reason} — lead ${lead.id}`)
         // Delay step 2/3 to next permitted window
         if (stepToSend > 1) {
           await supabase.from('campaign_leads')
-            .update({ next_send_at: getNextSendWindow(lead.state, lead.timezone) })
+            .update({ next_send_at: getNextSendWindow(lead.state, safeTimezone(lead.timezone)) })
             .eq('id', enrollment.id)
         }
         continue
@@ -651,7 +653,7 @@ const processScheduledMessages = async () => {
       }
 
       // TCPA quiet hours — hard block, no override
-      const quietCheck = isWithinQuietHours(enrollment.leads.state, enrollment.leads.timezone)
+      const quietCheck = isWithinQuietHours(enrollment.leads.state, safeTimezone(enrollment.leads.timezone))
       if (quietCheck.blocked) {
         console.log(`Campaign send blocked (quiet hours): ${quietCheck.reason} — lead ${enrollment.leads.id}`)
         continue
@@ -733,7 +735,7 @@ const processScheduledMessages = async () => {
             }).eq('id', job.enrollmentId)
           } else {
             const nextMessage = messages[nextStep]
-            const leadTimezone = enrollment.leads.timezone || 'America/New_York'
+            const leadTimezone = safeTimezone(enrollment.leads.timezone)
             const nextSendAt = calculateSendTime(
               nextMessage.day_number,
               nextMessage.send_time || '10:00',
@@ -800,7 +802,7 @@ const processScheduledMessages = async () => {
         }
 
         // TCPA quiet hours — hard block on scheduled messages
-        const smQuietCheck = isWithinQuietHours(sm.leads.state, sm.leads.timezone)
+        const smQuietCheck = isWithinQuietHours(sm.leads.state, safeTimezone(sm.leads.timezone))
         if (smQuietCheck.blocked) {
           console.log(`Scheduled message blocked (quiet hours): ${smQuietCheck.reason} — lead ${sm.leads.id}`)
           continue
