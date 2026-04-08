@@ -14,6 +14,7 @@ const getBuckets = async (req, res) => {
     if (error) throw error
     const countMap = {}
     for (const r of leadRows || []) countMap[r.bucket_id] = (countMap[r.bucket_id] || 0) + 1
+    console.log('[bucketsController] leadRows:', leadRows?.length, 'countMap:', JSON.stringify(countMap))
     res.json({ buckets: (data || []).map(b => ({ ...b, lead_count: countMap[b.id] || 0 })) })
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
