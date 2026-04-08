@@ -2,7 +2,6 @@ const csv = require('csv-parser')
 const xlsx = require('xlsx')
 const { Readable } = require('stream')
 const supabase = require('../db')
-const { smsQueue } = require('../smsQueue')
 const { sendSMS, buildMessageBody, pickNumberForLead } = require('../twilio')
 const { spintext } = require('../spintext')
 const { isWithinQuietHours, checkSystemInitiatedLimit } = require('../compliance')
@@ -445,92 +444,75 @@ const uploadLeads = async (req, res) => {
             }
 
             const enrollment = (insertedEnrollments || []).find(e => e.lead_id === lead.id)
-            smsQueue.add({
-              phone: lead.phone,
-              message: messageBody,
-              leadId: lead.id,
-              conversationId: null,
-              userId,
-              fromNumber,
-              enrollmentId: enrollment?.id,
-              isQuickCampaign,
-              campaign,
-              dayMessages,
-              leadTimezone: lead.timezone || 'America/New_York',
+            const leadTimezone = lead.timezone || 'America/New_York'
 
-              sendFn: async (job) => {
-                const result = await sendSMS(job.phone, job.message, job.fromNumber)
-                if (!result.success) throw new Error(result.error || 'send failed')
-                job._twilioSid = result.sid
-              },
+            try {
+              const result = await sendSMS(lead.phone, messageBody, fromNumber)
+              if (!result.success) throw new Error(result.error || 'send failed')
 
-              onSuccess: async (job) => {
-                const sentAt = new Date().toISOString()
+              const sentAt = new Date().toISOString()
 
-                const { data: conv } = await supabase
-                  .from('conversations')
-                  .upsert({ lead_id: job.leadId, user_id: job.userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
-                  .select('id').single()
+              const { data: conv } = await supabase
+                .from('conversations')
+                .upsert({ lead_id: lead.id, user_id: userId, status: 'active' }, { onConflict: 'lead_id,user_id', ignoreDuplicates: false })
+                .select('id').single()
 
-                if (conv?.id) {
-                  await supabase.from('messages').insert({
-                    conversation_id: conv.id,
-                    user_id: job.userId,
-                    direction: 'outbound',
-                    body: job.message,
-                    sent_at: sentAt,
-                    twilio_sid: job._twilioSid,
-                    status: 'sent'
-                  })
-                }
+              if (conv?.id) {
+                await supabase.from('messages').insert({
+                  conversation_id: conv.id,
+                  user_id: userId,
+                  direction: 'outbound',
+                  body: messageBody,
+                  sent_at: sentAt,
+                  twilio_sid: result.sid,
+                  status: 'sent'
+                })
+              }
 
-                await supabase.from('leads').update({
-                  status: 'contacted',
-                  first_message_sent: true,
-                  outbound_initiated_today: 1,
-                  updated_at: sentAt
-                }).eq('id', job.leadId)
+              await supabase.from('leads').update({
+                status: 'contacted',
+                first_message_sent: true,
+                outbound_initiated_today: 1,
+                updated_at: sentAt
+              }).eq('id', lead.id)
 
-                if (job.enrollmentId) {
-                  if (job.isQuickCampaign) {
-                    const stepUpdate = { step_1_sent_at: sentAt, status: 'active' }
-                    if (job.campaign.message_2 && job.campaign.message_2_delay_minutes) {
-                      stepUpdate.next_send_at = new Date(
-                        new Date(sentAt).getTime() + job.campaign.message_2_delay_minutes * 60000
-                      ).toISOString()
-                    }
-                    await supabase.from('campaign_leads').update(stepUpdate).eq('id', job.enrollmentId)
+              if (enrollment?.id) {
+                if (isQuickCampaign) {
+                  const stepUpdate = { step_1_sent_at: sentAt, status: 'active' }
+                  if (campaign.message_2 && campaign.message_2_delay_minutes) {
+                    stepUpdate.next_send_at = new Date(
+                      new Date(sentAt).getTime() + campaign.message_2_delay_minutes * 60000
+                    ).toISOString()
+                  }
+                  await supabase.from('campaign_leads').update(stepUpdate).eq('id', enrollment.id)
+                } else {
+                  const nextStep = 1
+                  if (nextStep < dayMessages.length) {
+                    const nextMsg = dayMessages[nextStep]
+                    const nextSendAt = calculateSendTime(
+                      nextMsg.day_number,
+                      nextMsg.send_time || '10:00',
+                      sentAt,
+                      leadTimezone
+                    )
+                    await supabase.from('campaign_leads').update({
+                      current_step: nextStep,
+                      next_send_at: nextSendAt,
+                      status: 'active'
+                    }).eq('id', enrollment.id)
                   } else {
-                    const nextStep = 1
-                    if (nextStep < job.dayMessages.length) {
-                      const nextMsg = job.dayMessages[nextStep]
-                      const nextSendAt = calculateSendTime(
-                        nextMsg.day_number,
-                        nextMsg.send_time || '10:00',
-                        sentAt,
-                        job.leadTimezone
-                      )
-                      await supabase.from('campaign_leads').update({
-                        current_step: nextStep,
-                        next_send_at: nextSendAt,
-                        status: 'active'
-                      }).eq('id', job.enrollmentId)
-                    } else {
-                      await supabase.from('campaign_leads').update({
-                        status: 'completed',
-                        completed_at: sentAt
-                      }).eq('id', job.enrollmentId)
-                    }
+                    await supabase.from('campaign_leads').update({
+                      status: 'completed',
+                      completed_at: sentAt
+                    }).eq('id', enrollment.id)
                   }
                 }
-
-                console.log(`Initial campaign message sent to lead ${job.leadId}`)
-              },
-
-              onFailure: async (job, err) => {
-                console.error(`Initial campaign send failed for lead ${job.leadId}: ${err?.message}`)
               }
-            })
+
+              console.log(`Initial campaign message sent to lead ${lead.id}`)
+            } catch (sendErr) {
+              console.error(`Initial campaign send failed for lead ${lead.id}: ${sendErr?.message}`)
+            }
           }
         }
       }
