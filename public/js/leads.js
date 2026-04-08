@@ -112,18 +112,83 @@ const renderMsPills = (key) => {
 }
 
 // ===== BUCKETS =====
-const selectBucket = (bucketId) => {
+const selectBucket = async (bucketId) => {
   activeBucket = bucketId
   activeFolderId = ''
   renderBucketPills()
-  filterLeads()
+
+  if (!bucketId) {
+    // All Leads — reset to normal paginated view
+    await loadLeads()
+    return
+  }
+
+  // Server-side fetch for this specific bucket
+  const grid = document.getElementById('leads-grid')
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+
+  try {
+    const res = await fetch('/leads?bucket_id=' + bucketId + '&limit=200&page=1')
+    const data = await res.json()
+    allLeads = data.leads || []
+
+    document.getElementById('leads-count').textContent =
+      'Showing ' + allLeads.length + ' of ' + (data.total || allLeads.length) + ' leads in bucket'
+
+    renderLeads(allLeads)
+
+    const loadMoreWrapper = document.getElementById('load-more-wrapper')
+    if (loadMoreWrapper) loadMoreWrapper.style.display = (data.total > allLeads.length) ? 'block' : 'none'
+  } catch (err) {
+    console.error('Bucket filter error:', err)
+  }
 }
 
-const selectFolder = (folderId) => {
+const selectFolder = async (folderId) => {
   activeFolderId = activeFolderId === folderId ? '' : folderId
   activeBucket = ''
   renderBucketPills()
-  filterLeads()
+
+  if (!activeFolderId) {
+    // Deselected folder — reset to all leads
+    await loadLeads()
+    return
+  }
+
+  // Get all bucket IDs in this folder (direct children only)
+  const folderBucketIds = allBuckets
+    .filter(b => b.parent_id === folderId && !b.is_folder)
+    .map(b => b.id)
+
+  if (folderBucketIds.length === 0) {
+    document.getElementById('leads-count').textContent = '0 leads in folder'
+    renderLeads([])
+    return
+  }
+
+  const grid = document.getElementById('leads-grid')
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+
+  try {
+    const results = await Promise.all(
+      folderBucketIds.map(id =>
+        fetch('/leads?bucket_id=' + id + '&limit=500&page=1').then(r => r.json())
+      )
+    )
+
+    allLeads = results.flatMap(r => r.leads || [])
+    const total = results.reduce((sum, r) => sum + (r.total || 0), 0)
+
+    document.getElementById('leads-count').textContent =
+      'Showing ' + allLeads.length + ' of ' + total + ' leads in folder'
+
+    renderLeads(allLeads)
+
+    const loadMoreWrapper = document.getElementById('load-more-wrapper')
+    if (loadMoreWrapper) loadMoreWrapper.style.display = 'none'
+  } catch (err) {
+    console.error('Folder filter error:', err)
+  }
 }
 
 const toggleFolderCollapse = (folderId, e) => {
