@@ -24,7 +24,6 @@
         <div class="conv3-tabs">
           <button class="conv3-tab active" id="conv3-tab-all" onclick="setConvTab('all')">All</button>
           <button class="conv3-tab" id="conv3-tab-unread" onclick="setConvTab('unread')">Unread</button>
-          <button class="conv3-tab" id="conv3-tab-recent" onclick="setConvTab('recent')">Recent</button>
           <button class="conv3-tab" id="conv3-tab-starred" onclick="setConvTab('starred')">Starred</button>
         </div>
       </div>
@@ -219,7 +218,7 @@
 
   const setConvTab = (tab) => {
     convTab = tab
-    ;['all', 'unread', 'recent', 'starred'].forEach(t => {
+    ;['all', 'unread', 'starred'].forEach(t => {
       document.getElementById(`conv3-tab-${t}`)?.classList.toggle('active', t === tab)
     })
     filterConversations(document.getElementById('conv3-search')?.value || '')
@@ -372,8 +371,6 @@
       filtered = filtered.filter(c => (c.unread_count || 0) > 0)
     } else if (convTab === 'starred') {
       filtered = filtered.filter(c => c.is_starred)
-    } else if (convTab === 'recent') {
-      filtered = filtered.filter(c => c.updated_at >= sevenDaysAgo)
     }
     if (search) {
       const q = search.toLowerCase()
@@ -385,6 +382,7 @@
         return name.includes(q) || phone.includes(q) || lastMsg.includes(q)
       })
     }
+    filtered.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
     renderConversationList(filtered)
   }
 
@@ -811,12 +809,10 @@
   }
 
   const bringConvToTop = (convId) => {
-    const list = document.getElementById('conv3-list')
-    const item = list?.querySelector('[data-conv-id="' + convId + '"]')
-    if (item && list && list.firstChild !== item) {
-      list.insertBefore(item, list.firstChild)
-      const timeEl = item.querySelector('[class*="time"], .conv3-time')
-      if (timeEl) timeEl.textContent = 'Just now'
+    const conv = allConversations.find(c => c.id === convId)
+    if (conv) {
+      conv.updated_at = new Date().toISOString()
+      filterConversations(document.getElementById('conv3-search')?.value || '')
     }
   }
 
@@ -866,6 +862,7 @@
       allConversations = allConversations.map(c => freshMap[c.id] ? { ...c, ...freshMap[c.id] } : c)
       const existingIds = new Set(allConversations.map(c => c.id))
       fresh.filter(c => !existingIds.has(c.id)).forEach(c => allConversations.unshift(c))
+      allConversations.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
       filterConversations(document.getElementById('conv3-search')?.value || '')
     } catch (err) { console.error('pollSidebar error:', err) }
   }
@@ -1032,7 +1029,13 @@
     try {
       const res = await fetch('/messages/send-manual', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId, body }) })
       const data = await res.json()
-      if (data.success) { input.value = ''; updateConvCharCount(input); const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'; bringConvToTop(convId); openConversation(convId) }
+      if (data.success) {
+        input.value = ''; updateConvCharCount(input)
+        const box = document.getElementById('ai-suggestion-box'); if (box) box.style.display = 'none'
+        const sentConv = allConversations.find(c => c.id === convId)
+        if (sentConv) sentConv.updated_at = new Date().toISOString()
+        openConversation(convId)
+      }
       else toast.error('Send failed', data.error || 'Could not send message')
     } catch (err) { toast.error('Error', 'Something went wrong') }
   }

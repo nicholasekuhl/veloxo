@@ -72,21 +72,27 @@ const sendInitialOutreach = async (req, res) => {
     const result = await sendSMS(lead.phone, messageBody, fromNumber)
     if (!result.success) return res.status(500).json({ error: result.error })
 
+    const sentAt = new Date().toISOString()
     await supabase.from('messages').insert({
       conversation_id: conversation.id,
       user_id: req.user.id,
       direction: 'outbound',
       body: messageBody,
-      sent_at: new Date().toISOString(),
+      sent_at: sentAt,
       twilio_sid: result.sid,
       status: 'sent'
     })
 
-    await supabase.from('leads').update({
-      status: 'contacted',
-      first_message_sent: true,
-      updated_at: new Date().toISOString()
-    }).eq('id', leadId)
+    await Promise.all([
+      supabase.from('leads').update({
+        status: 'contacted',
+        first_message_sent: true,
+        updated_at: sentAt
+      }).eq('id', leadId),
+      supabase.from('conversations')
+        .update({ updated_at: sentAt, last_outbound_at: sentAt })
+        .eq('id', conversation.id)
+    ])
 
     res.json({ success: true, message: `Initial outreach sent to ${lead.first_name} ${lead.last_name}`, phone: lead.phone })
   } catch (err) {
