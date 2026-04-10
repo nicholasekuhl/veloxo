@@ -101,10 +101,8 @@ const sendInitialOutreach = async (req, res) => {
   }
 }
 
-const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile) => {
+const checkHandoffTriggers = (conversation, lastInboundMessage, history) => {
   const msg = lastInboundMessage.toLowerCase()
-  const agentName = profile?.agent_name || 'your agent'
-  const agentFirstName = profile?.agent_nickname || agentName.split(' ')[0]
   const fullText = history.map(m => m.content).join(' ').toLowerCase()
 
   // TRIGGER 0: Soft decline / not interested
@@ -130,7 +128,7 @@ const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile
     return {
       triggered: true,
       reason: 'appointment_confirmed',
-      message: `Perfect, I've got everything noted. ${agentFirstName} will be in touch and can walk you through everything from here. Looking forward to connecting you!`
+      message: `Perfect, I've got everything noted. Our benefits specialist will be in touch and can walk you through everything from here.`
     }
   }
 
@@ -141,7 +139,7 @@ const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile
       return {
         triggered: true,
         reason: 'quote_requested',
-        message: `Absolutely — ${agentFirstName} can put that together on a quick call so the numbers actually make sense for your specific situation. When works best for you?`
+        message: `Absolutely, our benefits specialist can put that together on a quick call so the numbers actually make sense for your specific situation. When works best for you?`
       }
     }
     return { triggered: false, quoteDetected: true }
@@ -154,7 +152,7 @@ const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile
     return {
       triggered: true,
       reason: 'complex_medical',
-      message: `That's really helpful context. The right plan really does depend on your specific situation — ${agentFirstName} can make sure you're matched with the right coverage. Do you prefer a quick review later today or tomorrow?`
+      message: `That's really helpful context. The right plan really does depend on your specific situation. Our benefits specialist can make sure you're matched with the right coverage. Do you prefer a quick review later today or tomorrow?`
     }
   }
 
@@ -179,7 +177,7 @@ const checkHandoffTriggers = (conversation, lastInboundMessage, history, profile
     return {
       triggered: true,
       reason: 'qualification_complete',
-      message: `Perfect, I've got everything noted. ${agentFirstName} will be in touch and can walk you through everything from here. Looking forward to connecting you!`
+      message: `Perfect, I've got everything noted. Our benefits specialist will be in touch and can walk you through everything from here.`
     }
   }
 
@@ -448,7 +446,7 @@ const processInboundMessage = async (body) => {
       console.log('Conversation history loaded:', history.length, 'messages')
 
       // Check handoff triggers before generating AI response
-      const handoff = checkHandoffTriggers(conversation, Body, history, profile)
+      const handoff = checkHandoffTriggers(conversation, Body, history)
 
       if (handoff.quoteDetected) {
         const newCount = (conversation.quote_push_count || 0) + 1
@@ -807,8 +805,7 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
       if ((STATUS_PRIORITY_B[lead.status] ?? 0) < STATUS_PRIORITY_B.booked) bookedUpdate.status = 'booked'
       await supabase.from('leads').update(bookedUpdate).eq('id', lead.id)
 
-      const agentFirstName = profile?.agent_nickname || (profile?.agent_name || 'your agent').split(' ')[0]
-      const confirmText = `Locked in. ${agentFirstName} will call you ${day} at ${time} and walk you through everything. Looking forward to connecting you two!`
+      const confirmText = `Locked in. Our benefits specialist will call you ${day} at ${time} and walk you through everything.`
       const confirmResult = await sendSMS(lead.phone, confirmText, fromNumber)
       if (confirmResult.success) {
         await supabase.from('messages').insert({
@@ -902,9 +899,10 @@ The appointment gets added to the calendar automatically.
 
 OBJECTIONS:
 Email request: the advisor just needs a quick look at your situation first so the info actually makes sense for you. takes a few minutes, what time works
-Already has coverage: offer a free comparison, no pressure
-Cost question: depends on your age, zip and income, that's exactly what the advisor goes over on the call
-Think about it: no rush, text back whenever you're ready
+Cost question or quote request: "I hear you, I don't want to throw numbers out without knowing your full picture, but there are usually solid options around that range. The call takes just a few minutes and they can pull up real numbers for your exact situation. What day works?"
+Already has insurance: "Totally makes sense, a lot of people find they're overpaying or missing better coverage though. Takes 5 minutes for a free side by side comparison. Worth a quick look?"
+Think about it or not sure: "No rush at all, whenever you're ready just text me back and I'll pick up right where we left off."
+Price objection (too expensive, can't afford it): "I hear you on the budget, that's exactly why a quick call helps. They work with all budgets and can often find options people don't know exist. What day and time works to take a look?"
 Pre-existing conditions: plans vary by situation, best to go over it on a call
 High income: private PPO likely a better fit, marketplace discounts probably won't apply
 Low income: there may be some savings available depending on your situation
