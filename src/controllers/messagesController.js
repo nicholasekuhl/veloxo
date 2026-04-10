@@ -803,7 +803,19 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
       const STATUS_PRIORITY_B = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
       const bookedUpdate = { autopilot: false, updated_at: new Date().toISOString() }
       if ((STATUS_PRIORITY_B[lead.status] ?? 0) < STATUS_PRIORITY_B.booked) bookedUpdate.status = 'booked'
+
+      // Explicitly advance pipeline to appointment_scheduled — only advance, never downgrade
+      const currentPipelineOrder = STAGE_ORDER.indexOf(lead.pipeline_stage)
+      const apptOrder = STAGE_ORDER.indexOf('appointment_scheduled')
+      if (apptOrder > currentPipelineOrder) {
+        bookedUpdate.pipeline_stage = 'appointment_scheduled'
+        bookedUpdate.pipeline_stage_set_at = new Date().toISOString()
+        bookedUpdate.pipeline_ghosted = false
+        bookedUpdate.pipeline_ghosted_at = null
+      }
+
       await supabase.from('leads').update(bookedUpdate).eq('id', lead.id)
+      console.log(`[bookAppointment] pipeline_stage → appointment_scheduled for lead ${lead.id}`)
 
       const confirmText = `Locked in. Our benefits specialist will call you ${day} at ${time} and walk you through everything.`
       const confirmResult = await sendSMS(lead.phone, confirmText, fromNumber)
