@@ -247,20 +247,21 @@ const getCampaignStats = async (req, res) => {
 const getLeadFunnel = async (req, res) => {
   try {
     const userId = req.user.id
-    const [{ data: leads, error }, { data: repliedConvs }] = await Promise.all([
-      supabase.from('leads').select('status, is_sold, is_blocked, first_message_sent').eq('user_id', userId),
+    const [
+      { count: total },
+      { count: contacted },
+      { count: sold },
+      { data: repliedConvs }
+    ] = await Promise.all([
+      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId).or('first_message_sent.eq.true,status.neq.new'),
+      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('is_sold', true),
       supabase.from('conversations').select('lead_id').eq('user_id', userId).not('last_inbound_at', 'is', null)
     ])
 
-    if (error) throw error
-
-    const total = leads?.length || 0
-    const contacted = leads?.filter(l => l.first_message_sent || l.status !== 'new').length || 0
     const replied = new Set((repliedConvs || []).map(c => c.lead_id)).size
-    const sold = leads?.filter(l => l.is_sold).length || 0
-    const blocked = leads?.filter(l => l.is_blocked).length || 0
 
-    res.json({ funnel: { total, contacted, replied, sold, blocked } })
+    res.json({ funnel: { total: total || 0, contacted: contacted || 0, replied, sold: sold || 0 } })
   } catch (err) {
     console.error('getLeadFunnel error:', err.message, err.stack)
     res.status(500).json({ error: err.message })
