@@ -8,7 +8,8 @@ const {
   deleteCampaign,
   enrollLeads,
   startCampaign,
-  pauseCampaign
+  pauseCampaign,
+  duplicateCampaign
 } = require('../controllers/campaignsController')
 
 router.get('/', getCampaigns)
@@ -19,5 +20,6 @@ router.delete('/:id', deleteCampaign)
 router.post('/:id/enroll', enrollLeads)
 router.post('/:id/start', startCampaign)
 router.post('/:id/pause', pauseCampaign)
+router.post('/:id/duplicate', duplicateCampaign)
 
 module.exports = router

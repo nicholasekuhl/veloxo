@@ -1623,6 +1623,23 @@ const advanceToRiskPreview = async () => {
 
 const BUCKET_PALETTE = ['#6366f1','#3b82f6','#0ea5e9','#8b5cf6','#f59e0b','#10b981','#22c55e','#ef4444','#f97316','#ec4899']
 
+const onImportCampaignChange = () => {
+  const select = document.getElementById('import-campaign')
+  const notice = document.getElementById('campaign-send-time-notice')
+  if (!notice) return
+  const campaign = allCampaigns.find(c => c.id === select.value)
+  if (campaign?.initial_send_time) {
+    const [h, m] = campaign.initial_send_time.split(':').map(Number)
+    const ampm = h >= 12 ? 'PM' : 'AM'
+    const hour = h % 12 || 12
+    const timeLabel = `${hour}:${String(m).padStart(2, '0')} ${ampm}`
+    notice.textContent = `ℹ️ Initial messages will send tomorrow at ${timeLabel} local to each lead's timezone.`
+    notice.style.display = 'block'
+  } else {
+    notice.style.display = 'none'
+  }
+}
+
 const onBucketSelectChange = (sel) => {
   const form = document.getElementById('new-bucket-form')
   if (!form) return

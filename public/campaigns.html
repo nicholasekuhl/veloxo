@@ -64,6 +64,11 @@
       <div class="char-count" id="msg1-char">0 / 160</div>
       <label class="spintext-toggle"><input type="checkbox" id="msg1-spintext"> Enable spintext <span class="spintext-hint" title="Use {Option A|Option B} to randomize text — the scheduler picks one variation per send">?</span></label>
       <div id="msg1-kw"></div>
+      <div style="margin-top:12px;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send initial message at <span style="font-weight:400;color:var(--color-text-secondary);">(optional)</span></label>
+        <input type="time" id="initial-send-time" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;color:var(--color-text);background:var(--color-surface);outline:none;">
+        <div class="help-text" style="margin-top:4px;">If set, initial messages send at this time in each lead's local timezone. Leave blank to send immediately when leads are assigned.</div>
+      </div>
     </div>
 
     <!-- Message 2: Quick follow-up 1 (optional) -->
@@ -281,6 +286,7 @@
               ${c.status === 'active' ? `<button onclick="pauseCampaign('${c.id}')">Pause</button>` : ''}
               ${c.status === 'paused' ? `<button onclick="startCampaign('${c.id}')">Resume</button>` : ''}
               <button onclick="editCampaign('${c.id}')">Edit</button>
+              <button onclick="duplicateCampaign('${c.id}')">Duplicate</button>
               <button class="danger" onclick="deleteCampaign('${c.id}')">Delete</button>
             </div>
           </div>
@@ -301,6 +307,17 @@
 
   const startCampaign = async (id) => { await fetch(`/campaigns/${id}/start`, { method: 'POST' }); loadCampaigns(); toast.success('Campaign active', 'Campaign is now running') }
   const pauseCampaign = async (id) => { await fetch(`/campaigns/${id}/pause`, { method: 'POST' }); loadCampaigns(); toast.info('Campaign paused', 'No new messages will be sent') }
+  const duplicateCampaign = async (id) => {
+    const res = await fetch(`/campaigns/${id}/duplicate`, { method: 'POST' })
+    const data = await res.json()
+    if (data.success) {
+      await loadCampaigns()
+      toast.success('Duplicated', 'Campaign copied as draft — opening editor')
+      editCampaign(data.campaign.id)
+    } else {
+      toast.error('Duplicate failed', data.error || 'Could not duplicate campaign')
+    }
+  }
   const deleteCampaign = async (id) => {
     if (!await confirmModal('Delete campaign?', 'All campaign data will be removed. Enrolled leads already contacted will not be affected.', 'Delete', true)) return
     await fetch(`/campaigns/${id}`, { method: 'DELETE' })
@@ -336,6 +353,7 @@
     document.getElementById('msg3-spintext').checked = false
     document.getElementById('msg3-delay-error').style.display = 'none'
     document.getElementById('cancel-on-reply').checked = true
+    document.getElementById('initial-send-time').value = ''
     document.getElementById('message-steps').innerHTML = ''
     document.getElementById('campaign-modal').classList.add('open')
   }
@@ -357,6 +375,7 @@
     document.getElementById('msg1-spintext').checked = !!c.message_1_spintext
     updateQuickCharCount(1)
     initKwChips()
+    document.getElementById('initial-send-time').value = c.initial_send_time ? c.initial_send_time.substring(0, 5) : ''
 
     // Reset msg2/3 first
     document.getElementById('msg2-enabled').checked = false
@@ -539,6 +558,8 @@
     if (!valid) return toast.error('Incomplete', 'Please fill in all day-based message bodies')
     messages.sort((a, b) => a.day_number - b.day_number)
 
+    const initial_send_time = document.getElementById('initial-send-time').value || null
+
     try {
       const url = editingCampaignId ? `/campaigns/${editingCampaignId}` : '/campaigns'
       const method = editingCampaignId ? 'PUT' : 'POST'
@@ -552,6 +573,7 @@
           message_2, message_2_delay_minutes, message_2_spintext,
           message_3, message_3_delay_minutes, message_3_spintext,
           cancel_on_reply,
+          initial_send_time,
           messages
         })
       })

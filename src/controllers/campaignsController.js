@@ -45,7 +45,7 @@ const createCampaign = async (req, res) => {
       message_1, message_1_spintext,
       message_2, message_2_delay_minutes, message_2_spintext,
       message_3, message_3_delay_minutes, message_3_spintext,
-      cancel_on_reply
+      cancel_on_reply, initial_send_time
     } = req.body
     if (!name) return res.status(400).json({ error: 'Campaign name is required' })
     if (!message_1) return res.status(400).json({ error: 'Initial message is required' })
@@ -61,7 +61,8 @@ const createCampaign = async (req, res) => {
         message_3: message_3 || null,
         message_3_delay_minutes: message_3_delay_minutes || null,
         message_3_spintext: !!message_3_spintext,
-        cancel_on_reply: cancel_on_reply !== false
+        cancel_on_reply: cancel_on_reply !== false,
+        initial_send_time: initial_send_time || null
       })
       .select()
       .single()
@@ -93,10 +94,11 @@ const updateCampaign = async (req, res) => {
       message_1, message_1_spintext,
       message_2, message_2_delay_minutes, message_2_spintext,
       message_3, message_3_delay_minutes, message_3_spintext,
-      cancel_on_reply
+      cancel_on_reply, initial_send_time
     } = req.body
 
     const updates = { name, description, updated_at: new Date().toISOString() }
+    if (initial_send_time !== undefined) updates.initial_send_time = initial_send_time || null
     if (message_1 !== undefined) {
       Object.assign(updates, {
         message_1, message_1_spintext: !!message_1_spintext,
@@ -157,6 +159,23 @@ const deleteCampaign = async (req, res) => {
   }
 }
 
+// Returns the next UTC ISO timestamp when timeStr (HH:MM[:SS]) occurs in the given timezone.
+// If that time has already passed today in the lead's timezone, rolls to tomorrow.
+const getNextSendAt = (timeStr, timezone) => {
+  try {
+    const now = new Date()
+    const [hours, minutes] = timeStr.split(':').map(Number)
+    const leadNow = new Date(now.toLocaleString('en-US', { timeZone: timezone }))
+    const target = new Date(leadNow)
+    target.setHours(hours, minutes, 0, 0)
+    if (target <= leadNow) target.setDate(target.getDate() + 1)
+    const utcOffset = now.getTime() - leadNow.getTime()
+    return new Date(target.getTime() + utcOffset).toISOString()
+  } catch {
+    return new Date().toISOString()
+  }
+}
+
 const enrollLeads = async (req, res) => {
   try {
     const { lead_ids, start_date } = req.body
@@ -171,7 +190,7 @@ const enrollLeads = async (req, res) => {
 
     const { data: campaign, error: campFetchError } = await supabase
       .from('campaigns')
-      .select('message_1')
+      .select('message_1, initial_send_time')
       .eq('id', campaignId)
       .single()
     if (campFetchError) throw campFetchError
@@ -198,8 +217,10 @@ const enrollLeads = async (req, res) => {
       let firstSendAt
 
       if (campaign.message_1) {
-        // Quick-follow-up campaign: message_1 sends at the specified start_date
-        firstSendAt = new Date(start_date).toISOString()
+        // Quick-follow-up campaign: use initial_send_time if set, otherwise start_date
+        firstSendAt = campaign.initial_send_time
+          ? getNextSendAt(campaign.initial_send_time, leadTimezone)
+          : new Date(start_date).toISOString()
       } else {
         // Legacy day-based campaign: schedule first day-based message
         const firstMessage = messages[0]
@@ -293,6 +314,41 @@ const pauseCampaign = async (req, res) => {
   }
 }
 
+const duplicateCampaign = async (req, res) => {
+  try {
+    const { data: original, error: fetchErr } = await supabase
+      .from('campaigns')
+      .select('*, campaign_messages(*)')
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .single()
+    if (fetchErr || !original) return res.status(404).json({ error: 'Campaign not found' })
+
+    const { campaign_messages, id, created_at, updated_at, ...fields } = original
+    const { data: newCampaign, error: insertErr } = await supabase
+      .from('campaigns')
+      .insert({ ...fields, name: `${original.name} (Copy)`, status: 'draft', user_id: req.user.id })
+      .select()
+      .single()
+    if (insertErr) throw insertErr
+
+    if (campaign_messages && campaign_messages.length > 0) {
+      await supabase.from('campaign_messages').insert(
+        campaign_messages.map(m => ({
+          campaign_id: newCampaign.id,
+          day_number: m.day_number,
+          send_time: m.send_time,
+          message_body: m.message_body
+        }))
+      )
+    }
+
+    res.json({ success: true, campaign: newCampaign })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 module.exports = {
   getCampaigns,
   getCampaign,
@@ -301,5 +357,6 @@ module.exports = {
   deleteCampaign,
   enrollLeads,
   startCampaign,
-  pauseCampaign
+  pauseCampaign,
+  duplicateCampaign
 }
