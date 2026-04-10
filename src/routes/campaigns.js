@@ -7,6 +7,7 @@ const {
   updateCampaign,
   deleteCampaign,
   enrollLeads,
+  enrollBucket,
   startCampaign,
   pauseCampaign,
   duplicateCampaign
@@ -18,6 +19,7 @@ router.post('/', createCampaign)
 router.put('/:id', updateCampaign)
 router.delete('/:id', deleteCampaign)
 router.post('/:id/enroll', enrollLeads)
+router.post('/:id/enroll-bucket/:bucketId', enrollBucket)
 router.post('/:id/start', startCampaign)
 router.post('/:id/pause', pauseCampaign)
 router.post('/:id/duplicate', duplicateCampaign)

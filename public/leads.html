@@ -718,8 +718,10 @@
 </div>
 
 <!-- BUCKET CONTEXT MENU -->
-<div id="bucket-context-menu" style="display:none;position:fixed;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:140px;overflow:hidden;">
+<div id="bucket-context-menu" style="display:none;position:fixed;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:500;min-width:160px;overflow:hidden;">
   <button onclick="editBucketFromMenu()" style="display:block;width:100%;padding:9px 16px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#374151;" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background=''">✏️ Rename</button>
+  <button id="ctx-archive-btn" onclick="archiveBucketFromMenu()" style="display:block;width:100%;padding:9px 16px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#374151;" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background=''">📦 Archive</button>
+  <div style="height:1px;background:#f3f4f6;margin:2px 0;"></div>
   <button onclick="deleteBucketFromMenu()" style="display:block;width:100%;padding:9px 16px;text-align:left;border:none;background:none;font-size:13px;cursor:pointer;color:#dc2626;" onmouseenter="this.style.background='#fee2e2'" onmouseleave="this.style.background=''">🗑️ Delete</button>
 </div>
 

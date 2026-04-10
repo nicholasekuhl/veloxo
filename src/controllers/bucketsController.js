@@ -185,4 +185,28 @@ const deleteBucket = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 
-module.exports = { getBuckets, createBucket, updateBucket, patchBucket, deleteBucket }
+const getArchivedBuckets = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const [{ data: buckets, error }, { data: countRows }, { data: lastOutboundRows }] = await Promise.all([
+      supabase.from('buckets').select('*').eq('user_id', userId).eq('is_archived', true)
+        .order('archived_at', { ascending: false }),
+      supabase.rpc('get_bucket_lead_counts', { p_user_id: userId }),
+      supabase.rpc('get_archived_bucket_last_outbound', { p_user_id: userId })
+    ])
+    if (error) throw error
+    const countMap = {}
+    for (const r of countRows || []) countMap[r.bucket_id] = parseInt(r.lead_count) || 0
+    const lastOutboundMap = {}
+    for (const r of lastOutboundRows || []) lastOutboundMap[r.bucket_id] = r.last_outbound_at
+    res.json({
+      buckets: (buckets || []).map(b => ({
+        ...b,
+        lead_count: countMap[b.id] || 0,
+        last_outbound_at: lastOutboundMap[b.id] || null
+      }))
+    })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+}
+
+module.exports = { getBuckets, getArchivedBuckets, createBucket, updateBucket, patchBucket, deleteBucket }

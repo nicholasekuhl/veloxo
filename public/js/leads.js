@@ -37,6 +37,7 @@ let editingBucketId = null
 let contextMenuBucketId = null
 let contextMenuBucketName = null
 let contextMenuBucketColor = null
+let contextMenuBucketIsFolder = false
 let deleteTargetLeadId = null
 let deleteTargetLeadName = null
 let scheduleFollowupLeadId = null
@@ -1946,6 +1947,14 @@ const showBucketContextMenu = (e, id, name, color) => {
   contextMenuBucketId = id
   contextMenuBucketName = name
   contextMenuBucketColor = color
+  contextMenuBucketIsFolder = !!bucket?.is_folder
+  const childCount = bucket?.is_folder ? allBuckets.filter(b => b.parent_id === id).length : 0
+  const archiveBtn = document.getElementById('ctx-archive-btn')
+  if (archiveBtn) {
+    archiveBtn.textContent = bucket?.is_folder
+      ? `📦 Archive folder (${childCount} bucket${childCount !== 1 ? 's' : ''})`
+      : '📦 Archive'
+  }
   const menu = document.getElementById('bucket-context-menu')
   menu.style.left = `${e.clientX}px`
   menu.style.top = `${e.clientY}px`
@@ -1971,6 +1980,35 @@ const deleteBucketFromMenu = async () => {
     updateCampaignFilter()
     filterLeads()
     toast.success('Bucket deleted')
+  } catch (err) { toast.error('Error', err.message) }
+}
+
+const archiveBucketFromMenu = async () => {
+  document.getElementById('bucket-context-menu').style.display = 'none'
+  const msg = contextMenuBucketIsFolder
+    ? `Archive folder "${contextMenuBucketName}"? All buckets inside will also be archived. Leads will be hidden from the main view.`
+    : `Archive "${contextMenuBucketName}"? Leads will be hidden from the main view.`
+  if (!confirm(msg)) return
+  try {
+    const res = await fetch(`/buckets/${contextMenuBucketId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'archive' })
+    })
+    const data = await res.json()
+    if (!data.success) throw new Error(data.error)
+    // Remove archived bucket (and children if folder) from allBuckets
+    const archivedIds = new Set([contextMenuBucketId])
+    if (contextMenuBucketIsFolder) {
+      allBuckets.forEach(b => { if (b.parent_id === contextMenuBucketId) archivedIds.add(b.id) })
+    }
+    allBuckets = allBuckets.filter(b => !archivedIds.has(b.id))
+    allLeads = allLeads.filter(l => !archivedIds.has(l.bucket_id))
+    if (archivedIds.has(activeBucket)) { activeBucket = ''; activeFolderId = '' }
+    renderBucketPills()
+    updateCampaignFilter()
+    filterLeads()
+    toast.success('Archived', `"${contextMenuBucketName}" moved to archive`)
   } catch (err) { toast.error('Error', err.message) }
 }
 

@@ -618,11 +618,23 @@ const getLeads = async (req, res) => {
       if (enrolledIds.length === 0) return res.json({ leads: [], total: 0, page, limit })
     }
 
+    // Fetch archived bucket IDs to exclude their leads from non-bucket-scoped views
+    let archivedBucketIds = []
+    if (!req.query.bucket_id) {
+      const { data: archivedBuckets } = await supabase
+        .from('buckets').select('id').eq('user_id', req.user.id).eq('is_archived', true)
+      archivedBucketIds = (archivedBuckets || []).map(b => b.id)
+    }
+
     const applyQueryFilters = (q) => {
       q = q.eq('user_id', req.user.id)
-      // Exclude opted-out leads from all views except bucket-scoped views
-      // (opted-out leads live in the Opted Out bucket, visible there naturally)
-      if (!req.query.bucket_id) q = q.eq('opted_out', false)
+      // Exclude opted-out and archived-bucket leads from all views except bucket-scoped views
+      if (!req.query.bucket_id) {
+        q = q.eq('opted_out', false)
+        if (archivedBucketIds.length > 0) {
+          q = q.not('bucket_id', 'in', `(${archivedBucketIds.join(',')})`)
+        }
+      }
       if (req.query.search) {
         const s = req.query.search
         q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)

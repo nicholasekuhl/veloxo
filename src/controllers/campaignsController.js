@@ -349,6 +349,62 @@ const duplicateCampaign = async (req, res) => {
   }
 }
 
+const enrollBucket = async (req, res) => {
+  try {
+    const { id: campaignId, bucketId } = req.params
+
+    const [{ data: campaign, error: campFetchError }, { data: messages, error: msgError }] = await Promise.all([
+      supabase.from('campaigns').select('message_1, initial_send_time, user_id').eq('id', campaignId).single(),
+      supabase.from('campaign_messages').select('*').eq('campaign_id', campaignId).order('day_number', { ascending: true })
+    ])
+    if (campFetchError || !campaign) return res.status(404).json({ error: 'Campaign not found' })
+    if (campaign.user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
+    if (msgError) throw msgError
+    if (!campaign.message_1 && messages.length === 0) return res.status(400).json({ error: 'Campaign has no messages' })
+
+    const { data: leadsData, error: leadsErr } = await supabase
+      .from('leads').select('id, timezone')
+      .eq('bucket_id', bucketId).eq('user_id', req.user.id).eq('opted_out', false)
+    if (leadsErr) throw leadsErr
+    if (!leadsData || leadsData.length === 0) return res.status(400).json({ error: 'No eligible leads in this bucket' })
+
+    // Exclude leads already active in this campaign
+    const { data: existingEnrollments } = await supabase
+      .from('campaign_leads').select('lead_id')
+      .eq('campaign_id', campaignId)
+      .in('status', ['pending', 'active'])
+      .in('lead_id', leadsData.map(l => l.id))
+    const existingLeadIds = new Set((existingEnrollments || []).map(e => e.lead_id))
+    const eligibleLeads = leadsData.filter(l => !existingLeadIds.has(l.id))
+
+    if (eligibleLeads.length === 0) {
+      return res.status(400).json({ error: 'All leads in this bucket are already enrolled in this campaign' })
+    }
+
+    const now = new Date().toISOString()
+    const enrollments = eligibleLeads.map((lead) => {
+      const leadTimezone = lead.timezone || 'America/New_York'
+      let firstSendAt
+      if (campaign.message_1) {
+        firstSendAt = campaign.initial_send_time
+          ? getNextSendAt(campaign.initial_send_time, leadTimezone)
+          : now
+      } else {
+        const firstMessage = messages[0]
+        firstSendAt = calculateSendTime(firstMessage.day_number, firstMessage.send_time || '10:00', now, leadTimezone)
+      }
+      return { campaign_id: campaignId, lead_id: lead.id, status: 'pending', current_step: 0, start_date: now, next_send_at: firstSendAt, user_id: req.user.id }
+    })
+
+    const { data, error } = await supabase.from('campaign_leads').insert(enrollments).select()
+    if (error) throw error
+
+    res.json({ success: true, count: data.length })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 module.exports = {
   getCampaigns,
   getCampaign,
@@ -356,6 +412,7 @@ module.exports = {
   updateCampaign,
   deleteCampaign,
   enrollLeads,
+  enrollBucket,
   startCampaign,
   pauseCampaign,
   duplicateCampaign

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>(function(){if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark")})()</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archive — TextApp</title>
+  <link rel="stylesheet" href="/css/shared.css?v=2">
+  <style>
+    .archive-page { max-width: 860px; margin: 0 auto; padding: 28px 24px; }
+    .archive-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    .archive-header h1 { font-size: 22px; font-weight: 700; color: var(--color-text); margin: 0; }
+    .archive-header p { font-size: 13px; color: var(--color-text-secondary); margin: 4px 0 0; }
+    .archive-empty { text-align: center; padding: 80px 24px; color: var(--color-text-secondary); }
+    .archive-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .archive-empty p { font-size: 14px; margin: 0; }
+
+    /* Folder group */
+    .archive-folder-group { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface-subtle); }
+    .archive-folder-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--bg-card); border-bottom: 1px solid var(--color-border); }
+    .archive-folder-icon { font-size: 18px; }
+    .archive-folder-name { font-size: 15px; font-weight: 700; color: var(--color-text); flex: 1; }
+    .archive-folder-meta { font-size: 12px; color: var(--color-text-secondary); }
+    .archive-folder-actions { display: flex; gap: 8px; }
+    .archive-folder-buckets { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* Bucket card */
+    .archive-bucket-card { background: var(--bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    .archive-bucket-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .archive-bucket-info { flex: 1; min-width: 0; }
+    .archive-bucket-name { font-size: 14px; font-weight: 600; color: var(--color-text); margin-bottom: 3px; }
+    .archive-bucket-meta { display: flex; flex-wrap: wrap; gap: 12px; }
+    .archive-bucket-stat { font-size: 12px; color: var(--color-text-secondary); }
+    .archive-bucket-stat strong { color: var(--color-text); font-weight: 600; }
+    .archive-bucket-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    /* Standalone section */
+    .archive-section-label { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 10px; }
+
+    .loading-state { text-align: center; padding: 60px; color: var(--color-text-secondary); font-size: 14px; }
+  </style>
+</head>
+<body>
+<div id="sidebar-root"></div>
+<div class="container">
+  <div class="archive-page">
+    <div class="archive-header">
+      <div>
+        <h1>📦 Archive</h1>
+        <p>Archived buckets are hidden from Leads view. You can unarchive or enroll them in a campaign at any time.</p>
+      </div>
+    </div>
+    <div id="archive-content">
+      <div class="loading-state">Loading archived buckets…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN TO CAMPAIGN MODAL -->
+<div class="modal-overlay" id="assign-campaign-modal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h2>Assign to Campaign</h2>
+      <button class="modal-close" onclick="closeAssignModal()">×</button>
+    </div>
+    <p id="assign-modal-desc" style="font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;"></p>
+    <div class="form-group">
+      <label>Campaign</label>
+      <select id="assign-campaign-select" onchange="onAssignCampaignChange()">
+        <option value="">Select a campaign…</option>
+      </select>
+    </div>
+    <div id="assign-send-notice" style="display:none;background:var(--color-primary-bg);border:1px solid var(--indigo-200);border-radius:var(--radius-sm);padding:9px 13px;font-size:12px;color:var(--color-primary);margin-bottom:12px;"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn btn-primary" id="assign-confirm-btn" onclick="confirmAssignCampaign()" disabled>Enroll Leads</button>
+    </div>
+  </div>
+</div>
+
+<script src="/toast.js?v=2"></script>
+<script src="/js/shared.js?v=2"></script>
+<script>
+  let archivedBuckets = []
+  let allCampaigns = []
+  let assignTargetBucketId = null
+  let assignTargetLeadCount = 0
+
+  const fmtDate = (iso) => {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  const loadArchive = async () => {
+    try {
+      const [bucketsRes, campaignsRes] = await Promise.all([
+        fetch('/buckets/archived'),
+        fetch('/campaigns')
+      ])
+      const bucketsData = await bucketsRes.json()
+      const campaignsData = await campaignsRes.json()
+      archivedBuckets = bucketsData.buckets || []
+      allCampaigns = (campaignsData.campaigns || []).filter(c => c.status !== 'deleted')
+      renderArchive()
+    } catch (err) {
+      document.getElementById('archive-content').innerHTML = `<div class="archive-empty"><div class="archive-empty-icon">⚠️</div><p>Failed to load archive: ${err.message}</p></div>`
+    }
+  }
+
+  const renderArchive = () => {
+    const content = document.getElementById('archive-content')
+    if (!archivedBuckets.length) {
+      content.innerHTML = `<div class="archive-empty"><div class="archive-empty-icon">📦</div><p>No archived buckets yet. Right-click any bucket on the Leads page to archive it.</p></div>`
+      return
+    }
+
+    // Separate folders vs standalone buckets
+    const folders = archivedBuckets.filter(b => b.is_folder)
+    const standaloneIds = new Set(folders.map(f => f.id))
+    const childBuckets = archivedBuckets.filter(b => !b.is_folder && b.parent_id && standaloneIds.has(b.parent_id))
+    const standaloneBuckets = archivedBuckets.filter(b => !b.is_folder && (!b.parent_id || !standaloneIds.has(b.parent_id)))
+
+    let html = ''
+
+    // Render archived folder groups
+    for (const folder of folders) {
+      const children = childBuckets.filter(b => b.parent_id === folder.id)
+      const totalLeads = children.reduce((sum, b) => sum + (b.lead_count || 0), 0)
+      html += `
+        <div class="archive-folder-group">
+          <div class="archive-folder-header">
+            <div class="archive-folder-icon">📁</div>
+            <div class="archive-folder-name">${esc(folder.name)}</div>
+            <div class="archive-folder-meta">${children.length} bucket${children.length !== 1 ? 's' : ''} · ${totalLeads} lead${totalLeads !== 1 ? 's' : ''} · Archived ${fmtDate(folder.archived_at)}</div>
+            <div class="archive-folder-actions">
+              <button class="btn btn-secondary btn-sm" onclick="unarchiveBucket('${folder.id}', '${esc(folder.name)}', true)">Unarchive folder</button>
+            </div>
+          </div>
+          <div class="archive-folder-buckets">
+            ${children.length === 0 ? '<div style="font-size:13px;color:var(--color-text-secondary);padding:4px 0;">No buckets inside this folder</div>' : ''}
+            ${children.map(b => renderBucketCard(b)).join('')}
+          </div>
+        </div>`
+    }
+
+    // Render standalone buckets
+    if (standaloneBuckets.length > 0) {
+      if (folders.length > 0) html += `<div class="archive-section-label">Standalone Buckets</div>`
+      html += standaloneBuckets.map(b => renderBucketCard(b)).join('')
+    }
+
+    content.innerHTML = html
+  }
+
+  const renderBucketCard = (b) => {
+    const count = b.lead_count || 0
+    const color = b.color || '#6366f1'
+    return `
+      <div class="archive-bucket-card">
+        <div class="archive-bucket-dot" style="background:${color};"></div>
+        <div class="archive-bucket-info">
+          <div class="archive-bucket-name">${esc(b.name)}</div>
+          <div class="archive-bucket-meta">
+            <span class="archive-bucket-stat"><strong>${count}</strong> lead${count !== 1 ? 's' : ''}</span>
+            <span class="archive-bucket-stat">Archived <strong>${fmtDate(b.archived_at)}</strong></span>
+            ${b.last_outbound_at ? `<span class="archive-bucket-stat">Last sent <strong>${fmtDate(b.last_outbound_at)}</strong></span>` : ''}
+          </div>
+        </div>
+        <div class="archive-bucket-actions">
+          <button class="btn btn-secondary btn-sm" onclick="openAssignModal('${b.id}', ${count})">Assign to Campaign</button>
+          <button class="btn btn-secondary btn-sm" onclick="unarchiveBucket('${b.id}', '${esc(b.name)}', false)">Unarchive</button>
+        </div>
+      </div>`
+  }
+
+  const unarchiveBucket = async (id, name, isFolder) => {
+    try {
+      const res = await fetch(`/buckets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'unarchive' })
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      // Remove from local list
+      const removedIds = new Set([id])
+      if (isFolder) archivedBuckets.filter(b => b.parent_id === id).forEach(b => removedIds.add(b.id))
+      archivedBuckets = archivedBuckets.filter(b => !removedIds.has(b.id))
+      renderArchive()
+      toast.success('Unarchived', `"${name}" is now visible in Leads`)
+    } catch (err) { toast.error('Error', err.message) }
+  }
+
+  // ── Assign to Campaign Modal ──────────────────────────────────────────────────
+
+  const openAssignModal = (bucketId, leadCount) => {
+    assignTargetBucketId = bucketId
+    assignTargetLeadCount = leadCount
+    const bucket = archivedBuckets.find(b => b.id === bucketId)
+    document.getElementById('assign-modal-desc').textContent =
+      `Enroll ${leadCount} lead${leadCount !== 1 ? 's' : ''} from "${bucket?.name || 'this bucket'}" into a campaign.`
+    const sel = document.getElementById('assign-campaign-select')
+    sel.innerHTML = '<option value="">Select a campaign…</option>' +
+      allCampaigns.map(c => `<option value="${c.id}" data-time="${c.initial_send_time || ''}">${esc(c.name)}</option>`).join('')
+    document.getElementById('assign-send-notice').style.display = 'none'
+    document.getElementById('assign-confirm-btn').disabled = true
+    document.getElementById('assign-campaign-modal').classList.add('open')
+  }
+
+  const closeAssignModal = () => {
+    document.getElementById('assign-campaign-modal').classList.remove('open')
+    assignTargetBucketId = null
+  }
+
+  const onAssignCampaignChange = () => {
+    const sel = document.getElementById('assign-campaign-select')
+    const opt = sel.options[sel.selectedIndex]
+    const sendTime = opt?.dataset?.time || ''
+    const notice = document.getElementById('assign-send-notice')
+    const btn = document.getElementById('assign-confirm-btn')
+    btn.disabled = !sel.value
+    if (sel.value && sendTime) {
+      notice.style.display = 'block'
+      notice.textContent = `Messages will send tomorrow at ${sendTime} local time for each lead.`
+    } else if (sel.value) {
+      notice.style.display = 'block'
+      notice.textContent = 'Messages will begin sending immediately.'
+    } else {
+      notice.style.display = 'none'
+    }
+  }
+
+  const confirmAssignCampaign = async () => {
+    const campaignId = document.getElementById('assign-campaign-select').value
+    if (!campaignId || !assignTargetBucketId) return
+    const btn = document.getElementById('assign-confirm-btn')
+    btn.disabled = true
+    btn.textContent = 'Enrolling…'
+    try {
+      const res = await fetch(`/campaigns/${campaignId}/enroll-bucket/${assignTargetBucketId}`, { method: 'POST' })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error)
+      closeAssignModal()
+      toast.success('Enrolled', `${data.count} lead${data.count !== 1 ? 's' : ''} added to campaign`)
+    } catch (err) {
+      toast.error('Error', err.message)
+    } finally {
+      btn.disabled = false
+      btn.textContent = 'Enroll Leads'
+    }
+  }
+
+  const esc = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+
+  document.addEventListener('DOMContentLoaded', () => {
+    renderSidebar()
+    loadArchive()
+  })
+</script>
+</body>
+</html>
