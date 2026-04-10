@@ -113,7 +113,7 @@ const getOverview = async (req, res) => {
       { count: totalLeads },
       { count: newLeads },
       { data: campaigns },
-      { data: userLeads }
+      { count: replied }
     ] = await Promise.all([
       supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('direction', 'outbound').gte('sent_at', since.toISOString()),
       supabase.from('messages').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('direction', 'outbound').eq('status', 'delivered').gte('sent_at', since.toISOString()),
@@ -121,24 +121,11 @@ const getOverview = async (req, res) => {
       supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId),
       supabase.from('leads').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', since.toISOString()),
       supabase.from('campaigns').select('id, status').eq('user_id', userId),
-      supabase.from('leads').select('id').eq('user_id', userId).limit(10000),
+      supabase.from('conversations').select('*', { count: 'exact', head: true }).eq('user_id', userId).not('last_inbound_at', 'is', null).gte('last_inbound_at', since.toISOString()),
     ])
 
-    // Inbound query uses lead_id scoping instead of user_id since inbound messages
-    // are stored without user_id (they come from leads, not agents)
-    const leadIds = (userLeads || []).map(l => l.id)
-    const { data: inboundLeads } = leadIds.length > 0
-      ? await supabase.from('messages').select('lead_id, body').eq('direction', 'inbound').gte('sent_at', since.toISOString()).in('lead_id', leadIds).limit(5000)
-      : { data: [] }
-
-    const OPT_OUT_WORDS = ['stop', 'stopall', 'unsubscribe', 'cancel', 'end', 'quit']
     const sentCount = totalSent || 0
     const deliveredCount = delivered || 0
-    const replied = new Set(
-      (inboundLeads || [])
-        .filter(m => !OPT_OUT_WORDS.includes((m.body || '').trim().toLowerCase()))
-        .map(m => m.lead_id)
-    ).size
 
     res.json({
       messages_sent: sentCount,
@@ -147,8 +134,8 @@ const getOverview = async (req, res) => {
       delivery_rate: sentCount > 0 ? parseFloat(((deliveredCount / sentCount) * 100).toFixed(1)) : null,
       new_leads: newLeads || 0,
       total_leads: totalLeads || 0,
-      replied_leads: replied,
-      reply_rate: sentCount > 0 ? parseFloat(((replied / sentCount) * 100).toFixed(1)) : null,
+      replied_leads: replied || 0,
+      reply_rate: sentCount > 0 && replied > 0 ? parseFloat(((replied / sentCount) * 100).toFixed(1)) : null,
       active_campaigns: campaigns?.filter(c => c.status === 'active').length || 0,
       total_campaigns: campaigns?.length || 0,
     })
