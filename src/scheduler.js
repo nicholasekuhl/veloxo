@@ -408,7 +408,7 @@ const processQuickFollowups = async () => {
 
       const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, lead.state) || process.env.TWILIO_PHONE_NUMBER
 
-      // Atomic guard for step 1 — prevents duplicate sends when two scheduler instances run concurrently
+      // Atomic guard — claim each step before enqueue to prevent duplicate sends on concurrent runs
       if (stepToSend === 1) {
         const { data: claimed } = await supabase
           .from('campaign_leads')
@@ -417,7 +417,29 @@ const processQuickFollowups = async () => {
           .is('step_1_sent_at', null)
           .select('id')
         if (!claimed || claimed.length === 0) {
-          console.log(`[quickFollowups] Step 1 already claimed for enrollment ${enrollment.id} — skipping to prevent duplicate`)
+          console.log(`[quickFollowups] Step 1 already claimed for enrollment ${enrollment.id} — skipping`)
+          continue
+        }
+      } else if (stepToSend === 2) {
+        const { data: claimed } = await supabase
+          .from('campaign_leads')
+          .update({ step_2_sent_at: new Date().toISOString() })
+          .eq('id', enrollment.id)
+          .is('step_2_sent_at', null)
+          .select('id')
+        if (!claimed || claimed.length === 0) {
+          console.log(`[quickFollowups] Step 2 already claimed for enrollment ${enrollment.id} — skipping`)
+          continue
+        }
+      } else if (stepToSend === 3) {
+        const { data: claimed } = await supabase
+          .from('campaign_leads')
+          .update({ step_3_sent_at: new Date().toISOString() })
+          .eq('id', enrollment.id)
+          .is('step_3_sent_at', null)
+          .select('id')
+        if (!claimed || claimed.length === 0) {
+          console.log(`[quickFollowups] Step 3 already claimed for enrollment ${enrollment.id} — skipping`)
           continue
         }
       }
@@ -469,6 +491,8 @@ const processQuickFollowups = async () => {
           }
           await supabase.from('leads').update(leadUpdates).eq('id', job.leadId)
 
+          // step_1_sent_at is written here as authoritative timestamp (atomic guard uses DB now(), onSuccess uses sentAt for precision)
+          // step_2_sent_at and step_3_sent_at are already set by the atomic guard — do NOT overwrite them here
           const stepUpdates = {}
           if (job.stepToSend === 1) {
             stepUpdates.step_1_sent_at = sentAt
@@ -480,7 +504,7 @@ const processQuickFollowups = async () => {
               else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
             }
           } else if (job.stepToSend === 2) {
-            stepUpdates.step_2_sent_at = sentAt
+            // step_2_sent_at already set atomically — only update scheduling fields
             if (campaign.message_3 && campaign.message_3_delay_minutes) {
               stepUpdates.next_send_at = new Date(new Date(enrollment.step_1_sent_at).getTime() + campaign.message_3_delay_minutes * 60000).toISOString()
             } else {
@@ -489,7 +513,7 @@ const processQuickFollowups = async () => {
               else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
             }
           } else if (job.stepToSend === 3) {
-            stepUpdates.step_3_sent_at = sentAt
+            // step_3_sent_at already set atomically — only update scheduling fields
             const nextDayAt = await getNextDayBasedSendAt(enrollment)
             if (nextDayAt) stepUpdates.next_send_at = nextDayAt
             else { stepUpdates.status = 'completed'; stepUpdates.completed_at = sentAt }
@@ -691,6 +715,24 @@ const processScheduledMessages = async () => {
       }
 
       const fromNumber = pickNumberForLead(enrollment.user_id ? phoneNumbersMap[enrollment.user_id] : null, enrollment.leads.state) || process.env.TWILIO_PHONE_NUMBER
+
+      // Atomic claim — flip status pending→active before enqueue.
+      // If two scheduler instances race, only one wins; the loser sees claimed.length === 0 and skips.
+      const { data: claimed, error: claimError } = await supabase
+        .from('campaign_leads')
+        .update({ status: 'active' })
+        .eq('id', enrollment.id)
+        .eq('status', 'pending')
+        .select('id')
+      if (claimError) {
+        console.error(`[scheduler] Claim error for enrollment ${enrollment.id}:`, claimError.message)
+        continue
+      }
+      if (!claimed || claimed.length === 0) {
+        console.log(`[scheduler] Enrollment ${enrollment.id} already claimed — skipping`)
+        continue
+      }
+
       smsQueue.add({
         phone: enrollment.leads.phone,
         message: messageBody,
