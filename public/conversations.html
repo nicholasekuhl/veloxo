@@ -164,6 +164,7 @@
   let isSearchMode = false
   let scheduledTime = null
   let scheduledTimeLabel = null
+  let profileCache = null
 
   const debounce = (fn, ms) => {
     let t
@@ -571,9 +572,23 @@
 
   const scheduleConvMessage = async (convId, leadId) => {
     const input = document.getElementById('conv-input')
-    const body = input?.value.trim()
-    if (!body) return toast.error('Required', 'Type a message first')
+    const rawBody = input?.value.trim()
+    if (!rawBody) return toast.error('Required', 'Type a message first')
     if (!scheduledTime) return toast.error('Required', 'Select a send time first')
+
+    const missingVars = checkMissingVars(rawBody, currentLead, profileCache)
+    if (missingVars.length) {
+      const s = missingVars.length === 1
+      const ok = await confirmModal(
+        'Missing variable values',
+        `${missingVars.join(', ')} ${s ? 'has' : 'have'} no value for this lead and will send blank. Schedule anyway?`,
+        'Schedule anyway',
+        false
+      )
+      if (!ok) return
+    }
+
+    const body = resolveVariables(rawBody, currentLead, profileCache)
     try {
       const res = await fetch(`/conversations/${convId}/scheduled`, {
         method: 'POST',
@@ -803,14 +818,21 @@
           </div>
           <div class="conv3-template-picker" id="conv3-template-picker" style="display:none;position:absolute;bottom:calc(100% + 4px);left:8px;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:260px;max-height:220px;overflow-y:auto;z-index:200;" id="template-pills"></div>
           <div class="conv3-var-buttons">
-            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[First Name]')">First Name</button>
-            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Last Name]')">Last Name</button>
-            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Zip]')">Zip</button>
-            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[State]')">State</button>
-            <button type="button" class="conv3-var-btn" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[DOB]')">DOB</button>
+            <button type="button" class="conv3-var-btn" data-var="[First Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[First Name]')">First Name</button>
+            <button type="button" class="conv3-var-btn" data-var="[Last Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Last Name]')">Last Name</button>
+            <button type="button" class="conv3-var-btn" data-var="[Email]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Email]')">Email</button>
+            <button type="button" class="conv3-var-btn" data-var="[Phone]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Phone]')">Phone</button>
+            <button type="button" class="conv3-var-btn" data-var="[State]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[State]')">State</button>
+            <button type="button" class="conv3-var-btn" data-var="[City]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[City]')">City</button>
+            <button type="button" class="conv3-var-btn" data-var="[Zip]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Zip]')">Zip</button>
+            <button type="button" class="conv3-var-btn" data-var="[DOB]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[DOB]')">DOB</button>
+            <button type="button" class="conv3-var-btn" data-var="[Agent Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Agent Name]')">Agent Name</button>
+            <button type="button" class="conv3-var-btn" data-var="[Agency Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Agency Name]')">Agency Name</button>
+            <button type="button" class="conv3-var-btn" data-var="[Calendly Link]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Calendly Link]')">Calendly</button>
           </div>
-          <textarea class="conv3-textarea" id="conv-input" placeholder="${isOptedOut ? 'Sending disabled — lead has opted out' : isAutopilot ? 'Autopilot active — type to override' : 'Type a message...'}" oninput="updateConvCharCount(this)" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){event.preventDefault();sendConvMessage('${conv.id}','${conv.lead_id}')}" ${!isAutopilot && !isOptedOut ? `onfocus="loadAISuggestion('${conv.id}','${conv.lead_id}')"` : ''} ${isOptedOut ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}></textarea>
+          <textarea class="conv3-textarea" id="conv-input" placeholder="${isOptedOut ? 'Sending disabled — lead has opted out' : isAutopilot ? 'Autopilot active — type to override' : 'Type a message...'}" oninput="updateConvCharCount(this);updateVarWarnings()" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){event.preventDefault();sendConvMessage('${conv.id}','${conv.lead_id}')}" ${!isAutopilot && !isOptedOut ? `onfocus="loadAISuggestion('${conv.id}','${conv.lead_id}')"` : ''} ${isOptedOut ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}></textarea>
           ${kwChipsRowHTML("document.getElementById('conv-input')")}
+          <div class="conv3-var-warnings" id="conv3-var-warnings" style="display:none;"></div>
           <div class="conv3-input-toolbar">
             <div style="position:relative;">
               <button class="conv3-itb" id="conv3-template-btn" onclick="toggleConvTemplatePicker()" title="Templates" ${isOptedOut ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>
@@ -844,6 +866,7 @@
       renderMessages(conv, 'all')
       renderTemplatePills(conv.lead_id)
       if (rightPanelOpen) renderRightPanel(conv, lead, [])
+      updateVarButtonStates(lead)
 
       // Populate disposition filter dropdown (once)
       const dispSelect = document.getElementById('conv3-disp-filter')
@@ -1093,7 +1116,20 @@
     const input = document.getElementById('conv-input')
     const rawBody = input?.value.trim()
     if (!rawBody) return
-    const body = resolveVariables(rawBody, currentLead, currentUser)
+
+    const missingVars = checkMissingVars(rawBody, currentLead, profileCache)
+    if (missingVars.length) {
+      const s = missingVars.length === 1
+      const ok = await confirmModal(
+        'Missing variable values',
+        `${missingVars.join(', ')} ${s ? 'has' : 'have'} no value for this lead and will send blank. Send anyway?`,
+        'Send anyway',
+        false
+      )
+      if (!ok) return
+    }
+
+    const body = resolveVariables(rawBody, currentLead, profileCache)
 
     // Check quiet hours before sending
     try {
@@ -1263,12 +1299,14 @@
     input.value = template.body
     input.focus()
     input.style.height = '84px'
+    updateConvCharCount(input)
+    updateVarWarnings()
   }
 
   const resolveVariables = (text, lead, profile) => {
     const now = new Date()
     const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-    const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    const dateStr = now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
     return text
       .replace(/\[First Name\]/gi, lead?.first_name || '')
       .replace(/\[Last Name\]/gi, lead?.last_name || '')
@@ -1276,6 +1314,7 @@
       .replace(/\[Phone\]/gi, lead?.phone || '')
       .replace(/\[Email\]/gi, lead?.email || '')
       .replace(/\[State\]/gi, lead?.state || '')
+      .replace(/\[City\]/gi, lead?.city || '')
       .replace(/\[Zip\]/gi, lead?.zip_code || '')
       .replace(/\[DOB\]/gi, lead?.date_of_birth || '')
       .replace(/\[Agent Name\]/gi, profile?.agent_name || '')
@@ -1283,6 +1322,67 @@
       .replace(/\[Calendly Link\]/gi, profile?.calendly_url || '')
       .replace(/\[Date\]/gi, dateStr)
       .replace(/\[Time\]/gi, timeStr)
+  }
+
+  const checkMissingVars = (text, lead, profile) => {
+    const varValues = {
+      'first name': lead?.first_name,
+      'last name': lead?.last_name,
+      'full name': [lead?.first_name, lead?.last_name].filter(Boolean).join(' ') || '',
+      'phone': lead?.phone,
+      'email': lead?.email,
+      'state': lead?.state,
+      'city': lead?.city,
+      'zip': lead?.zip_code,
+      'dob': lead?.date_of_birth,
+      'agent name': profile?.agent_name,
+      'agency name': profile?.agency_name,
+      'calendly link': profile?.calendly_url,
+    }
+    const missing = []
+    const matches = text.match(/\[([^\]]+)\]/gi) || []
+    for (const match of matches) {
+      const key = match.slice(1, -1).toLowerCase()
+      if (key in varValues && !varValues[key] && !missing.includes(match)) {
+        missing.push(match)
+      }
+    }
+    return missing
+  }
+
+  const updateVarButtonStates = (lead) => {
+    const varValues = {
+      '[First Name]': lead?.first_name,
+      '[Last Name]': lead?.last_name,
+      '[Full Name]': [lead?.first_name, lead?.last_name].filter(Boolean).join(' '),
+      '[Phone]': lead?.phone,
+      '[Email]': lead?.email,
+      '[State]': lead?.state,
+      '[City]': lead?.city,
+      '[Zip]': lead?.zip_code,
+      '[DOB]': lead?.date_of_birth,
+      '[Agent Name]': profileCache?.agent_name,
+      '[Agency Name]': profileCache?.agency_name,
+      '[Calendly Link]': profileCache?.calendly_url,
+    }
+    document.querySelectorAll('.conv3-var-btn[data-var]').forEach(btn => {
+      const v = btn.dataset.var
+      if (v in varValues) btn.classList.toggle('var-missing', !varValues[v])
+    })
+  }
+
+  const updateVarWarnings = () => {
+    const input = document.getElementById('conv-input')
+    const banner = document.getElementById('conv3-var-warnings')
+    if (!input || !banner) return
+    const missing = checkMissingVars(input.value, currentLead, profileCache)
+    if (missing.length) {
+      banner.style.display = 'block'
+      const s = missing.length === 1
+      banner.textContent = `⚠️ ${missing.join(', ')} ${s ? 'has' : 'have'} no value for this lead — ${s ? 'it' : 'they'} will send blank unless you replace ${s ? 'it' : 'them'}.`
+    } else {
+      banner.style.display = 'none'
+    }
   }
 
   const insertVarAtCursor = (textarea, text) => {
@@ -1293,6 +1393,7 @@
     textarea.selectionStart = textarea.selectionEnd = start + text.length
     textarea.focus()
     updateConvCharCount(textarea)
+    updateVarWarnings()
   }
 
   const init = async () => {
@@ -1307,6 +1408,7 @@
       allDispositionTags = dtData.tags || []
       allTemplates = tData.templates || []
       allBuckets = bData.buckets || []
+      profileCache = currentUser || null
     } catch (e) {}
     await loadConversations()
     startPolling()

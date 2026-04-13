@@ -1181,6 +1181,32 @@ input, select, textarea { font-size: 16px; }
   color: white;
   border-color: var(--color-primary);
 }
+.conv3-var-btn.var-missing {
+  border-color: #fbbf24;
+  color: #92400e;
+  background: #fef9ec;
+  position: relative;
+}
+.conv3-var-btn.var-missing::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  background: #f59e0b;
+  border-radius: 50%;
+}
+.conv3-var-warnings {
+  font-size: 12px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  margin: 4px 0;
+  line-height: 1.5;
+}
 
 /* ── FAB BULK ACTION ─────────────────────────────────────────────────────── */
 .fab-item {
