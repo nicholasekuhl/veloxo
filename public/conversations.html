@@ -162,6 +162,8 @@
   let convHasMore = true
   let convLoading = false
   let isSearchMode = false
+  let scheduledTime = null
+  let scheduledTimeLabel = null
 
   const debounce = (fn, ms) => {
     let t
@@ -484,11 +486,85 @@
     } catch (err) { toast.error('Error', 'Could not cancel scheduled message') }
   }
 
+  const getRelativeTime = (minutes) => {
+    const d = new Date()
+    d.setMinutes(d.getMinutes() + minutes)
+    return d.toISOString()
+  }
+
+  const getTomorrowAt = (hour, minute) => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    d.setHours(hour, minute, 0, 0)
+    return d.toISOString()
+  }
+
+  const selectSchedulePreset = (label, isoTime) => {
+    scheduledTime = isoTime
+    scheduledTimeLabel = label
+    document.getElementById('conv3-schedule-picker')?.classList.remove('open')
+    document.getElementById('conv3-schedule-btn')?.classList.remove('active')
+    updateSchedulePill()
+  }
+
+  const clearScheduledTime = () => {
+    scheduledTime = null
+    scheduledTimeLabel = null
+    updateSchedulePill()
+  }
+
+  const showCustomTimePicker = () => {
+    const dropdown = document.getElementById('conv3-sched-dropdown')
+    const custom = document.getElementById('conv3-sched-custom')
+    if (dropdown) dropdown.style.display = 'none'
+    if (custom) custom.style.display = 'flex'
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const dateInput = document.getElementById('conv3-schedule-date')
+    if (dateInput) dateInput.value = tomorrow.toISOString().slice(0, 10)
+  }
+
+  const confirmCustomTime = () => {
+    const dateInput = document.getElementById('conv3-schedule-date')
+    const timeInput = document.getElementById('conv3-schedule-time')
+    if (!dateInput?.value || !timeInput?.value) return toast.error('Required', 'Pick a date and time')
+    const dt = new Date(`${dateInput.value}T${timeInput.value}`)
+    if (isNaN(dt.getTime())) return toast.error('Invalid', 'Please enter a valid date and time')
+    scheduledTime = dt.toISOString()
+    scheduledTimeLabel = dt.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+    document.getElementById('conv3-schedule-picker')?.classList.remove('open')
+    document.getElementById('conv3-schedule-btn')?.classList.remove('active')
+    updateSchedulePill()
+  }
+
+  const updateSchedulePill = () => {
+    const pill = document.getElementById('conv3-sched-pill')
+    const schedSendBtn = document.getElementById('conv3-sched-send-btn')
+    const sendBtn = document.getElementById('conv3-send-btn')
+    if (pill) {
+      if (scheduledTime) {
+        pill.style.display = 'flex'
+        const label = pill.querySelector('.conv3-sched-pill-label')
+        if (label) label.textContent = `🕐 Scheduled: ${scheduledTimeLabel}`
+      } else {
+        pill.style.display = 'none'
+      }
+    }
+    if (schedSendBtn) schedSendBtn.style.display = scheduledTime ? 'flex' : 'none'
+    if (sendBtn) sendBtn.style.display = scheduledTime ? 'none' : ''
+  }
+
   const toggleSchedulePicker = () => {
     const picker = document.getElementById('conv3-schedule-picker')
     const btn = document.getElementById('conv3-schedule-btn')
     if (!picker) return
     const isOpen = picker.classList.contains('open')
+    if (!isOpen) {
+      const dropdown = document.getElementById('conv3-sched-dropdown')
+      const custom = document.getElementById('conv3-sched-custom')
+      if (dropdown) dropdown.style.display = 'block'
+      if (custom) custom.style.display = 'none'
+    }
     picker.classList.toggle('open', !isOpen)
     btn?.classList.toggle('active', !isOpen)
   }
@@ -496,22 +572,18 @@
   const scheduleConvMessage = async (convId, leadId) => {
     const input = document.getElementById('conv-input')
     const body = input?.value.trim()
-    const dateInput = document.getElementById('conv3-schedule-date')
-    const timeInput = document.getElementById('conv3-schedule-time')
     if (!body) return toast.error('Required', 'Type a message first')
-    if (!dateInput?.value || !timeInput?.value) return toast.error('Required', 'Pick a date and time')
-    const send_at = new Date(`${dateInput.value}T${timeInput.value}`).toISOString()
+    if (!scheduledTime) return toast.error('Required', 'Select a send time first')
     try {
       const res = await fetch(`/conversations/${convId}/scheduled`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body, send_at, lead_id: leadId })
+        body: JSON.stringify({ body, send_at: scheduledTime, lead_id: leadId })
       })
       const data = await res.json()
       if (data.success) {
         input.value = ''
-        document.getElementById('conv3-schedule-picker')?.classList.remove('open')
-        document.getElementById('conv3-schedule-btn')?.classList.remove('active')
+        clearScheduledTime()
         setConvSubTab('scheduled')
         toast.success('Scheduled', 'Message scheduled successfully')
       } else toast.error('Schedule failed', data.error || 'Could not schedule message')
@@ -613,6 +685,8 @@
   const openConversation = async (convId) => {
     activeConvId = convId
     convSubTab = 'all'
+    scheduledTime = null
+    scheduledTimeLabel = null
     filterConversations(document.getElementById('conv3-search')?.value || '')
     if (window.innerWidth < 768) {
       document.getElementById('conv3-layout')?.classList.add('conv3-open')
@@ -667,6 +741,7 @@
             <div style="min-width:0;">
               <div class="conv3-conv-header-name">${name}${dispTag ? ` <span class="disposition-pill" style="background:${dispTag.color};font-size:10px;">${dispTag.name}</span>` : ''}${isBlocked ? ' <span style="font-size:10px;background:#fee2e2;color:#dc2626;border-radius:20px;padding:1px 6px;font-weight:600;">Blocked</span>' : ''}</div>
               <div class="conv3-conv-header-meta">${lead?.phone || ''}${localTime ? ' · ' + localTime + ' local' : ''}${lead?.state ? ' · ' + lead.state : ''}</div>
+              ${conv.from_number ? `<div class="conv3-conv-header-via">📱 Sending via ${conv.from_number}</div>` : ''}
             </div>
           </div>
           <div class="conv3-conv-header-actions">
@@ -706,9 +781,25 @@
               </div>`
             : isAutopilot ? `<div class="autopilot-status on" style="margin-bottom:8px;">⚡ Autopilot is handling this conversation</div>` : `<div class="ai-suggestion" id="ai-suggestion-box" style="display:none;"><div class="ai-suggestion-label">⚡ AI suggestion</div><div id="ai-suggestion-text"></div></div>`}
           <div class="conv3-schedule-picker" id="conv3-schedule-picker">
-            <input type="date" id="conv3-schedule-date" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;min-height:34px;">
-            <input type="time" id="conv3-schedule-time" style="padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px;min-height:34px;">
-            <button class="btn btn-primary btn-sm" onclick="scheduleConvMessage('${conv.id}','${lead?.id}')">Schedule</button>
+            <div class="conv3-sched-dropdown" id="conv3-sched-dropdown">
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('In 10 minutes', getRelativeTime(10))">⚡ In 10 minutes</button>
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('In 30 minutes', getRelativeTime(30))">⚡ In 30 minutes</button>
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('In 1 hour', getRelativeTime(60))">⚡ In 1 hour</button>
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('Tomorrow at 8:00 AM', getTomorrowAt(8, 0))">📅 Tomorrow at 8:00 AM</button>
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('Tomorrow at 10:00 AM', getTomorrowAt(10, 0))">📅 Tomorrow at 10:00 AM</button>
+              <button class="conv3-sched-option" onclick="selectSchedulePreset('Tomorrow at 12:00 PM', getTomorrowAt(12, 0))">📅 Tomorrow at 12:00 PM</button>
+              <div class="conv3-sched-divider"></div>
+              <button class="conv3-sched-option" onclick="showCustomTimePicker()">🗓 Custom time...</button>
+            </div>
+            <div class="conv3-sched-custom" id="conv3-sched-custom" style="display:none;">
+              <input type="date" id="conv3-schedule-date" class="conv3-sched-input">
+              <input type="time" id="conv3-schedule-time" class="conv3-sched-input">
+              <button class="btn btn-primary btn-sm" onclick="confirmCustomTime()">Set</button>
+            </div>
+          </div>
+          <div class="conv3-sched-pill" id="conv3-sched-pill" style="display:none;">
+            <span class="conv3-sched-pill-label">🕐 Scheduled: —</span>
+            <button class="conv3-sched-pill-cancel" onclick="clearScheduledTime()">✕</button>
           </div>
           <div class="conv3-template-picker" id="conv3-template-picker" style="display:none;position:absolute;bottom:calc(100% + 4px);left:8px;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:260px;max-height:220px;overflow-y:auto;z-index:200;" id="template-pills"></div>
           <div class="conv3-var-buttons">
@@ -728,6 +819,7 @@
             <button class="conv3-itb conv3-itb-ai ${isAutopilot ? 'active' : ''}" onclick="toggleConvAutopilot('${lead?.id}','${conv.id}')" title="${isAutopilot ? 'AI active — click to disable' : 'AI off — click to enable'}" ${isOptedOut ? 'disabled style="opacity:0.4;pointer-events:none;"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span style="font-size:11px;font-weight:600;margin-left:2px;">AI</span></button>
             <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
               <span class="conv3-char-count" id="conv3-char-count" style="font-size:11px;color:#9ca3af;white-space:nowrap;">0 chars</span>
+              <button class="conv3-sched-send-btn" id="conv3-sched-send-btn" onclick="scheduleConvMessage('${conv.id}','${conv.lead_id}')" style="display:none;">🕐 Schedule Send</button>
               <button class="conv3-send-btn" id="conv3-send-btn" onclick="sendConvMessage('${conv.id}','${conv.lead_id}')" title="Send (Cmd+Enter)" ${isOptedOut ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
             </div>
           </div>
