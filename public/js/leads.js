@@ -224,9 +224,9 @@ const renderBucketPill = (b, extraStyle = '') => {
   if (b.is_system) {
     return `<button class="bucket-tab" data-bucket-id="${b.id}" style="${baseStyle}" onclick="selectBucket('${b.id}')" title="System bucket — cannot be renamed or deleted">🔒 ${b.name}<span style="opacity:0.8;font-size:11px;margin-left:4px;">${count}</span></button>`
   }
-  // data-* attributes used by event listener in renderBucketPills — avoids inline JS escaping issues
+  // data-id used for drag-and-drop ordering; data-bucket-name used for context menu
   const escapedName = (b.name || '').replace(/"/g, '&quot;')
-  return `<button class="bucket-tab" data-bucket-id="${b.id}" data-bucket-name="${escapedName}" data-bucket-color="${b.color || ''}" data-is-folder="${b.is_folder ? '1' : '0'}" style="${baseStyle}" onclick="selectBucket('${b.id}')" title="Right-click to rename, archive or run a campaign">${b.name}<span style="opacity:0.8;font-size:11px;margin-left:4px;">${count}</span></button>`
+  return `<button class="bucket-tab" data-id="${b.id}" data-bucket-id="${b.id}" data-bucket-name="${escapedName}" data-bucket-color="${b.color || ''}" data-is-folder="${b.is_folder ? '1' : '0'}" style="${baseStyle}" onclick="selectBucket('${b.id}')" title="Right-click to rename, archive or run a campaign">${b.name}<span style="opacity:0.8;font-size:11px;margin-left:4px;">${count}</span></button>`
 }
 
 const renderBucketPills = () => {
@@ -269,7 +269,8 @@ const renderBucketPills = () => {
       const subFolders = depth1Folders.filter(s => s.parent_id === folder.id)
       const folderCount = getFolderCount(folder.id, allBuckets)
 
-      html += `<div data-drag-id="${folder.id}" style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
+      // Folder wrapper: block-level div so it's actually draggable as a unit
+      html += `<div data-drag-id="${folder.id}" data-id="${folder.id}" style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
         <button class="bucket-tab" style="color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${folder.id}',event)">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
           ${folder.name}<span style="opacity:0.7;font-size:11px;margin-left:2px;">${folderCount}</span><span style="font-size:10px;opacity:0.5;margin-left:2px;">${chevron}</span>
@@ -299,7 +300,8 @@ const renderBucketPills = () => {
       }
       html += `</div>`
     } else {
-      html += `<span data-drag-id="${item.id}">${renderBucketPill(item)}</span>`
+      // Standalone bucket: render button directly (no inline span wrapper — inline elements aren't reliably draggable)
+      html += renderBucketPill(item)
     }
   }
 
@@ -314,34 +316,46 @@ const renderBucketPills = () => {
     })
   })
 
-  // Attach drag-and-drop to draggable items
-  container.querySelectorAll('[data-drag-id]').forEach(item => {
-    item.draggable = true
-    item.addEventListener('dragstart', (e) => {
-      dragBucketId = item.dataset.dragId
+  // Attach drag-and-drop to dynamic draggable elements:
+  //   - Standalone bucket buttons (.bucket-tab[data-id]) — draggable on the button itself
+  //   - Folder wrapper divs ([data-drag-id]) — folder moves as a unit including children
+  const getDragId = (el) => el.dataset.id || el.dataset.dragId
+
+  const draggableEls = [
+    ...Array.from(container.querySelectorAll('.bucket-tab[data-id]')).filter(btn => !btn.closest('[data-drag-id]')),
+    ...Array.from(container.querySelectorAll('[data-drag-id]'))
+  ]
+
+  draggableEls.forEach(el => {
+    el.draggable = true
+    el.addEventListener('dragstart', (e) => {
+      dragBucketId = getDragId(el)
       e.dataTransfer.effectAllowed = 'move'
-      setTimeout(() => { item.style.opacity = '0.4' }, 0)
+      e.dataTransfer.setData('bucketId', dragBucketId)
+      setTimeout(() => { el.style.opacity = '0.4' }, 0)
     })
-    item.addEventListener('dragend', () => {
-      item.style.opacity = ''
-      container.querySelectorAll('.bucket-drag-over').forEach(el => el.classList.remove('bucket-drag-over'))
+    el.addEventListener('dragend', () => {
+      el.style.opacity = ''
+      draggableEls.forEach(d => d.classList.remove('bucket-drag-over'))
     })
-    item.addEventListener('dragover', (e) => {
+    el.addEventListener('dragover', (e) => {
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
-      if (dragBucketId && dragBucketId !== item.dataset.dragId) {
-        container.querySelectorAll('.bucket-drag-over').forEach(el => el.classList.remove('bucket-drag-over'))
-        item.classList.add('bucket-drag-over')
+      const targetId = getDragId(el)
+      if (dragBucketId && dragBucketId !== targetId) {
+        draggableEls.forEach(d => d.classList.remove('bucket-drag-over'))
+        el.classList.add('bucket-drag-over')
       }
     })
-    item.addEventListener('dragleave', (e) => {
-      if (!item.contains(e.relatedTarget)) item.classList.remove('bucket-drag-over')
+    el.addEventListener('dragleave', (e) => {
+      if (!el.contains(e.relatedTarget)) el.classList.remove('bucket-drag-over')
     })
-    item.addEventListener('drop', (e) => {
+    el.addEventListener('drop', (e) => {
       e.preventDefault()
-      item.classList.remove('bucket-drag-over')
-      if (!dragBucketId || dragBucketId === item.dataset.dragId) return
-      reorderBucketDrop(dragBucketId, item.dataset.dragId)
+      el.classList.remove('bucket-drag-over')
+      const targetId = getDragId(el)
+      if (!dragBucketId || dragBucketId === targetId) return
+      reorderBucketDrop(dragBucketId, targetId)
       dragBucketId = null
     })
   })
