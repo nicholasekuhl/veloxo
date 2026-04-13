@@ -210,4 +210,20 @@ const getArchivedBuckets = async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 }
 
-module.exports = { getBuckets, getArchivedBuckets, createBucket, updateBucket, patchBucket, deleteBucket }
+const reorderBuckets = async (req, res) => {
+  try {
+    const { order } = req.body
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be an array of bucket IDs' })
+    await Promise.all(
+      order.map((id, index) =>
+        supabase.from('buckets')
+          .update({ sort_order: index })
+          .eq('id', id)
+          .eq('user_id', req.user.id)
+      )
+    )
+    res.json({ success: true })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+}
+
+module.exports = { getBuckets, getArchivedBuckets, createBucket, updateBucket, patchBucket, deleteBucket, reorderBuckets }

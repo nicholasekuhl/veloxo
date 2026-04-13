@@ -41,6 +41,7 @@ let contextMenuBucketIsFolder = false
 let deleteTargetLeadId = null
 let deleteTargetLeadName = null
 let scheduleFollowupLeadId = null
+let dragBucketId = null
 
 const IMPORT_FIELDS = [
   { key: 'phone', label: 'Phone', required: true },
@@ -232,62 +233,79 @@ const renderBucketPills = () => {
   const container = document.getElementById('bucket-tabs')
   if (!container) return
 
-  // Only non-archived (allBuckets already excludes archived via API)
-  const depth0Folders = allBuckets.filter(b => b.is_folder && !b.parent_id)
-  const depth1Folders = allBuckets.filter(b => b.is_folder && b.parent_id)
-  const topBuckets = allBuckets.filter(b => !b.is_folder && !b.parent_id)
+  // Separate system (fixed) from user-created (draggable) buckets
+  const soldBucketObj = allBuckets.find(b => b.system_key === 'sold')
+  const optedOutBucketObj = allBuckets.find(b => b.system_key === 'opted_out')
+  const dynamicBuckets = allBuckets.filter(b => !b.is_system)
+  const depth1Folders = dynamicBuckets.filter(b => b.is_folder && b.parent_id)
 
+  // Top-level dynamic items (folders + standalone buckets) sorted by sort_order
+  const topLevelItems = dynamicBuckets
+    .filter(b => !b.parent_id)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+
+  // ── Fixed pills ─────────────────────────────────────────────────────────────
   let html = `<div class="bucket-tab${activeBucket === '' && activeFolderId === '' ? ' active' : ''}" onclick="selectBucket('')">All Leads <span class="count">${totalLeads || allLeads.length}</span></div>`
 
-  // Render depth-0 folders with sub-folders and buckets
-  for (const folder of depth0Folders) {
-    const isCollapsed = collapsedFolders[folder.id]
-    const chevron = isCollapsed ? '▶' : '▼'
-    const directBuckets = allBuckets.filter(b => !b.is_folder && b.parent_id === folder.id)
-    const subFolders = depth1Folders.filter(s => s.parent_id === folder.id)
-    const folderCount = getFolderCount(folder.id, allBuckets)
+  if (soldBucketObj) {
+    const c = soldBucketObj.color || '#22c55e'
+    const isActive = activeBucket === soldBucketObj.id
+    html += `<button class="bucket-tab" data-bucket-id="${soldBucketObj.id}" style="background:${isActive ? c : 'transparent'};color:${isActive ? '#fff' : c};border-color:${c};" onclick="selectBucket('${soldBucketObj.id}')">💰 Sold<span style="opacity:0.8;font-size:11px;margin-left:4px;">${soldBucketObj.lead_count || 0}</span></button>`
+  }
 
-    html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
-      <button class="bucket-tab" style="color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${folder.id}',event)">
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
-        ${folder.name}<span style="opacity:0.7;font-size:11px;margin-left:2px;">${folderCount}</span><span style="font-size:10px;opacity:0.5;margin-left:2px;">${chevron}</span>
-      </button>`
+  if (optedOutBucketObj) {
+    const c = optedOutBucketObj.color || '#ef4444'
+    const isActive = activeBucket === optedOutBucketObj.id
+    html += `<button class="bucket-tab" data-bucket-id="${optedOutBucketObj.id}" style="background:${isActive ? c : 'transparent'};color:${isActive ? '#fff' : c};border-color:${c};" onclick="selectBucket('${optedOutBucketObj.id}')">🚫 Opted Out<span style="opacity:0.8;font-size:11px;margin-left:4px;">${optedOutBucketObj.lead_count || 0}</span></button>`
+  }
 
-    if (!isCollapsed) {
-      // Direct child buckets (depth 1 buckets)
-      for (const b of directBuckets) {
-        html += renderBucketPill(b, 'margin-left:4px;')
-      }
-      // Sub-folders (depth 1 folders)
-      for (const sub of subFolders) {
-        const subCollapsed = collapsedFolders[sub.id]
-        const subChevron = subCollapsed ? '▶' : '▼'
-        const subBuckets = allBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
-        const subCount = getFolderCount(sub.id, allBuckets)
-        html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:6px;">
-          <button class="bucket-tab" style="font-size:11px;color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${sub.id}',event)">
-            <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
-            ${sub.name}<span style="opacity:0.7;font-size:10px;margin-left:2px;">${subCount}</span><span style="font-size:9px;opacity:0.5;margin-left:2px;">${subChevron}</span>
-          </button>`
-        if (!subCollapsed) {
-          for (const b of subBuckets) {
-            html += renderBucketPill(b, 'margin-left:4px;font-size:11px;')
-          }
+  // ── Draggable dynamic items ─────────────────────────────────────────────────
+  for (const item of topLevelItems) {
+    if (item.is_folder) {
+      const folder = item
+      const isCollapsed = collapsedFolders[folder.id]
+      const chevron = isCollapsed ? '▶' : '▼'
+      const directBuckets = dynamicBuckets.filter(b => !b.is_folder && b.parent_id === folder.id)
+      const subFolders = depth1Folders.filter(s => s.parent_id === folder.id)
+      const folderCount = getFolderCount(folder.id, allBuckets)
+
+      html += `<div data-drag-id="${folder.id}" style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
+        <button class="bucket-tab" style="color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${folder.id}',event)">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
+          ${folder.name}<span style="opacity:0.7;font-size:11px;margin-left:2px;">${folderCount}</span><span style="font-size:10px;opacity:0.5;margin-left:2px;">${chevron}</span>
+        </button>`
+
+      if (!isCollapsed) {
+        for (const b of directBuckets) {
+          html += renderBucketPill(b, 'margin-left:4px;')
         }
-        html += `</div>`
+        for (const sub of subFolders) {
+          const subCollapsed = collapsedFolders[sub.id]
+          const subChevron = subCollapsed ? '▶' : '▼'
+          const subBuckets = dynamicBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
+          const subCount = getFolderCount(sub.id, allBuckets)
+          html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:6px;">
+            <button class="bucket-tab" style="font-size:11px;color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${sub.id}',event)">
+              <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
+              ${sub.name}<span style="opacity:0.7;font-size:10px;margin-left:2px;">${subCount}</span><span style="font-size:9px;opacity:0.5;margin-left:2px;">${subChevron}</span>
+            </button>`
+          if (!subCollapsed) {
+            for (const b of subBuckets) {
+              html += renderBucketPill(b, 'margin-left:4px;font-size:11px;')
+            }
+          }
+          html += `</div>`
+        }
       }
+      html += `</div>`
+    } else {
+      html += `<span data-drag-id="${item.id}">${renderBucketPill(item)}</span>`
     }
-    html += `</div>`
   }
 
-  // Render top-level buckets (no folder)
-  for (const b of topBuckets) {
-    html += renderBucketPill(b)
-  }
   container.innerHTML = html
 
-  // Attach context-menu listeners to every non-system bucket pill
-  // Only pills with data-bucket-name are non-system buckets (system + folder buttons omit it)
+  // Attach context-menu listeners to user bucket pills
   container.querySelectorAll('.bucket-tab[data-bucket-name]').forEach(btn => {
     btn.addEventListener('contextmenu', (e) => {
       e.preventDefault()
@@ -296,12 +314,44 @@ const renderBucketPills = () => {
     })
   })
 
+  // Attach drag-and-drop to draggable items
+  container.querySelectorAll('[data-drag-id]').forEach(item => {
+    item.draggable = true
+    item.addEventListener('dragstart', (e) => {
+      dragBucketId = item.dataset.dragId
+      e.dataTransfer.effectAllowed = 'move'
+      setTimeout(() => { item.style.opacity = '0.4' }, 0)
+    })
+    item.addEventListener('dragend', () => {
+      item.style.opacity = ''
+      container.querySelectorAll('.bucket-drag-over').forEach(el => el.classList.remove('bucket-drag-over'))
+    })
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault()
+      e.dataTransfer.dropEffect = 'move'
+      if (dragBucketId && dragBucketId !== item.dataset.dragId) {
+        container.querySelectorAll('.bucket-drag-over').forEach(el => el.classList.remove('bucket-drag-over'))
+        item.classList.add('bucket-drag-over')
+      }
+    })
+    item.addEventListener('dragleave', (e) => {
+      if (!item.contains(e.relatedTarget)) item.classList.remove('bucket-drag-over')
+    })
+    item.addEventListener('drop', (e) => {
+      e.preventDefault()
+      item.classList.remove('bucket-drag-over')
+      if (!dragBucketId || dragBucketId === item.dataset.dragId) return
+      reorderBucketDrop(dragBucketId, item.dataset.dragId)
+      dragBucketId = null
+    })
+  })
+
   // Show commission total when Sold bucket is active
-  const soldBucket = allBuckets.find(b => b.is_system)
+  const soldBkt = allBuckets.find(b => b.system_key === 'sold')
   const banner = document.getElementById('sold-commission-banner')
   if (banner) {
-    if (activeBucket && soldBucket && activeBucket === soldBucket.id) {
-      const soldLeads = allLeads.filter(l => l.bucket_id === soldBucket.id)
+    if (activeBucket && soldBkt && activeBucket === soldBkt.id) {
+      const soldLeads = allLeads.filter(l => l.bucket_id === soldBkt.id)
       const total = soldLeads.reduce((sum, l) => sum + (l.commission || 0), 0)
       const pending = soldLeads.filter(l => l.commission_status === 'pending').reduce((sum, l) => sum + (l.commission || 0), 0)
       banner.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:#6b7280;font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
@@ -309,6 +359,37 @@ const renderBucketPills = () => {
     } else {
       banner.style.display = 'none'
     }
+  }
+}
+
+const reorderBucketDrop = async (draggedId, targetId) => {
+  const topLevelItems = allBuckets
+    .filter(b => !b.is_system && !b.parent_id)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+
+  const fromIdx = topLevelItems.findIndex(b => b.id === draggedId)
+  const toIdx = topLevelItems.findIndex(b => b.id === targetId)
+  if (fromIdx === -1 || toIdx === -1) return
+
+  const [moved] = topLevelItems.splice(fromIdx, 1)
+  topLevelItems.splice(toIdx, 0, moved)
+
+  // Update sort_order in local allBuckets immediately for instant re-render
+  topLevelItems.forEach((b, i) => {
+    const bkt = allBuckets.find(x => x.id === b.id)
+    if (bkt) bkt.sort_order = i
+  })
+  renderBucketPills()
+
+  try {
+    await fetch('/buckets/reorder', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order: topLevelItems.map(b => b.id) })
+    })
+  } catch (err) {
+    console.error('Failed to save bucket order', err)
+    toast.error('Error', 'Could not save bucket order')
   }
 }
 
@@ -1123,7 +1204,7 @@ const submitBulkSold = async () => {
   try {
     const data = await executeBulkAction('sold', { sold_plan_type: plan || null, commission })
     if (!data.success) throw new Error(data.error)
-    const soldBucket = allBuckets.find(b => b.is_system)
+    const soldBucket = allBuckets.find(b => b.system_key === 'sold')
     allLeads.forEach(l => {
       if (selectedLeads.has(l.id)) {
         Object.assign(l, { is_sold: true, status: 'sold', sold_at: new Date().toISOString(), sold_plan_type: plan || null, commission })
