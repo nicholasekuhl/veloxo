@@ -372,6 +372,15 @@ const processQuickFollowups = async () => {
 
       if (!stepToSend) continue
 
+      // Guard: if step_1 was already recorded but status somehow got reset to pending, fix it and skip
+      if (enrollment.step_1_sent_at && stepToSend === 1) {
+        console.log(`[quickFollowups] step_1 already sent for enrollment ${enrollment.id} — fixing status to active`)
+        await supabase.from('campaign_leads')
+          .update({ status: 'active' })
+          .eq('id', enrollment.id)
+        continue
+      }
+
       // Compliance checks
       const quietCheck = isWithinQuietHours(lead.state, safeTimezone(lead.timezone))
       if (quietCheck.blocked) {
@@ -445,6 +454,7 @@ const processQuickFollowups = async () => {
       }
 
       // Enqueue — don't block the scheduler loop waiting on Twilio
+      console.log(`[scheduler] Queuing quick step ${stepToSend} for enrollment ${enrollment.id}, status was: ${enrollment.status}`)
       smsQueue.add({
         phone: lead.phone,
         message: messageBody,
@@ -733,6 +743,7 @@ const processScheduledMessages = async () => {
         continue
       }
 
+      console.log(`[scheduler] Queuing day-based send for enrollment ${enrollment.id}, status was: ${enrollment.status}`)
       smsQueue.add({
         phone: enrollment.leads.phone,
         message: messageBody,

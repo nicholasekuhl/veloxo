@@ -876,6 +876,7 @@ const resumeCampaigns = async (req, res) => {
       .from('campaign_leads')
       .update({ status: 'pending', next_send_at: new Date().toISOString(), paused_at: null })
       .in('id', ids)
+      .in('status', ['paused'])  // never reset active/completed — double guard
     if (updateError) throw updateError
 
     console.log(`Campaigns resumed for lead ${req.params.id} (${ids.length} enrollment(s))`)
