@@ -323,6 +323,7 @@ const processQuickFollowups = async () => {
       quickEnrollments.push(...userEnrollments.slice(0, RATE_PER_SECOND_PER_USER))
     }
     if (quickEnrollments.length === 0) return
+    console.log(`[scheduler] tick: ${Object.keys(byUserQuick).length} active users | ${quickEnrollments.length} jobs dispatched (quick followups)`)
 
     // Batch-load phone numbers and profiles
     const userIds = [...new Set(quickEnrollments.map(e => e.user_id).filter(Boolean))]
@@ -664,6 +665,7 @@ const processScheduledMessages = async () => {
     for (const userLeads of Object.values(byUserSched)) {
       throttledLeads.push(...userLeads.slice(0, RATE_PER_SECOND_PER_USER))
     }
+    console.log(`[scheduler] tick: ${Object.keys(byUserSched).length} active users | ${throttledLeads.length} jobs dispatched (campaign)`)
 
     // Batch-load active phone numbers and profiles for all unique user_ids in this batch
     const userIds = [...new Set(throttledLeads.map(e => e.user_id).filter(Boolean))]
@@ -902,6 +904,7 @@ const processScheduledMessages = async () => {
       for (const userMsgs of Object.values(byUserOneOff)) {
         throttledOneOff.push(...userMsgs.slice(0, RATE_PER_SECOND_PER_USER))
       }
+      console.log(`[scheduler] tick: ${Object.keys(byUserOneOff).length} active users | ${throttledOneOff.length} jobs dispatched (one-off)`)
 
       for (const sm of throttledOneOff) {
         if (!sm.leads) continue
