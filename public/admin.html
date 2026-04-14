@@ -92,7 +92,13 @@
 
 <div id="sidebar-root"></div>
 <div class="container">
-  <h1>Account Management</h1>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <h1>Account Management</h1>
+    <button class="btn btn-primary" onclick="openInviteModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Invite Agent
+    </button>
+  </div>
   <div class="page-sub">View and manage all Veloxo user accounts.</div>
 
   <div class="stats-row">
@@ -158,6 +164,26 @@
   </div>
 </div>
 
+<!-- INVITE MODAL -->
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Invite Agent</h2>
+      <button class="modal-close" onclick="closeInviteModal()">×</button>
+    </div>
+    <div class="error-msg" id="invite-error"></div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="invite-email-input" placeholder="agent@theiragency.com" autocomplete="off">
+    </div>
+    <p style="font-size:12px;color:#9ca3af;line-height:1.5;margin-top:-8px;">They'll receive a link to create their account and set a password.</p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeInviteModal()">Cancel</button>
+      <button class="btn btn-primary" id="invite-submit-btn" onclick="sendInvite()">Send Invite</button>
+    </div>
+  </div>
+</div>
+
 <!-- SUSPEND MODAL -->
 <div class="modal-overlay" id="suspend-modal">
   <div class="modal">
@@ -213,13 +239,13 @@
   let deleteTargetEmail = null
 
   const init = async () => {
+    renderSidebar()
     // Verify admin access
     const meRes = await fetch('/auth/me')
     if (!meRes.ok) { window.location.href = '/login.html'; return }
     const meData = await meRes.json()
     if (!meData.user?.is_admin) { window.location.href = '/'; return }
     currentUserId = meData.user.id
-    document.getElementById('admin-name').textContent = meData.user.agent_name || meData.user.email || ''
     loadUsers()
   }
 
@@ -393,8 +419,56 @@
     window.location.href = '/login.html'
   }
 
+  // INVITE
+  const openInviteModal = () => {
+    document.getElementById('invite-email-input').value = ''
+    document.getElementById('invite-error').style.display = 'none'
+    document.getElementById('invite-submit-btn').disabled = false
+    document.getElementById('invite-submit-btn').textContent = 'Send Invite'
+    document.getElementById('invite-modal').classList.add('open')
+    setTimeout(() => document.getElementById('invite-email-input').focus(), 50)
+  }
+  const closeInviteModal = () => {
+    document.getElementById('invite-modal').classList.remove('open')
+  }
+  const sendInvite = async () => {
+    const email = document.getElementById('invite-email-input').value.trim()
+    const errEl = document.getElementById('invite-error')
+    const btn = document.getElementById('invite-submit-btn')
+    errEl.style.display = 'none'
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.'
+      errEl.style.display = 'block'
+      return
+    }
+    btn.disabled = true
+    btn.textContent = 'Sending...'
+    try {
+      const res = await fetch('/auth/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) {
+        errEl.textContent = data.error || 'Failed to send invite.'
+        errEl.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = 'Send Invite'
+        return
+      }
+      closeInviteModal()
+      toast.success('Invite sent', `Invite email sent to ${email}`)
+    } catch {
+      errEl.textContent = 'Something went wrong. Please try again.'
+      errEl.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = 'Send Invite'
+    }
+  }
+
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSuspendModal(); closeDeleteModal() }
+    if (e.key === 'Escape') { closeSuspendModal(); closeDeleteModal(); closeInviteModal() }
   })
 
   // ─── ADMIN TABS ────────────────────────────────────────────────────────────
