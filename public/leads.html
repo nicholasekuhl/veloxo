@@ -10,7 +10,7 @@
 .lead-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important; transition: border-color 0.12s; }
 .lead-card:hover { border-color: rgba(255,255,255,0.12); }
 .lead-card.has-notes { border-color: rgba(0,201,167,0.18); }
-.lead-card-body { display: grid !important; grid-template-columns: 300px 1fr 220px 200px 170px !important; }
+.lead-card-body { display: grid !important; }
 .col-contact { overflow: hidden; }
 .lead-card-body > div { border-right: 1px solid rgba(255,255,255,0.05); padding: 14px 15px; }
 .lead-card-body > div:last-child { border-right: none; }
@@ -269,11 +269,17 @@
 
     /* ── Page background + alignment ── */
     .main-content { background: #0b0f12 !important; }
-    .page-content, .lead-page-content, #leads-container, #leads-grid { background: transparent !important; }
+    .page-content, .lead-page-content, #leads-container { background: transparent !important; }
     .stats-row { padding-left: 28px !important; padding-right: 28px !important; }
     .buckets-row { padding-left: 28px !important; padding-right: 28px !important; }
     .filter-row { padding-left: 28px !important; padding-right: 28px !important; }
     .section-meta, .list-meta { padding-left: 28px !important; padding-right: 28px !important; }
+    /* ── LEADS GRID — targets the actual #leads-grid element ── */
+    #leads-grid, .leads-grid { padding: 12px 28px 40px 28px !important; background: transparent !important; display: flex !important; flex-direction: column !important; gap: 8px !important; }
+    /* ── FLOATING CARD — must override shared.css ── */
+    .lead-card { border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 16px rgba(0,0,0,0.4) !important; }
+    /* ── GRID — must be last to win cascade ── */
+    .lead-card-body { grid-template-columns: 300px 1fr 220px 200px 170px !important; }
   </style>
   <script src="/toast.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
