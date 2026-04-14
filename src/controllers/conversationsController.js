@@ -179,7 +179,7 @@ const markConversationRead = async (req, res) => {
   try {
     const { error } = await supabase
       .from('conversations')
-      .update({ unread_count: 0, updated_at: new Date().toISOString() })
+      .update({ unread_count: 0 })
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
     if (error) throw error

@@ -811,7 +811,9 @@
 
       const existingIdx = allConversations.findIndex(c => c.id === convId)
       if (existingIdx >= 0) {
-        allConversations[existingIdx] = { ...allConversations[existingIdx], ...conv }
+        // Preserve local updated_at — server may have it contaminated by mark-read ops
+        const localUpdatedAt = allConversations[existingIdx].updated_at
+        allConversations[existingIdx] = { ...allConversations[existingIdx], ...conv, updated_at: localUpdatedAt }
       }
 
       const isGhostedStatus = ['positive_ghosted', 'ghosted_mid'].includes(conv.engagement_status)
@@ -1059,9 +1061,19 @@
       const res = await fetch(`/conversations?page=1&limit=50&show_blocked=${showBlocked}`)
       const data = await res.json()
       const fresh = data.conversations || []
-      // Merge: update existing conversations and prepend any new arrivals
+      // Merge: update existing conversations and prepend any new arrivals.
+      // Always keep the higher (more recent) updated_at so that genuine new messages
+      // still re-sort correctly, but a mark-read bump on the server can never move a
+      // conversation up if the local state already has it correctly positioned.
       const freshMap = Object.fromEntries(fresh.map(c => [c.id, c]))
-      allConversations = allConversations.map(c => freshMap[c.id] ? { ...c, ...freshMap[c.id] } : c)
+      allConversations = allConversations.map(c => {
+        if (!freshMap[c.id]) return c
+        const serverUpdatedAt = freshMap[c.id].updated_at
+        const localUpdatedAt = c.updated_at
+        const useUpdatedAt = (!localUpdatedAt || new Date(serverUpdatedAt) > new Date(localUpdatedAt))
+          ? serverUpdatedAt : localUpdatedAt
+        return { ...c, ...freshMap[c.id], updated_at: useUpdatedAt }
+      })
       const existingIds = new Set(allConversations.map(c => c.id))
       fresh.filter(c => !existingIds.has(c.id)).forEach(c => allConversations.unshift(c))
       allConversations.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
