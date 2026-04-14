@@ -497,6 +497,42 @@ const processInboundMessage = async (body) => {
           // Merge fresh conversation data for handoff checks
           const convForHandoff = { ...capturedConversation, ...freshConv }
 
+          // Opt-out intent — explicit conversational phrases not caught by Twilio STOP keyword.
+          // Run BEFORE AI and BEFORE checkHandoffTriggers so no response is ever generated.
+          const OPT_OUT_PHRASES = [
+            'take me off', 'remove me', 'stop texting', 'dont text', "don't text",
+            'unsubscribe', 'not interested', 'leave me alone', 'stop contacting',
+            'do not contact', 'opt out', 'opt-out'
+          ]
+          const lastBodyLower = lastInboundBody.toLowerCase().trim()
+          const isOptOutIntent = OPT_OUT_PHRASES.some(p => lastBodyLower.includes(p))
+
+          if (isOptOutIntent) {
+            console.log('[AI] Opt-out intent detected for lead', capturedLead.id, '— triggering opt-out')
+            const now = new Date().toISOString()
+            const optOutBucketId = await getOrCreateOptOutBucket(capturedUserId)
+            await Promise.all([
+              supabase.from('conversations').update({
+                needs_agent_review: false,
+                handoff_reason: 'soft_decline',
+                status: 'closed',
+                updated_at: now
+              }).eq('id', convId),
+              supabase.from('leads').update({
+                opted_out: true,
+                status: 'opted_out',
+                is_cold: true,
+                autopilot: false,
+                opted_out_at: now,
+                updated_at: now,
+                ...(optOutBucketId ? { bucket_id: optOutBucketId } : {})
+              }).eq('id', capturedLead.id),
+              supabase.from('campaign_leads').update({ status: 'cancelled' })
+                .eq('lead_id', capturedLead.id).in('status', ['pending', 'active'])
+            ])
+            return
+          }
+
           const handoff = checkHandoffTriggers(convForHandoff, lastInboundBody, history)
 
           if (handoff.quoteDetected) {
@@ -512,7 +548,13 @@ const processInboundMessage = async (body) => {
             const mergedLead = { ...capturedLead, ...freshLead }
             const aiResponse = await generateAIResponse(mergedLead, history, capturedProfile, lastInboundBody)
 
-            if (aiResponse) {
+            if (!aiResponse || aiResponse.trim() === '' || aiResponse.trim().toLowerCase() === 'null') {
+              console.log('[AI] Null/empty response for lead', mergedLead.id, '— flagging for agent review')
+              await supabase.from('conversations')
+                .update({ needs_agent_review: true, handoff_reason: 'ai_null_response', updated_at: new Date().toISOString() })
+                .eq('id', convId)
+              await supabase.from('leads').update({ autopilot: false }).eq('id', mergedLead.id)
+            } else if (aiResponse) {
               // Check quiet hours — queue if outside window and user prefers queuing
               const quietCheck = isWithinQuietHours(mergedLead.state, mergedLead.timezone)
               const afterHoursSetting = capturedProfile.ai_afterhours_response || 'queue'
