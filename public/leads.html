@@ -6,11 +6,11 @@
   <title>Leads — Veloxo</title>
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <style>
-.lead-list { display: flex; flex-direction: column; gap: 8px; padding: 12px 24px 32px 24px; max-width: 1600px; margin-left: auto; margin-right: auto; }
-.lead-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 11px; overflow: hidden; transition: border-color 0.12s; }
+.lead-list { display: flex; flex-direction: column; gap: 8px; padding: 16px 28px 40px 28px !important; max-width: 1600px; margin-left: auto; margin-right: auto; background: transparent !important; }
+.lead-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important; transition: border-color 0.12s; }
 .lead-card:hover { border-color: rgba(255,255,255,0.12); }
 .lead-card.has-notes { border-color: rgba(0,201,167,0.18); }
-.lead-card-body { display: grid; grid-template-columns: 260px 1fr 200px 180px 160px; }
+.lead-card-body { display: grid !important; grid-template-columns: 300px 1fr 220px 200px 170px !important; }
 .col-contact { overflow: hidden; }
 .lead-card-body > div { border-right: 1px solid rgba(255,255,255,0.05); padding: 14px 15px; }
 .lead-card-body > div:last-child { border-right: none; }
@@ -251,9 +251,29 @@
     .map-preview-cell { color: rgba(255,255,255,0.35); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
 
     /* ── Font size overrides ── */
-    .status-pill { font-size: 12px; padding: 3px 10px; }
-    .ap-label { font-size: 12px; }
-    .copy-btn svg { width: 13px; height: 13px; }
+    .status-pill { font-size: 12px !important; padding: 3px 10px !important; }
+    .ap-label { font-size: 12px !important; }
+    .copy-btn svg { width: 13px !important; height: 13px !important; }
+    .lead-name { font-size: 15px !important; font-weight: 600 !important; }
+    .lead-phone { font-size: 13px !important; }
+    .lead-email { font-size: 12px !important; }
+    .lead-meta-line { font-size: 13px !important; }
+    .lead-local-time { font-size: 12px !important; }
+    .notes-textarea { font-size: 13.5px !important; line-height: 1.7 !important; }
+    .quotes-textarea { font-size: 13.5px !important; line-height: 1.7 !important; }
+    .meta-key { font-size: 12px !important; }
+    .meta-val { font-size: 12.5px !important; }
+    .meta-sms-line { font-size: 12px !important; }
+    .meta-bucket-name { font-size: 12px !important; }
+    .action-tag { font-size: 12px !important; padding: 4px 10px !important; }
+
+    /* ── Page background + alignment ── */
+    .main-content { background: #0b0f12 !important; }
+    .page-content, .lead-page-content, #leads-container, #leads-grid { background: transparent !important; }
+    .stats-row { padding-left: 28px !important; padding-right: 28px !important; }
+    .buckets-row { padding-left: 28px !important; padding-right: 28px !important; }
+    .filter-row { padding-left: 28px !important; padding-right: 28px !important; }
+    .section-meta, .list-meta { padding-left: 28px !important; padding-right: 28px !important; }
   </style>
   <script src="/toast.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
