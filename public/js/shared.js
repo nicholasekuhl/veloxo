@@ -55,13 +55,11 @@ const logout = async () => {
 
 // ─── PROFILE COMPLETION CHECK ─────────────────────────────────────────────────
 
-const REQUIRED_PROFILE_FIELDS = ['agent_name', 'agency_name', 'calendly_url', 'personal_phone']
-
 const checkProfileComplete = (profile) => {
-  if (window.location.pathname.includes('settings.html')) return
-  const missing = REQUIRED_PROFILE_FIELDS.filter(f => !profile[f])
-  if (missing.length > 0) {
-    window.location.href = '/settings.html?setup=1'
+  const exempt = ['/onboarding.html', '/login.html', '/invite.html']
+  if (exempt.some(p => window.location.pathname.includes(p))) return
+  if (!profile.profile_complete) {
+    window.location.href = '/onboarding.html'
   }
 }
 

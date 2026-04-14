@@ -88,6 +88,46 @@ const authMiddleware = async (req, res, next) => {
       res.clearCookie('refresh', { path: '/' })
       return res.status(403).json({ error: 'suspended', message: 'Your account has been suspended. Contact support for assistance.' })
     }
+    if (!profile.profile_complete) {
+      return res.status(403).json({ error: 'profile_incomplete' })
+    }
+
+    req.user = { id: userId, email: userEmail, profile }
+    next()
+  } catch (err) {
+    console.error('Auth middleware error:', err.message)
+    res.status(401).json({ error: 'Authentication failed' })
+  }
+}
+
+// Verifies token and loads profile with no status checks beyond suspension.
+// Use for endpoints that must work during onboarding (GET /auth/me, PATCH /profile).
+const authMiddlewareBasic = async (req, res, next) => {
+  try {
+    const token = req.cookies?.session
+    const refreshToken = req.cookies?.refresh
+    if (!token && !refreshToken) return res.status(401).json({ error: 'Not authenticated' })
+
+    let userId = null, userEmail = null
+    if (token) {
+      const decoded = await verifyToken(token)
+      if (decoded) { userId = decoded.id; userEmail = decoded.email }
+    }
+    if (!userId) {
+      const user = await tryRefresh(refreshToken, res)
+      if (!user) return res.status(401).json({ error: 'Session expired. Please log in again.' })
+      userId = user.id; userEmail = user.email
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles').select('*').eq('id', userId).single()
+    if (profileError || !profile) return res.status(401).json({ error: 'Profile not found.' })
+
+    if (profile.is_suspended) {
+      res.clearCookie('session', { path: '/' })
+      res.clearCookie('refresh', { path: '/' })
+      return res.status(403).json({ error: 'suspended', message: 'Your account has been suspended. Contact support for assistance.' })
+    }
 
     req.user = { id: userId, email: userEmail, profile }
     next()
@@ -146,4 +186,4 @@ const adminMiddleware = async (req, res, next) => {
   next()
 }
 
-module.exports = { authMiddleware, authMiddlewareNoTos, adminMiddleware }
+module.exports = { authMiddleware, authMiddlewareBasic, authMiddlewareNoTos, adminMiddleware }

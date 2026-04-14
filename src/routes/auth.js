@@ -1,19 +1,24 @@
 const express = require('express')
 const router = express.Router()
-const { authMiddleware, authMiddlewareNoTos } = require('../middleware/auth')
+const { authMiddleware, authMiddlewareBasic, authMiddlewareNoTos } = require('../middleware/auth')
 const {
   login, logout, getMe, updateProfile, signup, authCallback,
   inviteAgent, validateToken, signupWithToken, getInvites,
-  cancelInvite, forgotPassword, resetPassword, agreeTos
+  cancelInvite, forgotPassword, resetPassword, agreeTos,
+  verifyInvite, acceptInvite
 } = require('../controllers/authController')
 
 router.post('/login', login)
 router.post('/logout', logout)
-router.get('/me', authMiddleware, getMe)
-router.patch('/me', authMiddleware, updateProfile)
+// authMiddlewareBasic: /me must work during onboarding (profile_complete = false)
+router.get('/me', authMiddlewareBasic, getMe)
+router.patch('/me', authMiddlewareBasic, updateProfile)
 router.post('/signup', signup)
 router.get('/callback', authCallback)
 router.post('/invite', authMiddleware, inviteAgent)
+// /invite/verify must be declared before /invite/:token to avoid route conflict
+router.get('/invite/verify', verifyInvite)
+router.post('/invite/accept', acceptInvite)
 router.get('/invite/:token', validateToken)
 router.post('/signup-with-token', signupWithToken)
 router.get('/invites', authMiddleware, getInvites)

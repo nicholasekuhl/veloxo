@@ -19,7 +19,7 @@ const phoneNumbersRouter = require('./routes/phoneNumbers')
 const scheduledMessagesRouter = require('./routes/scheduledMessages')
 const appointmentsRouter = require('./routes/appointments')
 const notificationsRouter = require('./routes/notifications')
-const { authMiddleware, adminMiddleware } = require('./middleware/auth')
+const { authMiddleware, authMiddlewareBasic, adminMiddleware } = require('./middleware/auth')
 const adminRouter = require('./routes/admin')
 
 const app = express()
@@ -75,6 +75,10 @@ app.get('/', (req, res) => {
 app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
 
 app.use('/auth', authRouter)
+
+// Profile patch — uses authMiddlewareBasic so it works during onboarding (profile_complete = false)
+const { updateProfile } = require('./controllers/authController')
+app.patch('/profile', authMiddlewareBasic, updateProfile)
 
 app.use('/leads', authMiddleware, leadsRouter)
 app.use('/messages', messagesRouter)

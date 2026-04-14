@@ -55,7 +55,13 @@ const getMe = async (req, res) => {
 
 const updateProfile = async (req, res) => {
   try {
-    const { agent_name, agency_name, calendly_url, timezone, compliance_footer, compliance_footer_enabled, personal_phone, sms_notifications_enabled, inapp_notifications_enabled, agent_nickname, notify_appointment_sms } = req.body
+    const {
+      agent_name, agency_name, calendly_url, timezone,
+      compliance_footer, compliance_footer_enabled,
+      personal_phone, sms_notifications_enabled,
+      inapp_notifications_enabled, agent_nickname,
+      notify_appointment_sms, first_name, last_name, state
+    } = req.body
 
     const updates = { updated_at: new Date().toISOString() }
     if (agent_name !== undefined) updates.agent_name = agent_name
@@ -69,6 +75,17 @@ const updateProfile = async (req, res) => {
     if (sms_notifications_enabled !== undefined) updates.sms_notifications_enabled = sms_notifications_enabled
     if (inapp_notifications_enabled !== undefined) updates.inapp_notifications_enabled = inapp_notifications_enabled
     if (notify_appointment_sms !== undefined) updates.notify_appointment_sms = notify_appointment_sms
+    if (first_name !== undefined) updates.first_name = first_name
+    if (last_name !== undefined) updates.last_name = last_name
+    if (state !== undefined) updates.state = state
+
+    // Auto-mark profile complete when all required fields are present
+    const existing = req.user.profile
+    const merged = { ...existing, ...updates }
+    const required = ['agent_name', 'agency_name', 'personal_phone', 'state', 'calendly_url']
+    if (!existing.profile_complete && required.every(f => merged[f])) {
+      updates.profile_complete = true
+    }
 
     const { data, error } = await supabase
       .from('user_profiles').update(updates).eq('id', req.user.id).select().single()
@@ -152,7 +169,7 @@ const inviteAgent = async (req, res) => {
     })
 
     const appUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`
-    const signupLink = `${appUrl}/signup.html?token=${token}`
+    const signupLink = `${appUrl}/invite.html?token=${token}`
 
     if (process.env.SMTP_HOST) {
       const mailer = getMailer()
@@ -291,6 +308,73 @@ const resetPassword = async (req, res) => {
   }
 }
 
+const verifyInvite = async (req, res) => {
+  try {
+    const { token } = req.query
+    if (!token) return res.json({ valid: false, reason: 'No token provided' })
+    const { data, error } = await supabase
+      .from('invites').select('email, expires_at').eq('token', token).eq('used', false).single()
+    if (error || !data) return res.json({ valid: false, reason: 'Invalid or already used' })
+    if (new Date(data.expires_at) < new Date()) return res.json({ valid: false, reason: 'Invite link has expired' })
+    res.json({ valid: true, email: data.email })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const acceptInvite = async (req, res) => {
+  try {
+    const { token, first_name, last_name, password } = req.body
+    if (!token || !password) return res.status(400).json({ error: 'Token and password required' })
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' })
+    if (!first_name || !last_name) return res.status(400).json({ error: 'First and last name required' })
+
+    const { data: invite, error: inviteError } = await supabase
+      .from('invites').select('*').eq('token', token).eq('used', false).single()
+    if (inviteError || !invite) return res.status(400).json({ error: 'Invalid or already used invite' })
+    if (new Date(invite.expires_at) < new Date()) return res.status(400).json({ error: 'Invite link has expired' })
+
+    const { data: userData, error: createError } = await supabase.auth.admin.createUser({
+      email: invite.email, password, email_confirm: true
+    })
+    if (createError) return res.status(400).json({ error: createError.message })
+
+    const agentName = `${first_name} ${last_name}`.trim()
+    await supabase.from('user_profiles').insert({
+      id: userData.user.id,
+      email: invite.email,
+      first_name,
+      last_name,
+      agent_name: agentName,
+      tos_agreed: true,
+      tos_agreed_at: new Date().toISOString(),
+      profile_complete: false
+    })
+
+    // Create system buckets
+    await supabase.from('buckets').insert([
+      { user_id: userData.user.id, name: 'Sold', color: '#22c55e', is_system: true, system_key: 'sold' },
+      { user_id: userData.user.id, name: 'Opted Out', color: '#ef4444', is_system: true, system_key: 'opted_out' }
+    ])
+
+    await supabase.from('invites').update({ used: true }).eq('id', invite.id)
+
+    // Log them in immediately so onboarding can call /auth/me and PATCH /profile
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+      email: invite.email, password
+    })
+    if (loginError) {
+      return res.json({ success: true, needsManualLogin: true })
+    }
+
+    res.cookie('session', loginData.session.access_token, { ...COOKIE_OPTS, maxAge: 60 * 60 * 1000 })
+    res.cookie('refresh', loginData.session.refresh_token, { ...COOKIE_OPTS, maxAge: 30 * 24 * 60 * 60 * 1000 })
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 const agreeTos = async (req, res) => {
   try {
     const { error } = await supabase
@@ -304,4 +388,4 @@ const agreeTos = async (req, res) => {
   }
 }
 
-module.exports = { login, logout, getMe, updateProfile, signup, authCallback, inviteAgent, validateToken, signupWithToken, getInvites, cancelInvite, forgotPassword, resetPassword, agreeTos }
+module.exports = { login, logout, getMe, updateProfile, signup, authCallback, inviteAgent, validateToken, signupWithToken, getInvites, cancelInvite, forgotPassword, resetPassword, agreeTos, verifyInvite, acceptInvite }

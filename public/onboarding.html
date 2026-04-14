@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set Up Your Profile — Veloxo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #0a0a0b; min-height: 100vh; display: flex; align-items: center; justify-content: center; -webkit-font-smoothing: antialiased; padding: 24px; }
+    .card { background: #111114; border-radius: 16px; padding: 40px; width: 100%; max-width: 480px; border: 1px solid rgba(255,255,255,0.08); }
+    .logo { font-family: 'Instrument Serif', Georgia, serif; font-size: 24px; font-weight: 400; color: #f0efe8; margin-bottom: 28px; letter-spacing: -0.3px; }
+    .logo span { color: #7c6ff7; }
+
+    /* Progress bar */
+    .progress-wrap { margin-bottom: 28px; }
+    .progress-steps { display: flex; gap: 8px; margin-bottom: 8px; }
+    .progress-step { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); transition: background 0.3s; }
+    .progress-step.active { background: #7c6ff7; }
+    .progress-step.done { background: rgba(124,111,247,0.4); }
+    .progress-label { font-size: 12px; color: rgba(240,239,232,0.35); }
+
+    .step-title { font-size: 18px; font-weight: 600; color: #f0efe8; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .step-desc { font-size: 13px; color: rgba(240,239,232,0.45); margin-bottom: 24px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    label { display: block; font-size: 13px; font-weight: 500; color: rgba(240,239,232,0.6); margin-bottom: 5px; }
+    input, select { width: 100%; padding: 10px 14px; background: #18181c; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s; color: #f0efe8; }
+    input::placeholder { color: rgba(240,239,232,0.3); }
+    input:focus, select:focus { border-color: rgba(124,111,247,0.5); }
+    select option { background: #18181c; }
+    .label-hint { font-size: 11px; color: rgba(240,239,232,0.3); margin-top: 4px; }
+    .error { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 8px; }
+    .btn { flex: 1; padding: 11px; background: #7c6ff7; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 0.15s; letter-spacing: -0.01em; }
+    .btn:hover { background: #a89cf9; }
+    .btn:active { background: #6b5ef0; }
+    .btn:disabled { background: rgba(124,111,247,0.35); cursor: not-allowed; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.12); color: rgba(240,239,232,0.6); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); color: #f0efe8; }
+
+    /* Step 3 — success */
+    .success-icon { width: 56px; height: 56px; background: rgba(124,111,247,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { color: rgba(240,239,232,0.45); }
+    .summary-value { color: #f0efe8; font-weight: 500; max-width: 260px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Vel<span>oxo</span></div>
+
+    <div class="progress-wrap">
+      <div class="progress-steps">
+        <div class="progress-step active" id="prog-1"></div>
+        <div class="progress-step" id="prog-2"></div>
+        <div class="progress-step" id="prog-3"></div>
+      </div>
+      <div class="progress-label" id="progress-label">Step 1 of 3</div>
+    </div>
+
+    <div class="error" id="error-msg"></div>
+
+    <!-- STEP 1 — Your Profile -->
+    <div id="step-1">
+      <div class="step-title">Your Profile</div>
+      <div class="step-desc">Tell us a bit about yourself and your agency.</div>
+      <div class="form-group">
+        <label>Agent Name</label>
+        <input type="text" id="agent-name" placeholder="Your Name" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>Agency Name</label>
+        <input type="text" id="agency-name" placeholder="Your Agency Name" autocomplete="organization">
+      </div>
+      <div class="form-group">
+        <label>Your Cell Phone</label>
+        <input type="tel" id="personal-phone" placeholder="+1 (555) 000-0000" autocomplete="tel">
+        <div class="label-hint">Used for SMS notifications when leads reply.</div>
+      </div>
+      <div class="form-group">
+        <label>State You Operate In</label>
+        <select id="agent-state">
+          <option value="">Select a state...</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option>
+          <option>CA</option><option>CO</option><option>CT</option><option>DE</option>
+          <option>FL</option><option>GA</option><option>HI</option><option>ID</option>
+          <option>IL</option><option>IN</option><option>IA</option><option>KS</option>
+          <option>KY</option><option>LA</option><option>ME</option><option>MD</option>
+          <option>MA</option><option>MI</option><option>MN</option><option>MS</option>
+          <option>MO</option><option>MT</option><option>NE</option><option>NV</option>
+          <option>NH</option><option>NJ</option><option>NM</option><option>NY</option>
+          <option>NC</option><option>ND</option><option>OH</option><option>OK</option>
+          <option>OR</option><option>PA</option><option>RI</option><option>SC</option>
+          <option>SD</option><option>TN</option><option>TX</option><option>UT</option>
+          <option>VT</option><option>VA</option><option>WA</option><option>WV</option>
+          <option>WI</option><option>WY</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="step1-next" onclick="goStep2()">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — Your Links -->
+    <div id="step-2" class="hidden">
+      <div class="step-title">Your Links</div>
+      <div class="step-desc">Add your booking link so the AI can schedule appointments for you.</div>
+      <div class="form-group">
+        <label>Calendly URL</label>
+        <input type="url" id="calendly-url" placeholder="https://calendly.com/yourname" autocomplete="off">
+        <div class="label-hint">Paste your Calendly or Cal.com booking link.</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="goStep1()">Back</button>
+        <button class="btn" id="step2-next" onclick="goStep3()">Continue</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — You're all set -->
+    <div id="step-3" class="hidden">
+      <div class="success-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7c6ff7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="step-title">You're all set!</div>
+      <div class="step-desc" style="margin-bottom:20px;">Here's what we saved. You can update anything in Settings.</div>
+      <div id="summary"></div>
+      <div class="btn-row" style="margin-top:24px;">
+        <button class="btn" onclick="goToDashboard()">Go to Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load existing profile so fields can be pre-filled
+    let profileData = {}
+
+    const loadProfile = async () => {
+      try {
+        const res = await fetch('/auth/me')
+        if (!res.ok) { window.location.href = '/login.html'; return }
+        const data = await res.json()
+        profileData = data.user || {}
+        if (profileData.profile_complete) { window.location.href = '/leads.html'; return }
+        // Pre-fill step 1
+        if (profileData.agent_name) document.getElementById('agent-name').value = profileData.agent_name
+        if (profileData.agency_name) document.getElementById('agency-name').value = profileData.agency_name
+        if (profileData.personal_phone) document.getElementById('personal-phone').value = profileData.personal_phone
+        if (profileData.state) document.getElementById('agent-state').value = profileData.state
+        // Pre-fill step 2
+        if (profileData.calendly_url) document.getElementById('calendly-url').value = profileData.calendly_url
+      } catch {
+        window.location.href = '/login.html'
+      }
+    }
+
+    const setProgress = (step) => {
+      document.getElementById('progress-label').textContent = `Step ${step} of 3`
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`prog-${i}`)
+        el.className = 'progress-step' + (i < step ? ' done' : i === step ? ' active' : '')
+      }
+    }
+
+    const showStep = (n) => {
+      [1, 2, 3].forEach(i => document.getElementById(`step-${i}`).classList.toggle('hidden', i !== n))
+      setProgress(n)
+      document.getElementById('error-msg').style.display = 'none'
+    }
+
+    const saveStep = async (fields) => {
+      const res = await fetch('/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields)
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || 'Save failed')
+      profileData = { ...profileData, ...fields, ...data.profile }
+      return data.profile
+    }
+
+    const showError = (msg) => {
+      const el = document.getElementById('error-msg')
+      el.textContent = msg
+      el.style.display = 'block'
+    }
+
+    const goStep1 = () => showStep(1)
+
+    const goStep2 = async () => {
+      const agent_name = document.getElementById('agent-name').value.trim()
+      const agency_name = document.getElementById('agency-name').value.trim()
+      const personal_phone = document.getElementById('personal-phone').value.trim()
+      const state = document.getElementById('agent-state').value
+
+      if (!agent_name) { showError('Agent name is required.'); return }
+      if (!agency_name) { showError('Agency name is required.'); return }
+      if (!personal_phone) { showError('Your cell phone is required.'); return }
+      if (!state) { showError('Please select your state.'); return }
+
+      const btn = document.getElementById('step1-next')
+      btn.disabled = true; btn.textContent = 'Saving...'
+      try {
+        await saveStep({ agent_name, agency_name, personal_phone, state })
+        showStep(2)
+      } catch (err) {
+        showError(err.message)
+      } finally {
+        btn.disabled = false; btn.textContent = 'Continue'
+      }
+    }
+
+    const goStep3 = async () => {
+      const calendly_url = document.getElementById('calendly-url').value.trim()
+      if (!calendly_url) { showError('Please enter your Calendly booking link.'); return }
+
+      const btn = document.getElementById('step2-next')
+      btn.disabled = true; btn.textContent = 'Saving...'
+      try {
+        const profile = await saveStep({ calendly_url })
+        renderSummary(profile)
+        showStep(3)
+      } catch (err) {
+        showError(err.message)
+      } finally {
+        btn.disabled = false; btn.textContent = 'Continue'
+      }
+    }
+
+    const renderSummary = (profile) => {
+      const p = { ...profileData, ...profile }
+      const rows = [
+        { label: 'Agent Name', value: p.agent_name },
+        { label: 'Agency', value: p.agency_name },
+        { label: 'Phone', value: p.personal_phone },
+        { label: 'State', value: p.state },
+        { label: 'Calendly', value: p.calendly_url },
+      ]
+      document.getElementById('summary').innerHTML = rows.map(r =>
+        `<div class="summary-row"><span class="summary-label">${r.label}</span><span class="summary-value">${r.value || '—'}</span></div>`
+      ).join('')
+    }
+
+    const goToDashboard = () => { window.location.href = '/leads.html' }
+
+    loadProfile()
+  </script>
+</body>
+</html>
