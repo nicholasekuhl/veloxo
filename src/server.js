@@ -19,8 +19,10 @@ const phoneNumbersRouter = require('./routes/phoneNumbers')
 const scheduledMessagesRouter = require('./routes/scheduledMessages')
 const appointmentsRouter = require('./routes/appointments')
 const notificationsRouter = require('./routes/notifications')
+const numbersRouter = require('./routes/numbers')
 const { authMiddleware, authMiddlewareBasic, adminMiddleware } = require('./middleware/auth')
 const adminRouter = require('./routes/admin')
+const { smsQueue } = require('./smsQueue')
 
 const app = express()
 app.set('trust proxy', 1)
@@ -93,6 +95,7 @@ app.use('/appointments', authMiddleware, appointmentsRouter)
 app.use('/scheduled-messages', authMiddleware, scheduledMessagesRouter)
 app.use('/notifications', authMiddleware, notificationsRouter)
 app.use('/buckets', authMiddleware, bucketsRouter)
+app.use('/api/numbers', authMiddleware, numbersRouter)
 app.use('/admin', authMiddleware, adminMiddleware, adminRouter)
 
 app.get('/health', (req, res) => {
@@ -112,7 +115,7 @@ app.get('/health/scheduler', async (_req, res) => {
 
     const ageMs = Date.now() - new Date(data.last_heartbeat).getTime()
     const status = ageMs < 3 * 60 * 1000 ? 'healthy' : 'down'
-    res.json({ status, last_heartbeat: data.last_heartbeat, age_seconds: Math.round(ageMs / 1000), messages_sent_last_run: data.messages_sent_last_run, errors_last_run: data.errors_last_run })
+    res.json({ status, last_heartbeat: data.last_heartbeat, age_seconds: Math.round(ageMs / 1000), messages_sent_last_run: data.messages_sent_last_run, errors_last_run: data.errors_last_run, sms_queue: smsQueue.getStats() })
   } catch (err) {
     res.json({ status: 'unknown', error: err.message })
   }
@@ -122,12 +125,11 @@ const server = app.listen(PORT, () => {
   console.log(`Veloxo server running on port ${PORT}`)
 })
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('SIGTERM received — shutting down gracefully')
-  server.close(() => {
-    console.log('HTTP server closed')
-    process.exit(0)
-  })
+  server.close()
+  await smsQueue.shutdown(30000)
+  process.exit(0)
 })
 
 const bracketRouter = require('./routes/bracket')
