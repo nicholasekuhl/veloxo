@@ -56,13 +56,20 @@ app.get('/', (req, res) => {
 
   console.log('[routing] GET / host:', host)
 
+  // app.veloxo.io → send to app or login depending on session
   if (host === 'app.veloxo.io' || host.startsWith('app.')) {
-    console.log('[routing] Redirecting to login')
+    const token = req.cookies?.session || req.cookies?.refresh
+    if (token) {
+      console.log('[routing] Session found, redirecting to leads')
+      return res.redirect(302, '/leads.html')
+    }
+    console.log('[routing] No session, redirecting to login')
     return res.redirect(302, '/login.html')
   }
 
+  // veloxo.io, www.veloxo.io, or anything else → landing page
   console.log('[routing] Serving landing page')
-  res.sendFile(path.join(__dirname, '../public/index.html'))
+  res.sendFile(path.join(__dirname, '../public/landing.html'))
 })
 
 app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
