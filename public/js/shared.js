@@ -394,7 +394,7 @@ const renderSidebar = () => {
 <button class="mobile-hamburger" onclick="openNavDrawer()" aria-label="Open menu">☰</button>
 <div class="nav-overlay" id="nav-overlay" onclick="closeNavDrawer()"></div>
 <div class="sidebar" id="nav-drawer">
-  <a href="/leads.html" class="sidebar-logo">Text<span>App</span></a>
+  <a href="/leads.html" class="sidebar-logo">Vel<span>oxo</span></a>
   <nav class="sidebar-nav">
     <a href="/leads.html" class="sidebar-nav-item${a('/leads.html')}">${SVG_LEADS}Leads</a>
     <a href="/buckets.html" class="sidebar-nav-item${a('/buckets.html')}">${SVG_BUCKETS}Buckets</a>

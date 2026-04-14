@@ -159,9 +159,9 @@ const inviteAgent = async (req, res) => {
       await mailer.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: email,
-        subject: 'You have been invited to TextApp',
-        text: `You have been invited to join TextApp.\n\nClick here to set up your account:\n${signupLink}\n\nThis link expires in 7 days.`,
-        html: `<p>You have been invited to join TextApp.</p><p><a href="${signupLink}" style="background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">Set Up Your Account</a></p><p style="color:#9ca3af;font-size:12px;">This link expires in 7 days.</p>`
+        subject: 'You have been invited to Veloxo',
+        text: `You have been invited to join Veloxo.\n\nClick here to set up your account:\n${signupLink}\n\nThis link expires in 7 days.`,
+        html: `<p>You have been invited to join Veloxo.</p><p><a href="${signupLink}" style="background:#6366f1;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">Set Up Your Account</a></p><p style="color:#9ca3af;font-size:12px;">This link expires in 7 days.</p>`
       })
     }
 

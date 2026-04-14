@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Terms of Service — TextApp</title>
+  <title>Terms of Service — Veloxo</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f7f8fa; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -36,7 +36,7 @@
       <li>All leads you upload have consented to be contacted by licensed insurance professionals regarding insurance products.</li>
       <li>You will immediately honor all opt-out requests.</li>
       <li>You are solely responsible for compliance with the Telephone Consumer Protection Act (TCPA), CAN-SPAM Act, and all applicable federal and state regulations.</li>
-      <li>TextApp is a technology platform only. TextApp assumes no liability for how you use the platform or the content of messages you send.</li>
+      <li>Veloxo is a technology platform only. Veloxo assumes no liability for how you use the platform or the content of messages you send.</li>
       <li>Violation of these terms may result in immediate account termination.</li>
     </ol>
     <div class="tos-check-wrap">
@@ -45,7 +45,7 @@
         I agree to the Terms of Service and confirm that all leads I upload have consented to be contacted by licensed insurance professionals. I am solely responsible for compliance with TCPA and applicable federal and state regulations.
       </label>
     </div>
-    <button class="btn" id="agree-btn" onclick="agreeToTos()" disabled>I Agree — Continue to TextApp</button>
+    <button class="btn" id="agree-btn" onclick="agreeToTos()" disabled>I Agree — Continue to Veloxo</button>
     <a class="logout-link" onclick="logout()">Sign out</a>
   </div>
 
@@ -65,13 +65,13 @@
           errEl.textContent = data.error || 'Something went wrong.'
           errEl.style.display = 'block'
           btn.disabled = false
-          btn.textContent = 'I Agree — Continue to TextApp'
+          btn.textContent = 'I Agree — Continue to Veloxo'
         }
       } catch {
         errEl.textContent = 'Something went wrong. Try again.'
         errEl.style.display = 'block'
         btn.disabled = false
-        btn.textContent = 'I Agree — Continue to TextApp'
+        btn.textContent = 'I Agree — Continue to Veloxo'
       }
     }
 

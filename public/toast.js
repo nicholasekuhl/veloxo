@@ -1,5 +1,5 @@
 /**
- * TextApp — Toast & Confirm Modal System
+ * Veloxo — Toast & Confirm Modal System
  * Provides window.toast.success/error/warning/info(title, msg)
  * and window.confirmModal(title, msg, confirmText, destructive)
  */

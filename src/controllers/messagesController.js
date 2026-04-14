@@ -424,7 +424,7 @@ const processInboundMessage = async (body) => {
       if (!forwardingNumber) {
         console.log('SMS forward skipped — FORWARDING_NUMBER env var not set')
       } else {
-        const agencyName = profile.agency_name || 'TextApp'
+        const agencyName = profile.agency_name || 'Veloxo'
         const msgBody = Body.length > 100 ? Body.slice(0, 100) + '...' : Body
         const leadName = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || ''
         const forwardText = `${agencyName}: msg from ${leadName} ${lead.phone}: ${msgBody}`.trim()
@@ -939,7 +939,7 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
       }
 
       if (profile?.notify_appointment_sms !== false && profile?.personal_phone) {
-        const notificationBody = `TextApp: New appointment booked!\nLead: ${lead.first_name || ''} ${lead.last_name || ''}\nPhone: ${lead.phone}\nTime: ${apptTime}\nCalendly: ${profile.calendly_url || 'N/A'}`
+        const notificationBody = `Veloxo: New appointment booked!\nLead: ${lead.first_name || ''} ${lead.last_name || ''}\nPhone: ${lead.phone}\nTime: ${apptTime}\nCalendly: ${profile.calendly_url || 'N/A'}`
         sendSMS(profile.personal_phone, notificationBody, process.env.FORWARDING_NUMBER)
           .catch(err => console.error('bookAppointment: agent SMS notification error:', err.message))
       }

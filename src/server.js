@@ -73,7 +73,7 @@ app.get('/health/scheduler', async (_req, res) => {
 })
 
 const server = app.listen(PORT, () => {
-  console.log(`TextApp server running on port ${PORT}`)
+  console.log(`Veloxo server running on port ${PORT}`)
 })
 
 process.on('SIGTERM', () => {

@@ -19,7 +19,7 @@ require('dotenv').config()
 const { startScheduler } = require('./scheduler')
 const { smsQueue } = require('./smsQueue')
 
-console.log('TextApp Worker starting...')
+console.log('Veloxo Worker starting...')
 
 // Start the SMS queue drain
 smsQueue.start()
