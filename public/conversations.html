@@ -103,6 +103,21 @@
   </div>
 </div>
 
+<!-- GENERIC CONFIRM MODAL — used by confirmModal() helper -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="confirm-modal-title">Confirm</h2>
+      <button class="modal-close" id="confirm-modal-x">×</button>
+    </div>
+    <p id="confirm-modal-body" style="font-size:14px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="confirm-modal-cancel">Cancel</button>
+      <button class="btn" id="confirm-modal-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- MARK AS SOLD MODAL -->
 <div class="modal-overlay" id="sold-modal">
   <div class="modal" style="max-width:460px;">
@@ -171,6 +186,34 @@
   const debounce = (fn, ms) => {
     let t
     return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms) }
+  }
+
+  // Promise-based confirm dialog — resolves true/false when user clicks OK or Cancel.
+  // Uses { once: true } listeners so they auto-detach after a single click.
+  const confirmModal = (title, body, okLabel = 'Confirm', isDanger = false) => {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirm-modal')
+      document.getElementById('confirm-modal-title').textContent = title
+      document.getElementById('confirm-modal-body').textContent = body
+      const okBtn = document.getElementById('confirm-modal-ok')
+      okBtn.textContent = okLabel
+      okBtn.style.cssText = isDanger
+        ? 'background:#ef4444;color:white;font-weight:600;'
+        : 'background:var(--color-primary);color:white;font-weight:600;'
+
+      let resolved = false
+      const close = (result) => {
+        if (resolved) return
+        resolved = true
+        modal.classList.remove('open')
+        resolve(result)
+      }
+
+      okBtn.addEventListener('click', () => close(true), { once: true })
+      document.getElementById('confirm-modal-cancel').addEventListener('click', () => close(false), { once: true })
+      document.getElementById('confirm-modal-x').addEventListener('click', () => close(false), { once: true })
+      modal.classList.add('open')
+    })
   }
 
   const closeAllMenus = () => document.querySelectorAll('.actions-dropdown').forEach(d => d.classList.remove('open'))
@@ -1362,7 +1405,12 @@
       const res = await fetch(`/leads/${leadId}/opt-out`, { method: 'POST' })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
-      await loadConversations()
+      // Update local state immediately — no full reload needed
+      const conv = allConversations.find(c => c.id === convId)
+      if (conv?.leads) conv.leads.opted_out = true
+      const leadName = conv?.leads ? [conv.leads.first_name, conv.leads.last_name].filter(Boolean).join(' ') || 'Lead' : 'Lead'
+      filterConversations(document.getElementById('conv3-search')?.value || '')
+      toast.success('Lead opted out', `${leadName} will no longer receive messages`)
       openConversation(convId)
     } catch (err) { toast.error('Error', 'Could not opt out lead') }
   }
@@ -1373,7 +1421,12 @@
       const res = await fetch(`/leads/${leadId}/undo-opt-out`, { method: 'POST' })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
-      await loadConversations()
+      // Update local state immediately
+      const conv = allConversations.find(c => c.id === convId)
+      if (conv?.leads) conv.leads.opted_out = false
+      const leadName = conv?.leads ? [conv.leads.first_name, conv.leads.last_name].filter(Boolean).join(' ') || 'Lead' : 'Lead'
+      filterConversations(document.getElementById('conv3-search')?.value || '')
+      toast.success('Opt-out removed', `${leadName} can now receive texts again`)
       openConversation(convId)
     } catch (err) { toast.error('Error', 'Could not remove opt-out') }
   }
