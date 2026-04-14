@@ -46,10 +46,21 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
 
 app.get('/', (req, res) => {
-  const host = req.headers.host || req.hostname || ''
-  if (host.startsWith('app.')) {
-    return res.redirect('/login.html')
+  const host = (
+    req.headers['x-forwarded-host'] ||
+    req.headers.host ||
+    req.hostname ||
+    ''
+  ).toLowerCase().split(':')[0]
+
+  console.log('[routing] GET / host:', host)
+
+  if (host === 'app.veloxo.io' || host.startsWith('app.')) {
+    console.log('[routing] Redirecting to login')
+    return res.redirect(302, '/login.html')
   }
+
+  console.log('[routing] Serving landing page')
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
