@@ -691,7 +691,8 @@ const processInboundMessage = async (body) => {
 }
 
 const handleIncomingMessage = async (req, res) => {
-  // Respond to Twilio IMMEDIATELY — prevents retries and 15s timeout errors
+  // Already respond-first — no change needed
+  // Responds to carrier before any async processing to prevent 15s timeout retries
   res.set('Content-Type', 'text/xml')
   res.send('<Response></Response>')
 

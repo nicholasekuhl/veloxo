@@ -40,7 +40,7 @@
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const RATE_PER_SECOND_PER_LANE = 3;  // msgs/sec per phone number lane
+const RATE_PER_SECOND_PER_LANE = 10;  // msgs/sec per phone number lane
 const DRAIN_INTERVAL_MS        = 1000;
 const MAX_RETRIES               = 3;
 const BACKOFF_BASE_MS           = 2000; // 2s → 4s → 8s
