@@ -43,8 +43,9 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
-app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
 
+// Must run BEFORE express.static — static middleware auto-serves index.html for GET /
+// and would bypass this handler entirely if it came after.
 app.get('/', (req, res) => {
   const host = (
     req.headers['x-forwarded-host'] ||
@@ -63,6 +64,8 @@ app.get('/', (req, res) => {
   console.log('[routing] Serving landing page')
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
+
+app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
 
 app.use('/auth', authRouter)
 
