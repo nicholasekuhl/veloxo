@@ -796,6 +796,36 @@
 <!-- LEAD ACTIONS MENU (global floating) -->
 <div id="lead-actions-menu"></div>
 
+<!-- OPT-OUT CONFIRM MODAL -->
+<div class="modal-overlay" id="opt-out-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="opt-out-modal-title">Opt Out Lead?</h2>
+      <button class="modal-close" onclick="closeOptOutModal()">×</button>
+    </div>
+    <p id="opt-out-modal-body" style="font-size:14px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeOptOutModal()">Cancel</button>
+      <button class="btn" id="opt-out-confirm-btn" style="background:#ef4444;color:white;font-weight:600;" onclick="executeOptOut()">Opt Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- UNDO OPT-OUT CONFIRM MODAL -->
+<div class="modal-overlay" id="undo-opt-out-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;" id="undo-opt-out-modal-title">Remove Opt-Out?</h2>
+      <button class="modal-close" onclick="closeUndoOptOutModal()">×</button>
+    </div>
+    <p id="undo-opt-out-modal-body" style="font-size:14px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;"></p>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeUndoOptOutModal()">Cancel</button>
+      <button class="btn btn-primary" id="undo-opt-out-confirm-btn" onclick="executeUndoOptOut()">Remove Opt-Out</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE LEAD MODAL -->
 <div class="modal-overlay" id="delete-lead-modal">
   <div class="modal" style="max-width:440px;">

@@ -2861,32 +2861,101 @@ const unblockLeadAction = async (leadId) => {
   } catch (err) { toast.error('Error', 'Something went wrong') }
 }
 
-const confirmOptOutLead = async (leadId, name) => {
-  if (!confirm(`Opt out ${name} from all texts?\n\nThis will:\n• Cancel all scheduled messages\n• Pause all campaign drips\n• Prevent any future texts to this lead\n\nThis can be undone.`)) return
+let _optOutLeadId = null
+let _optOutLeadName = null
+let _undoOptOutLeadId = null
+let _undoOptOutLeadName = null
+
+const confirmOptOutLead = (leadId, name) => {
+  console.log('[optOut] confirmOptOutLead called — leadId:', leadId, 'name:', name)
+  _optOutLeadId = leadId
+  _optOutLeadName = name
+  document.getElementById('opt-out-modal-title').textContent = `Opt Out ${name}?`
+  document.getElementById('opt-out-modal-body').textContent = `This will cancel all scheduled messages, pause all campaign drips, and prevent any future texts to ${name}. This can be undone.`
+  const btn = document.getElementById('opt-out-confirm-btn')
+  btn.disabled = false
+  btn.textContent = 'Opt Out'
+  document.getElementById('opt-out-modal').classList.add('open')
+}
+
+const closeOptOutModal = () => {
+  document.getElementById('opt-out-modal').classList.remove('open')
+  _optOutLeadId = null
+  _optOutLeadName = null
+}
+
+const executeOptOut = async () => {
+  const leadId = _optOutLeadId
+  const name = _optOutLeadName
+  if (!leadId) return
+  const btn = document.getElementById('opt-out-confirm-btn')
+  btn.disabled = true
+  btn.textContent = 'Opting out...'
   try {
     const res = await fetch(`/leads/${leadId}/opt-out`, { method: 'POST' })
     const data = await res.json()
     if (data.success) {
+      closeOptOutModal()
       const lead = allLeads.find(l => l.id === leadId)
       if (lead) Object.assign(lead, data.lead)
       filterLeads()
       toast.success('Lead opted out', name + ' will no longer receive texts')
-    } else toast.error('Error', data.error || 'Could not opt out lead')
-  } catch (err) { toast.error('Error', 'Something went wrong') }
+    } else {
+      btn.disabled = false
+      btn.textContent = 'Opt Out'
+      toast.error('Error', data.error || 'Could not opt out lead')
+    }
+  } catch (err) {
+    btn.disabled = false
+    btn.textContent = 'Opt Out'
+    toast.error('Error', 'Something went wrong')
+  }
 }
 
-const undoOptOutAction = async (leadId, name) => {
-  if (!confirm(`Remove opt-out for ${name}? They can receive texts again.`)) return
+const undoOptOutAction = (leadId, name) => {
+  console.log('[optOut] undoOptOutAction called — leadId:', leadId, 'name:', name)
+  _undoOptOutLeadId = leadId
+  _undoOptOutLeadName = name
+  document.getElementById('undo-opt-out-modal-title').textContent = `Remove Opt-Out for ${name}?`
+  document.getElementById('undo-opt-out-modal-body').textContent = `${name} will be able to receive texts again. Any paused campaigns will need to be manually resumed.`
+  const btn = document.getElementById('undo-opt-out-confirm-btn')
+  btn.disabled = false
+  btn.textContent = 'Remove Opt-Out'
+  document.getElementById('undo-opt-out-modal').classList.add('open')
+}
+
+const closeUndoOptOutModal = () => {
+  document.getElementById('undo-opt-out-modal').classList.remove('open')
+  _undoOptOutLeadId = null
+  _undoOptOutLeadName = null
+}
+
+const executeUndoOptOut = async () => {
+  const leadId = _undoOptOutLeadId
+  const name = _undoOptOutLeadName
+  if (!leadId) return
+  const btn = document.getElementById('undo-opt-out-confirm-btn')
+  btn.disabled = true
+  btn.textContent = 'Removing...'
   try {
     const res = await fetch(`/leads/${leadId}/undo-opt-out`, { method: 'POST' })
     const data = await res.json()
     if (data.success) {
+      closeUndoOptOutModal()
       const lead = allLeads.find(l => l.id === leadId)
       if (lead) Object.assign(lead, data.lead)
       filterLeads()
       toast.success('Opt-out removed', name + ' can now receive texts')
-    } else toast.error('Error', data.error || 'Could not remove opt-out')
-  } catch (err) { toast.error('Error', 'Something went wrong') }
+    } else {
+      btn.disabled = false
+      btn.textContent = 'Remove Opt-Out'
+      toast.error('Error', data.error || 'Could not remove opt-out')
+    }
+  } catch (err) {
+    btn.disabled = false
+    btn.textContent = 'Remove Opt-Out'
+    toast.error('Error', 'Something went wrong')
+  }
 }
 
 // ===== DELETE LEAD =====
