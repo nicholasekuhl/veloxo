@@ -246,7 +246,20 @@
     const meData = await meRes.json()
     if (!meData.user?.is_admin) { window.location.href = '/'; return }
     currentUserId = meData.user.id
+    loadAdminStats()
     loadUsers()
+  }
+
+  const loadAdminStats = async () => {
+    try {
+      const res = await fetch('/admin/stats')
+      if (!res.ok) return
+      const data = await res.json()
+      document.getElementById('stat-total').textContent = (data.total || 0).toLocaleString()
+      document.getElementById('stat-active').textContent = (data.active || 0).toLocaleString()
+      document.getElementById('stat-suspended').textContent = (data.suspended || 0).toLocaleString()
+      document.getElementById('stat-leads').textContent = (data.leads || 0).toLocaleString()
+    } catch { /* non-fatal — renderStats() from loadUsers() will fill in */ }
   }
 
   const loadUsers = async () => {
@@ -368,7 +381,7 @@
 
   // UNSUSPEND
   const openUnsuspend = async (id, name) => {
-    if (!await confirmModal(`Unsuspend ${name}?`, 'They will regain access to the app immediately.', 'Unsuspend', false)) return
+    if (!window.confirm(`Unsuspend ${name}? They will regain access to the app immediately.`)) return
     try {
       const res = await fetch(`/admin/users/${id}/unsuspend`, { method: 'POST' })
       const data = await res.json()

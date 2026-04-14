@@ -169,4 +169,23 @@ const getComplianceOverrides = async (req, res) => {
   }
 }
 
-module.exports = { getUsers, suspendUser, unsuspendUser, deleteUser, getComplianceOverrides }
+const getStats = async (req, res) => {
+  try {
+    const [
+      { count: totalUsers },
+      { count: activeUsers },
+      { count: suspendedUsers },
+      { count: totalLeads }
+    ] = await Promise.all([
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('is_suspended', false),
+      supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('is_suspended', true),
+      supabase.from('leads').select('*', { count: 'exact', head: true })
+    ])
+    res.json({ total: totalUsers || 0, active: activeUsers || 0, suspended: suspendedUsers || 0, leads: totalLeads || 0 })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getUsers, getStats, suspendUser, unsuspendUser, deleteUser, getComplianceOverrides }
