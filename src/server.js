@@ -33,6 +33,10 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, '../public'), { maxAge: '5m', etag: true, lastModified: true }))
 
 app.get('/', (req, res) => {
+  const host = req.hostname || ''
+  if (host.startsWith('app.')) {
+    return res.redirect('/login.html')
+  }
   res.sendFile(path.join(__dirname, '../public/index.html'))
 })
 
