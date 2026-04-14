@@ -10,6 +10,10 @@ const STAGE_ORDER = [
 
 // Detect pipeline stage from conversation history using regex — zero API calls
 function detectPipelineStage(lead, messages) {
+  // fullText (all messages) is used ONLY for appointment_scheduled,
+  // which checks for confirmation phrases that appear in outbound AI replies.
+  // All other stage checks use inbound (lead messages only) to prevent
+  // AI qualifying questions from falsely advancing stages.
   const fullText = messages
     .map(m => m.body || m.content || '')
     .join(' ')
@@ -112,3 +116,11 @@ module.exports = {
   generateNoteSummary,
   STAGE_ORDER
 }
+
+// DATA FIX: Run once in Supabase SQL editor to
+// clear pipeline stages from opted-out leads:
+// UPDATE leads SET pipeline_stage = null,
+//   pipeline_ghosted = false,
+//   pipeline_ghosted_at = null
+// WHERE (opted_out = true OR status = 'opted_out')
+//   AND pipeline_stage IS NOT NULL;

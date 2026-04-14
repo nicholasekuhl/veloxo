@@ -214,6 +214,9 @@ const executeHandoff = async (lead, conversation, handoff, fromNumber) => {
           autopilot: false,
           opted_out_at: now,
           updated_at: now,
+          pipeline_stage: null,
+          pipeline_ghosted: false,
+          pipeline_ghosted_at: null,
           ...(optOutBucketId ? { bucket_id: optOutBucketId } : {})
         }).eq('id', lead.id),
         supabase.from('campaign_leads').update({
@@ -293,7 +296,7 @@ const processInboundMessage = async (body) => {
       const now = new Date().toISOString()
       const optOutBucketId = await getOrCreateOptOutBucket(userId)
       await supabase.from('leads')
-        .update({ status: 'opted_out', opted_out: true, opted_out_at: now, autopilot: false, updated_at: now, ...(optOutBucketId ? { bucket_id: optOutBucketId } : {}) })
+        .update({ status: 'opted_out', opted_out: true, opted_out_at: now, autopilot: false, updated_at: now, pipeline_stage: null, pipeline_ghosted: false, pipeline_ghosted_at: null, ...(optOutBucketId ? { bucket_id: optOutBucketId } : {}) })
         .eq('phone', From).eq('user_id', userId)
       const { data: stoppedLead } = await supabase.from('leads').select('id').eq('phone', From).eq('user_id', userId).single()
       if (stoppedLead) {
@@ -526,6 +529,9 @@ const processInboundMessage = async (body) => {
                 autopilot: false,
                 opted_out_at: now,
                 updated_at: now,
+                pipeline_stage: null,
+                pipeline_ghosted: false,
+                pipeline_ghosted_at: null,
                 ...(optOutBucketId ? { bucket_id: optOutBucketId } : {})
               }).eq('id', capturedLead.id),
               supabase.from('campaign_leads').update({ status: 'cancelled' })

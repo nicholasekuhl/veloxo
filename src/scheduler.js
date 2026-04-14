@@ -1025,7 +1025,8 @@ const checkPipelineGhosts = async () => {
       .select('id, pipeline_stage, pipeline_stage_set_at, user_id')
       .not('pipeline_stage', 'is', null)
       .eq('pipeline_ghosted', false)
-      .neq('pipeline_stage', 'sold')
+      .not('pipeline_stage', 'in', '("sold","appointment_scheduled")')
+      .neq('status', 'booked')
       .lte('pipeline_stage_set_at', oneDayAgo)
 
     if (!stalled || stalled.length === 0) return
