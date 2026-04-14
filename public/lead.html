@@ -60,10 +60,18 @@
     .followup-bar { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .followup-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(251,191,36,0.1); color: #fbbf24; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid rgba(251,191,36,0.2); }
     .followup-badge:hover { background: rgba(251,191,36,0.18); }
-    .notes-area { flex: 1; min-width: 200px; }
-    .notes-textarea { width: 100%; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; font-family: inherit; resize: none; height: 36px; outline: none; transition: all 0.2s; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); }
-    .notes-textarea:focus { border-color: rgba(0,201,167,0.35); height: 72px; background: rgba(0,201,167,0.03); }
-    .notes-textarea::placeholder { color: rgba(255,255,255,0.22); }
+
+    /* ── Notes + Quoted Plans row ── */
+    .lead-notes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 24px; background: #131a1f; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .lead-notes-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 6px; }
+    .lead-notes-textarea { width: 100%; min-height: 110px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; transition: border-color 0.12s, background 0.12s; display: block; box-sizing: border-box; }
+    .lead-notes-textarea::placeholder { color: rgba(255,255,255,0.2); font-size: 12px; }
+    .lead-notes-textarea:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
+    .lead-quotes-textarea:focus { border-color: rgba(251,191,36,0.35) !important; background: rgba(251,191,36,0.03) !important; }
+    .lead-notes-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+    .lead-notes-ts { font-size: 10.5px; color: rgba(255,255,255,0.2); }
+    #save-notes-btn, #save-quotes-btn { font-size: 11px; font-weight: 500; color: rgba(0,201,167,0.6); background: none; border: none; cursor: pointer; transition: color 0.12s; font-family: inherit; padding: 0; }
+    #save-notes-btn:hover, #save-quotes-btn:hover { color: #00d4b4; }
 
     /* ── Info grid ── */
     .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
@@ -384,8 +392,23 @@
               </div>
             ` : `<span style="font-size:13px;color:#d1d5db;">No follow-up scheduled</span>`}
           </div>
-          <div class="notes-area">
-            <textarea class="notes-textarea" placeholder="Add notes..." onblur="saveNotes(this.value)">${lead.notes || ''}</textarea>
+        </div>
+        <div class="lead-notes-row">
+          <div class="lead-notes-col">
+            <div class="lead-notes-label">Notes</div>
+            <textarea class="lead-notes-textarea" id="lead-notes-field" placeholder="Add notes about this lead...">${lead.notes || ''}</textarea>
+            <div class="lead-notes-footer">
+              <span class="lead-notes-ts" id="lead-notes-ts">${lead.updated_at ? 'Last edited ' + timeAgo(lead.updated_at) : ''}</span>
+              <button class="notes-save-btn" id="save-notes-btn" onclick="saveNotes(document.getElementById('lead-notes-field').value)">Save</button>
+            </div>
+          </div>
+          <div class="lead-quotes-col">
+            <div class="lead-notes-label">Quoted Plans</div>
+            <textarea class="lead-notes-textarea lead-quotes-textarea" id="lead-quotes-field" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo">${lead.quotes || ''}</textarea>
+            <div class="lead-notes-footer">
+              <span class="lead-notes-ts" id="lead-quotes-ts">${lead.quotes_updated_at ? 'Last edited ' + timeAgo(lead.quotes_updated_at) : 'No quotes yet'}</span>
+              <button class="notes-save-btn" id="save-quotes-btn" onclick="saveQuotes(document.getElementById('lead-quotes-field').value)">Save</button>
+            </div>
           </div>
         </div>
 
@@ -1063,6 +1086,19 @@
         body: JSON.stringify({ notes })
       })
       lead.notes = notes
+    } catch (err) { console.error(err) }
+  }
+
+  const saveQuotes = async (quotes) => {
+    try {
+      await fetch(`/leads/${leadId}/quotes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quotes })
+      })
+      lead.quotes = quotes
+      const ts = document.getElementById('lead-quotes-ts')
+      if (ts) ts.textContent = 'Just saved'
     } catch (err) { console.error(err) }
   }
 

@@ -380,7 +380,9 @@ const renderSidebar = () => {
   const root = document.getElementById('sidebar-root')
   if (!root) return
   const p = window.location.pathname
+  const q = window.location.search
   const a = (href) => (p === href || p.endsWith(href)) ? ' active' : ''
+  const aSettings = (panel) => (p.endsWith('/settings.html') && q.includes(`panel=${panel}`)) ? ' active' : ''
 
   const SVG_LEADS = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="2.5"/><path d="M1.5 13.5c0-3 2-4.5 4.5-4.5s4.5 1.5 4.5 4.5"/><circle cx="12.5" cy="6" r="1.8"/><path d="M10.5 13.5c0-2 1-3 2-3s2 1 2 3"/></svg>`
   const SVG_BUCKETS = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="12" height="9" rx="2"/><path d="M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/></svg>`
@@ -410,14 +412,29 @@ const renderSidebar = () => {
     </div>
   </div>
   <nav class="sidebar-nav">
+    <span class="nav-section-label">Lead Management</span>
     <a href="/leads.html" class="nav-item${a('/leads.html')}">${SVG_LEADS}<span>Leads</span></a>
     <a href="/buckets.html" class="nav-item${a('/buckets.html')}">${SVG_BUCKETS}<span>Buckets</span></a>
     <a href="/archive.html" class="nav-item${a('/archive.html')}">${SVG_ARCHIVE}<span>Archive</span></a>
     <a href="/pipeline.html" class="nav-item${a('/pipeline.html')}">${SVG_PIPELINE}<span>Pipeline</span></a>
+
+    <span class="nav-section-label">Outreach</span>
     <a href="/conversations.html" class="nav-item${a('/conversations.html')}">${SVG_CONV}<span>Conversations</span><span class="notif-badge-inline nav-badge alert" id="notif-badge" style="display:none;"></span></a>
     <a href="/campaigns.html" class="nav-item${a('/campaigns.html')}">${SVG_CAMP}<span>Campaigns</span></a>
+    <a href="/settings.html?panel=dispositions" class="nav-item${aSettings('dispositions')}">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M4 5V3.5A1.5 1.5 0 015.5 2h5A1.5 1.5 0 0112 3.5V5M6 9l1.5 1.5L11 7"/></svg>
+      <span>Dispositions</span>
+    </a>
+    <a href="/settings.html?panel=templates" class="nav-item${aSettings('templates')}">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h4"/></svg>
+      <span>Templates</span>
+    </a>
+
+    <span class="nav-section-label">Insights</span>
     <a href="/stats.html" class="nav-item${a('/stats.html')}">${SVG_STATS}<span>Stats</span></a>
     <a href="/calendar.html" class="nav-item${a('/calendar.html')}" id="nav-calendar">${SVG_CAL}<span>Calendar</span><span id="today-appt-badge" class="nav-badge alert" style="display:none;"></span></a>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
     <a href="/settings.html" class="nav-item${a('/settings.html')}">${SVG_SETTINGS}<span>Settings</span></a>
     <a href="/admin.html" id="admin-nav-link" class="nav-item${a('/admin.html')}" style="display:none;">${SVG_ADMIN}<span>Admin</span></a>
   </nav>
