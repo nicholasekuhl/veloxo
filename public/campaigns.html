@@ -6,6 +6,18 @@
   <title>Campaigns — Veloxo</title>
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <script src="/toast.js?v=2"></script>
+  <style>
+    .message-step { border: 1px solid rgba(255,255,255,0.07); border-radius: 9px; padding: 14px 16px; margin-bottom: 10px; background: rgba(255,255,255,0.02); }
+    .message-step-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7); }
+    .day-input { display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.5); margin-bottom: 10px; flex-wrap: wrap; }
+    .day-input label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.45); margin: 0; }
+    .step-day, .step-time { padding: 5px 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 7px; font-size: 13px; color: rgba(255,255,255,0.75); outline: none; font-family: inherit; }
+    .step-day { width: 60px; }
+    .kw-chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .kw-chip { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; transition: opacity 0.12s; }
+    .kw-chip.ok { background: rgba(52,211,153,0.1); color: #34d399; border-color: rgba(52,211,153,0.2); }
+    .kw-chip.missing { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.2); }
+  </style>
 </head>
 <body>
 
@@ -61,16 +73,16 @@
           <span class="camp-msg-label">Initial Message</span>
           <span class="badge-required">Required</span>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="previewQuickMsg(1)">Preview</button>
+        <button class="btn-ghost" onclick="previewQuickMsg(1)">Preview</button>
       </div>
-      <div id="campaign-footer-note" style="display:none;background:var(--color-primary-bg);border:1px solid var(--indigo-200);border-radius:var(--radius-md);padding:10px 14px;font-size:12px;color:var(--color-primary);margin-bottom:10px;">Compliance footer is enabled — it will be automatically appended to the first message sent to each lead.</div>
+      <div id="campaign-footer-note" style="display:none;background:rgba(0,201,167,0.07);border:1px solid rgba(0,201,167,0.18);border-radius:10px;padding:10px 14px;font-size:12px;color:#00d4b4;margin-bottom:10px;">Compliance footer is enabled — it will be automatically appended to the first message sent to each lead.</div>
       <textarea id="msg1-body" class="step-body" rows="6" placeholder="Hi [First Name], this is [Agent Name] with [Agency Name]..." oninput="updateQuickCharCount(1)"></textarea>
       <div class="char-count" id="msg1-char">0 / 160</div>
       <label class="spintext-toggle"><input type="checkbox" id="msg1-spintext"> Enable spintext <span class="spintext-hint" title="Use {Option A|Option B} to randomize text — the scheduler picks one variation per send">?</span></label>
       <div id="msg1-kw"></div>
       <div style="margin-top:12px;">
-        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send initial message at <span style="font-weight:400;color:var(--color-text-secondary);">(optional)</span></label>
-        <input type="time" id="initial-send-time" style="padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;color:var(--color-text);background:var(--color-surface);outline:none;">
+        <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Send initial message at <span style="font-weight:400;color:rgba(255,255,255,0.35);">(optional)</span></label>
+        <input type="time" id="initial-send-time" style="padding:6px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:13px;color:rgba(255,255,255,0.75);background:rgba(255,255,255,0.05);outline:none;">
         <div class="help-text" style="margin-top:4px;">If set, initial messages send at this time in each lead's local timezone. Leave blank to send immediately when leads are assigned.</div>
       </div>
     </div>
@@ -96,7 +108,7 @@
         </div>
         <div class="help-text">Quiet hours still apply — if the delay falls outside permitted hours it will be sent the next morning.</div>
         <div id="msg2-kw"></div>
-        <button class="btn btn-secondary btn-sm" onclick="previewQuickMsg(2)" style="margin-top:8px;">Preview</button>
+        <button class="btn-ghost" onclick="previewQuickMsg(2)" style="margin-top:8px;">Preview</button>
       </div>
     </div>
 
@@ -121,7 +133,7 @@
         </div>
         <div id="msg3-delay-error" class="form-error" style="display:none;">Must be after Follow-up 1</div>
         <div id="msg3-kw"></div>
-        <button class="btn btn-secondary btn-sm" onclick="previewQuickMsg(3)" style="margin-top:8px;">Preview</button>
+        <button class="btn-ghost" onclick="previewQuickMsg(3)" style="margin-top:8px;">Preview</button>
       </div>
     </div>
 
@@ -132,7 +144,7 @@
           <span class="camp-msg-label">Additional Follow-ups</span>
           <div class="camp-msg-subtitle">Day-based messages sent on specific days after enrollment</div>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="addMessageStep()">+ Add Message</button>
+        <button class="btn-ghost" onclick="addMessageStep()">+ Add Message</button>
       </div>
       <div class="help-text" style="margin-bottom:10px;">Each message must be at least 1 day after enrollment. For FL, OK, MD leads: note the 3 outbound message per 24-hour limit.</div>
       <div id="message-steps"></div>
@@ -140,12 +152,12 @@
 
     <!-- Reply behavior -->
     <div class="camp-msg-section">
-      <label class="toggle-enable-row" style="margin-bottom:4px;"><input type="checkbox" id="cancel-on-reply" checked> <span style="font-weight:500;color:var(--gray-700);">Stop follow-ups when lead replies</span></label>
+      <label class="toggle-enable-row" style="margin-bottom:4px;"><input type="checkbox" id="cancel-on-reply" checked> <span style="font-weight:500;color:rgba(255,255,255,0.65);">Stop follow-ups when lead replies</span></label>
       <div class="help-text">When a lead responds, remaining messages are cancelled. If autopilot is on the AI handles the conversation. If autopilot is off you will be notified to follow up.</div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeCampaignModal()">Cancel</button>
+      <button class="btn-ghost" onclick="closeCampaignModal()">Cancel</button>
       <button class="btn-primary" onclick="saveCampaign()">Save Campaign</button>
     </div>
   </div>
@@ -158,13 +170,13 @@
       <h2>Message Preview</h2>
       <button class="modal-close" onclick="document.getElementById('preview-modal').classList.remove('open')">×</button>
     </div>
-    <div style="font-size:12px;color:var(--color-text-muted);margin-bottom:10px;">Sample variables filled in · Spintext resolved randomly</div>
-    <div id="preview-message-body" style="background:var(--color-surface-subtle);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:16px;font-size:14px;color:var(--color-text);white-space:pre-wrap;line-height:1.5;margin-bottom:12px;"></div>
-    <div id="preview-char-count" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;font-weight:500;"></div>
-    <div id="preview-footer-note" style="display:none;font-size:12px;color:var(--color-primary);background:var(--color-primary-bg);padding:8px 12px;border-radius:var(--radius-sm);margin-bottom:12px;">Compliance footer appended (first message only)</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.32);margin-bottom:10px;">Sample variables filled in · Spintext resolved randomly</div>
+    <div id="preview-message-body" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:16px;font-size:14px;color:rgba(255,255,255,0.75);white-space:pre-wrap;line-height:1.5;margin-bottom:12px;"></div>
+    <div id="preview-char-count" style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px;font-weight:500;"></div>
+    <div id="preview-footer-note" style="display:none;font-size:12px;color:#00d4b4;background:rgba(0,201,167,0.07);padding:8px 12px;border-radius:7px;margin-bottom:12px;">Compliance footer appended (first message only)</div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('preview-modal').classList.remove('open')">Close</button>
-      <button class="btn btn-secondary" onclick="rerollPreview()">Re-roll</button>
+      <button class="btn-ghost" onclick="document.getElementById('preview-modal').classList.remove('open')">Close</button>
+      <button class="btn-ghost" onclick="rerollPreview()">Re-roll</button>
     </div>
   </div>
 </div>
@@ -187,8 +199,8 @@
     </div>
     <div id="enroll-leads-list" style="max-height:260px;overflow-y:auto;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeEnrollModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="enrollSelectedLeads()">Tag Leads</button>
+      <button class="btn-ghost" onclick="closeEnrollModal()">Cancel</button>
+      <button class="btn-primary"  onclick="enrollSelectedLeads()">Tag Leads</button>
     </div>
   </div>
 </div>
@@ -225,7 +237,7 @@
     } catch (err) {
       console.error(err)
       toast.error('Failed to load campaigns', 'Please try again')
-      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;font-size:13px;">Could not load campaigns.</td></tr>`
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:rgba(255,255,255,0.35);font-size:13px;">Could not load campaigns.</td></tr>`
     }
   }
 
@@ -249,9 +261,9 @@
       tbody.innerHTML = `<tr><td colspan="6">
         <div style="text-align:center;padding:72px 20px;">
           <div style="font-size:40px;margin-bottom:14px;">📋</div>
-          <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No campaigns yet</div>
-          <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Create a campaign to automatically follow up with leads.</div>
-          <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="openCreateCampaignModal()">Create Campaign</button>
+          <div style="font-size:17px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:6px;">No campaigns yet</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;">Create a campaign to automatically follow up with leads.</div>
+          <button class="btn-primary"  style="width:auto;padding:8px 20px;" onclick="openCreateCampaignModal()">Create Campaign</button>
         </div>
       </td></tr>`
       return
@@ -278,9 +290,9 @@
       const isLast = idx >= sorted.length - 2
       return `<tr>
         <td><div class="campaign-name-cell">${c.name}${isBest ? ' <span title="Highest reply rate" style="font-size:13px;">⭐</span>' : ''}</div>${c.description ? `<div class="campaign-desc">${c.description}</div>` : ''}</td>
-        <td style="font-size:13px;color:var(--color-text-secondary);">${msgSummary}</td>
+        <td style="font-size:13px;color:rgba(255,255,255,0.35);">${msgSummary}</td>
         <td style="font-size:13px;font-weight:600;">${enrolled}</td>
-        <td style="font-size:13px;font-weight:600;color:${replyRate !== null && replyRate > 0 ? '#059669' : 'var(--color-text-secondary)'};">${replyRate !== null ? `${replyRate}%` : '—'}</td>
+        <td style="font-size:13px;font-weight:600;color:${replyRate !== null && replyRate > 0 ? '#34d399' : 'rgba(255,255,255,0.35)'};">${replyRate !== null ? `${replyRate}%` : '—'}</td>
         <td><span class="status-badge status-${c.status}">${c.status}</span></td>
         <td>
           <div class="actions-menu">
@@ -447,8 +459,8 @@
   // ── Day-based message steps ────────────────────────────────────────────────
 
   const buildDayStepHTML = (num, day, time, body) => `
-    <div class="message-step-header"><span>Day-based Message ${num}</span><div style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="previewMessageStep('step-${num}')">Preview</button><button class="btn btn-danger btn-sm" onclick="removeStep('step-${num}')">Remove</button></div></div>
-    <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${day || num}"><label>at</label><input type="time" class="step-time" value="${time || '10:00'}"><span style="font-size:11px;color:var(--color-text-secondary);">lead's local time</span></div>
+    <div class="message-step-header"><span>Day-based Message ${num}</span><div style="display:flex;gap:6px;"><button class="btn-ghost" onclick="previewMessageStep('step-${num}')">Preview</button><button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="removeStep('step-${num}')">Remove</button></div></div>
+    <div class="day-input"><label>Send on day</label><input type="number" class="step-day" min="1" value="${day || num}"><label>at</label><input type="time" class="step-time" value="${time || '10:00'}"><span style="font-size:11px;color:rgba(255,255,255,0.35);">lead's local time</span></div>
     <textarea class="step-body" rows="6" oninput="updateCharCount(this)">${body || ''}</textarea>
     <div class="char-count">${body ? body.length : 0} / 160</div>
     ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
@@ -602,7 +614,7 @@
     const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1); tomorrow.setHours(10, 0, 0, 0)
     const pad = n => String(n).padStart(2, '0')
     document.getElementById('enroll-start-date').value = `${tomorrow.getFullYear()}-${pad(tomorrow.getMonth()+1)}-${pad(tomorrow.getDate())}T${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}`
-    document.getElementById('enroll-leads-list').innerHTML = '<div style="padding:16px;font-size:13px;color:#9ca3af;">Go to the Leads page to select leads and tag them with a campaign.</div>'
+    document.getElementById('enroll-leads-list').innerHTML = '<div style="padding:16px;font-size:13px;color:rgba(255,255,255,0.35);">Go to the Leads page to select leads and tag them with a campaign.</div>'
     document.getElementById('enroll-modal').classList.add('open')
   }
 

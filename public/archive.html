@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>(function(){if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark")})()</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Archive — Veloxo</title>
@@ -9,47 +8,40 @@
   <style>
     .archive-page { max-width: 860px; margin: 0 auto; padding: 28px 24px; }
     .archive-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    .archive-header h1 { font-size: 22px; font-weight: 700; color: var(--color-text); margin: 0; }
-    .archive-header p { font-size: 13px; color: var(--color-text-secondary); margin: 4px 0 0; }
-    .archive-empty { text-align: center; padding: 80px 24px; color: var(--color-text-secondary); }
+    .archive-header h1 { font-size: 22px; font-weight: 700; color: #fff; margin: 0; }
+    .archive-header p { font-size: 13px; color: rgba(255,255,255,0.4); margin: 4px 0 0; }
+    .archive-empty { text-align: center; padding: 80px 24px; color: rgba(255,255,255,0.3); }
     .archive-empty-icon { font-size: 48px; margin-bottom: 12px; }
     .archive-empty p { font-size: 14px; margin: 0; }
-
-    /* Folder group */
-    .archive-folder-group { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface-subtle); }
-    .archive-folder-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: var(--bg-card); border-bottom: 1px solid var(--color-border); }
+    .archive-folder-group { margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.07); border-radius: 11px; overflow: hidden; background: #131a1f; }
+    .archive-folder-header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; background: rgba(255,255,255,0.02); border-bottom: 1px solid rgba(255,255,255,0.06); }
     .archive-folder-icon { font-size: 18px; }
-    .archive-folder-name { font-size: 15px; font-weight: 700; color: var(--color-text); flex: 1; }
-    .archive-folder-meta { font-size: 12px; color: var(--color-text-secondary); }
+    .archive-folder-name { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.85); flex: 1; }
+    .archive-folder-meta { font-size: 12px; color: rgba(255,255,255,0.35); }
     .archive-folder-actions { display: flex; gap: 8px; }
     .archive-folder-buckets { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-
-    /* Bucket card */
-    .archive-bucket-card { background: var(--bg-card); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
+    .archive-bucket-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 8px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; }
     .archive-bucket-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
     .archive-bucket-info { flex: 1; min-width: 0; }
-    .archive-bucket-name { font-size: 14px; font-weight: 600; color: var(--color-text); margin-bottom: 3px; }
+    .archive-bucket-name { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.8); margin-bottom: 3px; }
     .archive-bucket-meta { display: flex; flex-wrap: wrap; gap: 12px; }
-    .archive-bucket-stat { font-size: 12px; color: var(--color-text-secondary); }
-    .archive-bucket-stat strong { color: var(--color-text); font-weight: 600; }
+    .archive-bucket-stat { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .archive-bucket-stat strong { color: rgba(255,255,255,0.65); font-weight: 600; }
     .archive-bucket-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-    /* Standalone section */
-    .archive-section-label { font-size: 11px; font-weight: 700; color: var(--color-text-secondary); letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 10px; }
-
-    .loading-state { text-align: center; padding: 60px; color: var(--color-text-secondary); font-size: 14px; }
+    .archive-section-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.28); letter-spacing: 0.08em; text-transform: uppercase; margin: 24px 0 10px; }
+    .loading-state { text-align: center; padding: 60px; color: rgba(255,255,255,0.28); font-size: 14px; }
   </style>
 </head>
 <body>
 <div id="sidebar-root"></div>
-<div class="container">
+<div class="main-content">
   <div class="archive-page">
     <div class="archive-header">
       <div>
         <h1>📦 Archive</h1>
         <p>Archived buckets are hidden from Leads view. You can unarchive or enroll them in a campaign at any time.</p>
       </div>
-      <button class="btn btn-secondary" onclick="openNewFolderModal()">+ New Folder</button>
+      <button class="btn-ghost" onclick="openNewFolderModal()">+ New Folder</button>
     </div>
     <div id="archive-content">
       <div class="loading-state">Loading archived buckets…</div>
@@ -73,8 +65,8 @@
       <div id="new-folder-color-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeNewFolderModal()">Cancel</button>
-      <button class="btn btn-primary" id="new-folder-confirm-btn" onclick="createArchivedFolder()">Create in Archive</button>
+      <button class="btn-ghost" onclick="closeNewFolderModal()">Cancel</button>
+      <button class="btn-primary" id="new-folder-confirm-btn" onclick="createArchivedFolder()">Create in Archive</button>
     </div>
   </div>
 </div>
@@ -86,17 +78,17 @@
       <h2>Assign to Campaign</h2>
       <button class="modal-close" onclick="closeAssignModal()">×</button>
     </div>
-    <p id="assign-modal-desc" style="font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;"></p>
+    <p id="assign-modal-desc" style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 16px;"></p>
     <div class="form-group">
       <label>Campaign</label>
       <select id="assign-campaign-select" onchange="onAssignCampaignChange()">
         <option value="">Select a campaign…</option>
       </select>
     </div>
-    <div id="assign-send-notice" style="display:none;background:var(--color-primary-bg);border:1px solid var(--indigo-200);border-radius:var(--radius-sm);padding:9px 13px;font-size:12px;color:var(--color-primary);margin-bottom:12px;"></div>
+    <div id="assign-send-notice" style="display:none;background:rgba(0,201,167,0.07);border:1px solid rgba(0,201,167,0.18);border-radius:7px;padding:9px 13px;font-size:12px;color:#00d4b4;margin-bottom:12px;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeAssignModal()">Cancel</button>
-      <button class="btn btn-primary" id="assign-confirm-btn" onclick="confirmAssignCampaign()" disabled>Enroll Leads</button>
+      <button class="btn-ghost" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn-primary" id="assign-confirm-btn" onclick="confirmAssignCampaign()" disabled>Enroll Leads</button>
     </div>
   </div>
 </div>
@@ -160,11 +152,11 @@
             <div class="archive-folder-name">${esc(folder.name)}</div>
             <div class="archive-folder-meta">${children.length} bucket${children.length !== 1 ? 's' : ''} · ${totalLeads} lead${totalLeads !== 1 ? 's' : ''} · Archived ${fmtDate(folder.archived_at)}</div>
             <div class="archive-folder-actions">
-              <button class="btn btn-secondary btn-sm" onclick="unarchiveBucket('${folder.id}', '${esc(folder.name)}', true)">Unarchive folder</button>
+              <button class="btn-ghost" onclick="unarchiveBucket('${folder.id}', '${esc(folder.name)}', true)">Unarchive folder</button>
             </div>
           </div>
           <div class="archive-folder-buckets">
-            ${children.length === 0 ? '<div style="font-size:13px;color:var(--color-text-secondary);padding:4px 0;">No buckets inside this folder</div>' : ''}
+            ${children.length === 0 ? '<div style="font-size:13px;color:rgba(255,255,255,0.35);padding:4px 0;">No buckets inside this folder</div>' : ''}
             ${children.map(b => renderBucketCard(b)).join('')}
           </div>
         </div>`
@@ -194,8 +186,8 @@
           </div>
         </div>
         <div class="archive-bucket-actions">
-          <button class="btn btn-secondary btn-sm" onclick="openAssignModal('${b.id}', ${count})">Assign to Campaign</button>
-          <button class="btn btn-secondary btn-sm" onclick="unarchiveBucket('${b.id}', '${esc(b.name)}', false)">Unarchive</button>
+          <button class="btn-ghost" onclick="openAssignModal('${b.id}', ${count})">Assign to Campaign</button>
+          <button class="btn-ghost" onclick="unarchiveBucket('${b.id}', '${esc(b.name)}', false)">Unarchive</button>
         </div>
       </div>`
   }

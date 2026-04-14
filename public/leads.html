@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>(function(){if(localStorage.getItem("theme")==="dark")document.documentElement.setAttribute("data-theme","dark")})()</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Leads — Veloxo</title>
@@ -75,10 +74,10 @@
     #lead-actions-menu {
       display: none;
       position: absolute;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: #1a2228;
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       z-index: 1000;
       min-width: 230px;
       overflow: hidden;
@@ -88,7 +87,7 @@
     .ami-section {
       font-size: 10px;
       font-weight: 700;
-      color: #9ca3af;
+      color: rgba(255,255,255,0.25);
       letter-spacing: 0.08em;
       padding: 8px 14px 4px;
       text-transform: uppercase;
@@ -100,37 +99,37 @@
       width: 100%;
       padding: 8px 14px;
       font-size: 13px;
-      color: #374151;
+      color: rgba(255,255,255,0.65);
       background: none;
       border: none;
       cursor: pointer;
       text-align: left;
       transition: background 0.1s;
     }
-    .ami-item:hover { background: #f9fafb; }
-    .ami-item.ami-danger { color: #dc2626; }
-    .ami-item.ami-danger:hover { background: #fef2f2; }
+    .ami-item:hover { background: rgba(255,255,255,0.05); }
+    .ami-item.ami-danger { color: #f87171; }
+    .ami-item.ami-danger:hover { background: rgba(239,68,68,0.08); }
     .ami-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
-    .ami-divider { height: 1px; background: #f3f4f6; margin: 4px 0; }
+    .ami-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; }
     #bulk-actions { display: none !important; }
     .ami-sub-item {
       display: flex;
       align-items: center;
       padding: 7px 14px 7px 28px;
       font-size: 13px;
-      color: #374151;
+      color: rgba(255,255,255,0.55);
       cursor: pointer;
       transition: background 0.1s;
     }
-    .ami-sub-item:hover { background: #f3f4f6; }
+    .ami-sub-item:hover { background: rgba(255,255,255,0.05); }
     .bulk-dd {
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      background: white;
-      border: 1px solid #e5e7eb;
+      background: #1a2228;
+      border: 1px solid rgba(255,255,255,0.09);
       border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
       z-index: 300;
       min-width: 200px;
       max-height: 300px;
@@ -140,7 +139,7 @@
     .bulk-dd-label {
       font-size: 11px;
       font-weight: 700;
-      color: #9ca3af;
+      color: rgba(255,255,255,0.25);
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 4px 8px 8px;
@@ -163,21 +162,21 @@
       text-align: left;
       padding: 8px 12px;
       font-size: 13px;
-      color: #374151;
+      color: rgba(255,255,255,0.6);
       background: none;
       border: none;
       cursor: pointer;
       border-radius: 6px;
       transition: background 0.1s;
     }
-    .bulk-dd-item:hover { background: #f9fafb; }
+    .bulk-dd-item:hover { background: rgba(255,255,255,0.05); }
     .map-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .map-table th { padding: 8px 10px; text-align: left; font-weight: 600; color: #374151; background: #f9fafb; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-    .map-table td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    .map-table th { padding: 8px 10px; text-align: left; font-weight: 600; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
+    .map-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; color: rgba(255,255,255,0.65); }
     .map-table tr:last-child td { border-bottom: none; }
-    .map-select { width: 100%; padding: 5px 8px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 13px; outline: none; background: white; }
-    .map-select:focus { border-color: #6366f1; }
-    .map-preview-cell { color: #6b7280; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+    .map-select { width: 100%; padding: 5px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 13px; outline: none; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+    .map-select:focus { border-color: rgba(0,201,167,0.4); }
+    .map-preview-cell { color: rgba(255,255,255,0.35); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
   </style>
   <script src="/toast.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -185,13 +184,13 @@
 <body>
 
 <div id="sidebar-root"></div>
-<div class="container">
+<div class="main-content">
   <div id="onboarding-checklist" style="display:none;">
     <div class="checklist-card">
       <div class="checklist-header">
         <div>
           <h3>Get started with Veloxo</h3>
-          <div style="font-size:13px;color:#9ca3af;margin-top:2px;">Complete these steps to start texting leads</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:2px;">Complete these steps to start texting leads</div>
         </div>
         <button class="checklist-dismiss" onclick="dismissChecklist()">Dismiss</button>
       </div>
@@ -199,25 +198,25 @@
       <div class="checklist-steps" id="checklist-steps"></div>
     </div>
   </div>
-  <div class="leads-toolbar">
-    <h1>Leads</h1>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-secondary btn-sm" onclick="openUploadModal()">⬆ Import Leads</button>
-      <button class="btn btn-primary btn-sm" onclick="openCreateLeadModal()">+ Create Lead</button>
+  <div class="topbar">
+    <div class="topbar-title">Leads</div>
+    <div class="topbar-actions">
+      <button class="btn-ghost" onclick="openUploadModal()">⬆ Import</button>
+      <button class="btn-primary" onclick="openCreateLeadModal()">+ Create Lead</button>
     </div>
   </div>
-  <div class="stats">
-    <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Total Leads</div></div>
-    <div class="stat-card"><div class="num" id="stat-new">0</div><div class="lbl">New</div></div>
-    <div class="stat-card"><div class="num" id="stat-contacted">0</div><div class="lbl">Contacted</div></div>
-    <div class="stat-card"><div class="num" id="stat-booked">0</div><div class="lbl">Booked</div></div>
-    <div class="stat-card"><div class="num" id="stat-autopilot">0</div><div class="lbl">On Autopilot</div></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-accent" style="background:linear-gradient(90deg,#00c9a7,#0ea5e9)"></div><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Leads</div></div>
+    <div class="stat-card"><div class="stat-accent" style="background:#34d399"></div><div class="stat-value" id="stat-new">0</div><div class="stat-label">New</div></div>
+    <div class="stat-card"><div class="stat-accent" style="background:#38bdf8"></div><div class="stat-value" id="stat-contacted">0</div><div class="stat-label">Contacted</div></div>
+    <div class="stat-card"><div class="stat-accent" style="background:#00d4b4"></div><div class="stat-value" id="stat-booked">0</div><div class="stat-label">Booked</div></div>
+    <div class="stat-card"><div class="stat-accent" style="background:#a78bfa"></div><div class="stat-value" id="stat-autopilot">0</div><div class="stat-label">On Autopilot</div></div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding-left:2px;">
-    <div style="font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:0.08em;text-transform:uppercase;">BUCKETS</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:10px 20px 0;">
+    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:0.08em;text-transform:uppercase;">Buckets</div>
     <div style="position:relative;" id="new-bucket-dropdown-wrap">
-      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:#9ca3af;font-size:13px;padding:2px 8px;border-radius:6px;font-weight:500;font-family:inherit;">+ New ▾</button>
-      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--bg-card,white);border:1px solid var(--border-default,#e5e7eb);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);min-width:160px;z-index:500;padding:6px 0;overflow:hidden;">
+      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);font-size:13px;padding:2px 8px;border-radius:6px;font-weight:500;font-family:inherit;">+ New ▾</button>
+      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#1a2228;border:1px solid rgba(255,255,255,0.09);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-width:160px;z-index:500;padding:6px 0;overflow:hidden;">
         <button onclick="closeNewBucketDropdown();openNewBucketModal()" class="new-dd-item">🏷 New Bucket</button>
         <button onclick="closeNewBucketDropdown();openNewFolderModal()" class="new-dd-item">📁 New Folder</button>
       </div>
@@ -226,25 +225,25 @@
   <div class="bucket-tabs" id="bucket-tabs">
     <div class="bucket-tab active" onclick="selectBucket('', this)">All Leads</div>
   </div>
-  <div id="sold-commission-banner" style="display:none;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:10px;"></div>
-  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+  <div id="sold-commission-banner" style="display:none;align-items:center;gap:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:8px 14px;font-size:13px;margin:8px 20px 0;color:rgba(255,255,255,0.7);"></div>
+  <div style="display:flex;gap:8px;margin-bottom:0;flex-wrap:wrap;align-items:center;padding:10px 20px 0;">
     <div style="position:relative;">
-      <input type="text" id="campaign-quick-input" placeholder="⚡ Filter by campaign..." oninput="showCampaignDropdown()" autocomplete="off" title="Filter by active drip campaign" style="padding:6px 12px;border:1px solid #e5e7eb;border-radius:20px;font-size:13px;outline:none;width:190px;">
-      <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;font-size:16px;line-height:1;">×</button>
-      <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:white;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.1);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
+      <input type="text" id="campaign-quick-input" placeholder="⚡ Filter by campaign..." oninput="showCampaignDropdown()" autocomplete="off" title="Filter by active drip campaign" style="padding:6px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:13px;outline:none;width:190px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);">
+      <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);font-size:16px;line-height:1;">×</button>
+      <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:#1a2228;border:1px solid rgba(255,255,255,0.09);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
     </div>
   </div>
   <div class="leads-filter-bar">
     <input type="text" id="sf-search" placeholder="Search leads by name, phone, email...">
-    <button class="btn btn-secondary btn-sm" id="filters-toggle-btn" onclick="toggleFilters()" style="white-space:nowrap;flex-shrink:0;">Filters <span id="filters-count-badge" style="display:none;background:var(--indigo-500);color:white;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:2px;"></span><span id="filters-arrow" style="font-size:10px;margin-left:4px;">▼</span></button>
+    <button class="btn-ghost" id="filters-toggle-btn" onclick="toggleFilters()" style="white-space:nowrap;flex-shrink:0;">Filters <span id="filters-count-badge" style="display:none;background:rgba(0,201,167,0.2);color:#00d4b4;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:2px;"></span><span id="filters-arrow" style="font-size:10px;margin-left:4px;">▼</span></button>
   </div>
   <div class="search-panel" id="search-panel">
     <div class="search-panel-header">
       <h3>Filters</h3>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="resetFilters()">Reset</button>
-        <button class="btn btn-primary btn-sm" onclick="applyFilters()">Apply</button>
-        <button class="btn btn-success btn-sm" onclick="exportFilteredLeads()">⬇ Export</button>
+        <button class="btn-ghost" onclick="resetFilters()">Reset</button>
+        <button class="btn-primary" onclick="applyFilters()">Apply</button>
+        <button class="btn-ghost" onclick="exportFilteredLeads()">⬇ Export</button>
       </div>
     </div>
     <div class="search-panel-grid">
@@ -343,10 +342,10 @@
     <div class="active-filters" id="active-filters"></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <div style="font-size:13px;color:#9ca3af;" id="leads-count"></div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.35);" id="leads-count"></div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="accent-color:#6366f1;">
-      <label for="select-all" style="font-size:13px;color:#6b7280;cursor:pointer;">Select all</label>
+      <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="accent-color:#00c9a7;">
+      <label for="select-all" style="font-size:13px;color:rgba(255,255,255,0.35);cursor:pointer;">Select all</label>
     </div>
   </div>
   <div class="leads-grid" id="leads-grid"></div>
@@ -359,10 +358,10 @@
       <h2 id="upload-modal-title">Import Lead Sheet</h2>
       <button class="modal-close" onclick="closeUploadModal()">×</button>
     </div>
-    <div style="display:flex;margin-bottom:20px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
-      <div id="step-ind-1" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:#EEF2FF;color:#4338ca;border-right:1px solid #e5e7eb;">1 · File &amp; Settings</div>
-      <div id="step-ind-2" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:#9ca3af;border-right:1px solid #e5e7eb;">2 · Map Columns</div>
-      <div id="step-ind-3" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:#9ca3af;">3 · Risk Preview</div>
+    <div style="display:flex;margin-bottom:20px;border:1px solid rgba(255,255,255,0.09);border-radius:8px;overflow:hidden;">
+      <div id="step-ind-1" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:rgba(0,201,167,0.1);color:#00d4b4;border-right:1px solid rgba(255,255,255,0.07);">1 · File &amp; Settings</div>
+      <div id="step-ind-2" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.35);border-right:1px solid #e5e7eb;">2 · Map Columns</div>
+      <div id="step-ind-3" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.35);">3 · Risk Preview</div>
     </div>
     <!-- STEP 1 -->
     <div id="upload-step-1">
@@ -377,10 +376,10 @@
         <select id="import-bucket-id" onchange="onBucketSelectChange(this)">
           <option value="">No bucket</option>
         </select>
-        <div id="new-bucket-form" style="display:none;margin-top:10px;padding:12px;background:var(--gray-50);border:1px solid var(--color-border);border-radius:var(--radius-md);">
+        <div id="new-bucket-form" style="display:none;margin-top:10px;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;">
           <div style="margin-bottom:8px;">
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Bucket Name</label>
-            <input type="text" id="new-bucket-name" placeholder="New Leads" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;outline:none;">
+            <input type="text" id="new-bucket-name" placeholder="New Leads" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:13px;outline:none;">
           </div>
           <div style="margin-bottom:8px;">
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Color</label>
@@ -389,7 +388,7 @@
           </div>
           <div>
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Parent Folder (optional)</label>
-            <select id="new-bucket-parent" style="width:100%;padding:6px 10px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:13px;">
+            <select id="new-bucket-parent" style="width:100%;padding:6px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:13px;">
               <option value="">No folder</option>
             </select>
           </div>
@@ -398,14 +397,14 @@
       <div class="form-group">
         <label>Assign to Campaign (optional)</label>
         <select id="import-campaign" onchange="onImportCampaignChange()"><option value="">No campaign</option></select>
-        <div id="campaign-send-time-notice" style="display:none;margin-top:6px;font-size:12px;color:var(--color-primary);background:var(--color-primary-bg);border:1px solid var(--indigo-200);border-radius:var(--radius-sm);padding:8px 12px;"></div>
+        <div id="campaign-send-time-notice" style="display:none;margin-top:6px;font-size:12px;color:#00d4b4;background:rgba(0,201,167,0.07);border:1px solid rgba(0,201,167,0.18);border-radius:7px;padding:8px 12px;"></div>
       </div>
       <div class="form-group">
         <label>Apply Disposition Tag (optional)</label>
         <select id="import-disposition">
           <option value="">No disposition tag</option>
         </select>
-        <p style="font-size:12px;color:#9ca3af;margin-top:4px;">Tag will be applied to every lead in this import and trigger any attached drip sequence.</p>
+        <p style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;">Tag will be applied to every lead in this import and trigger any attached drip sequence.</p>
       </div>
       <div class="toggle-row">
         <div>
@@ -416,17 +415,17 @@
       </div>
       <div class="status-bar" id="step1-status-bar"></div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
-        <button class="btn btn-primary" id="upload-next-btn" onclick="advanceToMapping()">Next: Map Columns →</button>
+        <button class="btn-ghost" onclick="closeUploadModal()">Cancel</button>
+        <button class="btn-primary" id="upload-next-btn" onclick="advanceToMapping()">Next: Map Columns →</button>
       </div>
     </div>
     <!-- STEP 2 -->
     <div id="upload-step-2" style="display:none;">
-      <div id="mapping-table-container" style="max-height:420px;overflow-y:auto;margin-bottom:12px;border:1px solid #e5e7eb;border-radius:8px;"></div>
+      <div id="mapping-table-container" style="max-height:420px;overflow-y:auto;margin-bottom:12px;border:1px solid rgba(255,255,255,0.09);border-radius:8px;"></div>
       <div class="status-bar" id="import-status-bar"></div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="goBackToStep1()">← Back</button>
-        <button class="btn btn-primary" id="upload-risk-btn" onclick="advanceToRiskPreview()">Analyze Risk →</button>
+        <button class="btn-ghost" onclick="goBackToStep1()">← Back</button>
+        <button class="btn-primary" id="upload-risk-btn" onclick="advanceToRiskPreview()">Analyze Risk →</button>
       </div>
     </div>
     <!-- STEP 3 -->
@@ -449,13 +448,13 @@
           <div class="import-stat-label">Total Rows</div>
         </div>
       </div>
-      <div id="risk-table-container" style="max-height:280px;overflow-y:auto;border:1px solid var(--border-default);border-radius:var(--radius-md);margin-bottom:12px;font-size:13px;"></div>
+      <div id="risk-table-container" style="max-height:280px;overflow-y:auto;border:1px solid rgba(255,255,255,0.09);border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
       <div class="status-bar" id="risk-status-bar"></div>
       <div class="modal-footer" style="flex-direction:column;gap:8px;align-items:stretch;">
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="goBackToStep2()" style="flex:0 0 auto;">← Back</button>
-          <button class="btn btn-secondary" id="import-green-btn" onclick="submitImport('green_only')" style="flex:1;">Import Clean Only (<span id="import-green-count">0</span>)</button>
-          <button class="btn btn-primary" id="import-all-btn" onclick="submitImport('all')" style="flex:1;">Import All Valid (<span id="import-all-count">0</span>)</button>
+          <button class="btn-ghost" onclick="goBackToStep2()" style="flex:0 0 auto;">← Back</button>
+          <button class="btn-ghost" id="import-green-btn" onclick="submitImport('green_only')" style="flex:1;">Import Clean Only (<span id="import-green-count">0</span>)</button>
+          <button class="btn-primary" id="import-all-btn" onclick="submitImport('all')" style="flex:1;">Import All Valid (<span id="import-all-count">0</span>)</button>
         </div>
       </div>
     </div>
@@ -487,17 +486,17 @@
         <div class="import-stat-label">Invalid Phones</div>
       </div>
     </div>
-    <p id="import-results-message" style="display:none;font-size:13px;color:var(--color-text-secondary);margin-top:12px;padding:10px 12px;background:var(--bg-app);border-radius:var(--radius-md);border:1px solid var(--color-border);"></p>
+    <p id="import-results-message" style="display:none;font-size:13px;color:rgba(255,255,255,0.35);margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.09);"></p>
     <div id="import-results-download-wrap" style="display:none;margin-top:16px;">
-      <button class="btn btn-secondary" style="width:100%;" onclick="downloadSkippedCSV()">↓ Download Skipped Rows CSV</button>
-      <p style="font-size:12px;color:var(--color-text-secondary);text-align:center;margin-top:6px;">Fix these rows and re-import to add them</p>
+      <button class="btn-ghost" style="width:100%;" onclick="downloadSkippedCSV()">↓ Download Skipped Rows CSV</button>
+      <p style="font-size:12px;color:rgba(255,255,255,0.35);text-align:center;margin-top:6px;">Fix these rows and re-import to add them</p>
     </div>
-    <div style="margin-top:16px;padding:12px 16px;background:var(--bg-app);border-radius:var(--radius-md);border:1px dashed var(--border-default);">
-      <div style="font-size:13px;font-weight:600;color:var(--color-text-secondary);margin-bottom:4px;">DNC Scrub</div>
-      <div style="font-size:12px;color:var(--color-text-secondary);">Automatically scrub against national Do-Not-Call lists before importing. <span class="badge" style="background:var(--bg-subtle);color:var(--color-text-secondary);font-size:10px;padding:2px 6px;">Coming Soon</span></div>
+    <div style="margin-top:16px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px dashed rgba(255,255,255,0.1);">
+      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.35);margin-bottom:4px;">DNC Scrub</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.35);">Automatically scrub against national Do-Not-Call lists before importing. <span class="badge" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);font-size:10px;padding:2px 6px;">Coming Soon</span></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="closeImportResults()">Done</button>
+      <button class="btn-primary" onclick="closeImportResults()">Done</button>
     </div>
   </div>
 </div>
@@ -520,8 +519,8 @@
     </div>
     <div id="enroll-leads-list" style="max-height:260px;overflow-y:auto;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeEnrollModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="enrollSelectedLeads()">Tag Leads</button>
+      <button class="btn-ghost" onclick="closeEnrollModal()">Cancel</button>
+      <button class="btn-primary" onclick="enrollSelectedLeads()">Tag Leads</button>
     </div>
   </div>
 </div>
@@ -540,14 +539,14 @@
     <div class="form-group">
       <label>Expected Commission</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="sold-commission" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
     <div class="form-group">
       <label>Monthly Premium</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="sold-premium" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
@@ -556,8 +555,8 @@
       <textarea id="sold-notes" placeholder="Any additional details about the sale" rows="3" style="resize:none;width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color 0.2s;"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('sold-modal').classList.remove('open')">Cancel</button>
-      <button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="submitMarkSold()">Mark as Sold</button>
+      <button class="btn-ghost" onclick="document.getElementById('sold-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="submitMarkSold()">Mark as Sold</button>
     </div>
   </div>
 </div>
@@ -568,7 +567,7 @@
     <div class="modal-header">
       <div>
         <h2 style="font-size:17px;">Send Text</h2>
-        <div id="sms-to-label" style="font-size:13px;color:#9ca3af;margin-top:2px;"></div>
+        <div id="sms-to-label" style="font-size:13px;color:rgba(255,255,255,0.35);margin-top:2px;"></div>
       </div>
       <button class="modal-close" onclick="document.getElementById('sms-modal').classList.remove('open')">×</button>
     </div>
@@ -584,8 +583,8 @@
       <div class="char-count" id="sms-char-count">0 / 160</div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('sms-modal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary" onclick="sendManualSMS()">Send Text</button>
+      <button class="btn-ghost" onclick="document.getElementById('sms-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="sendManualSMS()">Send Text</button>
     </div>
   </div>
 </div>
@@ -597,15 +596,15 @@
       <h2>Disposition Tags</h2>
       <button class="modal-close" onclick="document.getElementById('disposition-modal').classList.remove('open')">×</button>
     </div>
-    <div id="disposition-lead-name" style="font-size:13px;color:var(--color-text-secondary);margin-bottom:14px;"></div>
+    <div id="disposition-lead-name" style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:14px;"></div>
     <div id="disp-picker-grid" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:16px;"></div>
     <div class="form-group">
       <label>Notes (optional)</label>
       <textarea id="disposition-notes" placeholder="Add a note about this change..." rows="2"></textarea>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('disposition-modal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary" onclick="applyDisposition()">Apply Tags</button>
+      <button class="btn-ghost" onclick="document.getElementById('disposition-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="applyDisposition()">Apply Tags</button>
     </div>
   </div>
 </div>
@@ -657,23 +656,23 @@
     <div class="form-group"><label>Address</label><input type="text" id="cl-address" placeholder="123 Main St"></div>
     <div class="form-group"><label>Notes</label><textarea id="cl-notes" rows="2" placeholder="Any notes..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea></div>
     <div class="form-group" style="display:flex;align-items:center;gap:10px;">
-      <input type="checkbox" id="cl-autopilot" style="width:auto;accent-color:#6366f1;">
+      <input type="checkbox" id="cl-autopilot" style="width:auto;accent-color:#00c9a7;">
       <label for="cl-autopilot" style="margin:0;cursor:pointer;">Enable Autopilot</label>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Add to Campaign <span style="color:#9ca3af;">(optional)</span></label>
+        <label>Add to Campaign <span style="color:rgba(255,255,255,0.35);">(optional)</span></label>
         <select id="cl-campaign"><option value="">No campaign</option></select>
       </div>
       <div class="form-group">
-        <label>Apply Disposition <span style="color:#9ca3af;">(optional)</span></label>
+        <label>Apply Disposition <span style="color:rgba(255,255,255,0.35);">(optional)</span></label>
         <select id="cl-disposition"><option value="">No disposition</option></select>
       </div>
     </div>
     <div id="cl-error" style="color:#ef4444;font-size:13px;margin-bottom:8px;display:none;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeCreateLeadModal()">Cancel</button>
-      <button class="btn btn-primary" id="cl-save-btn" onclick="saveCreateLead()">Create Lead</button>
+      <button class="btn-ghost" onclick="closeCreateLeadModal()">Cancel</button>
+      <button class="btn-primary" id="cl-save-btn" onclick="saveCreateLead()">Create Lead</button>
     </div>
   </div>
 </div>
@@ -718,7 +717,7 @@
         <div style="font-size:14px;font-weight:600;">Follow-up Tasks</div>
         <button class="btn btn-primary btn-sm" onclick="openAddTaskForm()">+ Add Task</button>
       </div>
-      <div id="add-task-form" style="display:none;background:#f9fafb;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #e5e7eb;">
+      <div id="add-task-form" style="display:none;background:rgba(255,255,255,0.04);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.09);">
         <div class="form-row">
           <div class="form-group">
             <label>Task</label>
@@ -762,8 +761,8 @@
       <div class="color-picker-row" id="bucket-color-swatches"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeNewBucketModal()">Cancel</button>
-      <button class="btn btn-primary" id="save-bucket-btn" onclick="saveBucket()">Create Bucket</button>
+      <button class="btn-ghost" onclick="closeNewBucketModal()">Cancel</button>
+      <button class="btn-primary" id="save-bucket-btn" onclick="saveBucket()">Create Bucket</button>
     </div>
   </div>
 </div>
@@ -784,17 +783,17 @@
       <h2 id="run-campaign-modal-title">Assign Campaign</h2>
       <button class="modal-close" onclick="closeRunCampaignModal()">×</button>
     </div>
-    <p id="run-campaign-lead-count" style="font-size:13px;color:var(--color-text-secondary);margin:0 0 16px;"></p>
+    <p id="run-campaign-lead-count" style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 16px;"></p>
     <div class="form-group">
       <label>Campaign</label>
       <select id="run-campaign-select" onchange="onRunCampaignChange()">
         <option value="">Select a campaign…</option>
       </select>
     </div>
-    <div id="run-campaign-notice" style="display:none;background:var(--color-primary-bg);border:1px solid var(--indigo-200);border-radius:var(--radius-sm);padding:9px 13px;font-size:12px;color:var(--color-primary);margin-bottom:4px;"></div>
+    <div id="run-campaign-notice" style="display:none;background:rgba(0,201,167,0.07);border:1px solid rgba(0,201,167,0.18);border-radius:7px;padding:9px 13px;font-size:12px;color:#00d4b4;margin-bottom:4px;"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeRunCampaignModal()">Cancel</button>
-      <button class="btn btn-primary" id="run-campaign-confirm-btn" onclick="confirmRunCampaign()" disabled>Assign Campaign</button>
+      <button class="btn-ghost" onclick="closeRunCampaignModal()">Cancel</button>
+      <button class="btn-primary" id="run-campaign-confirm-btn" onclick="confirmRunCampaign()" disabled>Assign Campaign</button>
     </div>
   </div>
 </div>
@@ -806,7 +805,7 @@
       <h2 style="font-size:17px;" id="bulk-sold-title">Mark as Sold</h2>
       <button class="modal-close" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">×</button>
     </div>
-    <div id="bulk-sold-note" style="font-size:13px;color:#6b7280;margin-bottom:16px;background:#f9fafb;border-radius:8px;padding:10px 14px;"></div>
+    <div id="bulk-sold-note" style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:16px;background:#f9fafb;border-radius:8px;padding:10px 14px;"></div>
     <div class="form-group">
       <label>Product Sold</label>
       <input type="text" id="bulk-sold-plan" placeholder="e.g. UHC PPO $245/mo, Term Life $500k...">
@@ -814,13 +813,13 @@
     <div class="form-group">
       <label>Commission per Lead (optional)</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="bulk-sold-commission" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">Cancel</button>
-      <button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="submitBulkSold()">Mark All as Sold</button>
+      <button class="btn-ghost" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="submitBulkSold()">Mark All as Sold</button>
     </div>
   </div>
 </div>
@@ -832,13 +831,13 @@
       <h2 style="font-size:17px;" id="bulk-delete-title">Delete Leads?</h2>
       <button class="modal-close" onclick="closeBulkDeleteModal()">×</button>
     </div>
-    <p id="bulk-delete-body" style="font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.5;"></p>
+    <p id="bulk-delete-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
     <div class="form-group">
       <label>Type <strong>DELETE</strong> to confirm</label>
       <input type="text" id="bulk-delete-input" placeholder="DELETE" oninput="checkBulkDeleteInput()" autocomplete="off">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeBulkDeleteModal()">Cancel</button>
+      <button class="btn-ghost" onclick="closeBulkDeleteModal()">Cancel</button>
       <button class="btn" id="bulk-delete-btn" style="background:#ef4444;color:white;font-weight:600;opacity:0.4;cursor:not-allowed;" disabled onclick="confirmBulkDelete()">Permanently Delete</button>
     </div>
   </div>
@@ -854,9 +853,9 @@
       <h2 style="font-size:17px;" id="opt-out-modal-title">Opt Out Lead?</h2>
       <button class="modal-close" onclick="closeOptOutModal()">×</button>
     </div>
-    <p id="opt-out-modal-body" style="font-size:14px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;"></p>
+    <p id="opt-out-modal-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeOptOutModal()">Cancel</button>
+      <button class="btn-ghost" onclick="closeOptOutModal()">Cancel</button>
       <button class="btn" id="opt-out-confirm-btn" style="background:#ef4444;color:white;font-weight:600;" onclick="executeOptOut()">Opt Out</button>
     </div>
   </div>
@@ -869,10 +868,10 @@
       <h2 style="font-size:17px;" id="undo-opt-out-modal-title">Remove Opt-Out?</h2>
       <button class="modal-close" onclick="closeUndoOptOutModal()">×</button>
     </div>
-    <p id="undo-opt-out-modal-body" style="font-size:14px;color:var(--color-text-secondary);margin-bottom:20px;line-height:1.5;"></p>
+    <p id="undo-opt-out-modal-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeUndoOptOutModal()">Cancel</button>
-      <button class="btn btn-primary" id="undo-opt-out-confirm-btn" onclick="executeUndoOptOut()">Remove Opt-Out</button>
+      <button class="btn-ghost" onclick="closeUndoOptOutModal()">Cancel</button>
+      <button class="btn-primary" id="undo-opt-out-confirm-btn" onclick="executeUndoOptOut()">Remove Opt-Out</button>
     </div>
   </div>
 </div>
@@ -884,13 +883,13 @@
       <h2 style="font-size:17px;" id="delete-modal-title">Delete Lead?</h2>
       <button class="modal-close" onclick="closeDeleteModal()">×</button>
     </div>
-    <p style="font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.5;">This will permanently delete this lead and all their conversation history, tasks, and activity. This cannot be undone.</p>
+    <p style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;">This will permanently delete this lead and all their conversation history, tasks, and activity. This cannot be undone.</p>
     <div class="form-group">
       <label>Type <strong>DELETE</strong> to confirm</label>
       <input type="text" id="delete-confirm-input" placeholder="DELETE" oninput="checkDeleteInput()" autocomplete="off">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-ghost" onclick="closeDeleteModal()">Cancel</button>
       <button class="btn" id="delete-confirm-btn" style="background:#ef4444;color:white;font-weight:600;opacity:0.4;cursor:not-allowed;" disabled onclick="confirmDeleteLead()">Permanently Delete</button>
     </div>
   </div>
@@ -903,7 +902,7 @@
       <h2 style="font-size:17px;">Schedule Follow-up</h2>
       <button class="modal-close" onclick="document.getElementById('schedule-followup-modal').classList.remove('open')">×</button>
     </div>
-    <div id="schedule-followup-lead-name" style="font-size:14px;color:#6b7280;margin-bottom:16px;"></div>
+    <div id="schedule-followup-lead-name" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:16px;"></div>
     <div class="form-group">
       <label>Task / Reminder</label>
       <input type="text" id="schedule-followup-title" placeholder="e.g. Follow up call, Send quote">
@@ -917,8 +916,8 @@
       <input type="text" id="schedule-followup-notes" placeholder="Additional context...">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="document.getElementById('schedule-followup-modal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveScheduleFollowup()">Schedule</button>
+      <button class="btn-ghost" onclick="document.getElementById('schedule-followup-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="saveScheduleFollowup()">Schedule</button>
     </div>
   </div>
 </div>

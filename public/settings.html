@@ -202,7 +202,7 @@
           </div>
           <div class="form-group">
             <label>Email</label>
-            <input type="text" id="profile-email" readonly style="background:#f9fafb;">
+            <input type="text" id="profile-email" readonly>
           </div>
           <div id="profile-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
           <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
@@ -563,8 +563,8 @@
         <div class="disp-tag-name">${tag.name}</div>
         <div class="disp-tag-drip">${tag.disposition_messages?.length ? `${tag.disposition_messages.length} message drip` : 'No drip'}</div>
         <div class="disp-tag-actions">
-          <button class="btn btn-ghost btn-sm" onclick="editDispositionTag('${tag.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteDispositionTag('${tag.id}')">Delete</button>
+          <button class="btn-ghost" onclick="editDispositionTag('${tag.id}')">Edit</button>
+          <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="deleteDispositionTag('${tag.id}')">Delete</button>
         </div>
       </div>
     `).join('')
@@ -624,7 +624,7 @@
         step.className = 'message-step'
         step.id = `dstep-${dispMessageStepCount}`
         step.innerHTML = `
-          <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
+          <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
           <div class="day-input">
             <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${msg.day_number}">
             <label>at</label><input type="time" class="dstep-time" value="${msg.send_time || '10:00'}">
@@ -647,7 +647,7 @@
     step.className = 'message-step'
     step.id = `dstep-${dispMessageStepCount}`
     step.innerHTML = `
-      <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn btn-danger btn-sm" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
+      <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
       <div class="day-input">
         <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${dispMessageStepCount}">
         <label>at</label><input type="time" class="dstep-time" value="10:00">
@@ -720,7 +720,7 @@
           <option value="">Select action...</option>
           ${ACTION_TYPES.map(t => `<option value="${t.value}" ${t.value === selectedType ? 'selected' : ''}>${t.label}</option>`).join('')}
         </select>
-        <button class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()">Remove</button>
+        <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="document.getElementById('${id}').remove()">Remove</button>
       </div>
       <div class="action-value-area" id="${id}-value"></div>
     `
@@ -917,7 +917,7 @@
     if (!allPhoneNumbers.length) {
       container.innerHTML = `<div style="text-align:center;padding:48px 20px;">
         <div style="font-size:36px;margin-bottom:12px;">📱</div>
-        <div style="font-size:15px;font-weight:600;color:var(--color-text);margin-bottom:4px;">No phone numbers yet</div>
+        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;">No phone numbers yet</div>
         <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:16px;">Search for and purchase a number to start sending texts.</div>
         <button class="btn-primary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('pn-search-areacode').focus()">Search Numbers</button>
       </div>`
@@ -926,16 +926,16 @@
     container.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="border-bottom:1px solid var(--color-border);">
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Phone</th>
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">State</th>
-            <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Status</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Sent Today</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Viol. Rate</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Opt-Outs</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Delivery</th>
-            <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Health</th>
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--color-text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Since</th>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Phone</th>
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">State</th>
+            <th style="text-align:center;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Status</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Sent Today</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Viol. Rate</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Opt-Outs</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Delivery</th>
+            <th style="text-align:center;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Health</th>
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Since</th>
             <th style="padding:8px 10px;"></th>
           </tr>
         </thead>
@@ -972,29 +972,29 @@
             const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DC','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
             const stateOptions = `<option value="">Unassigned</option>` + US_STATES.map(s => `<option value="${s}"${pn.state === s ? ' selected' : ''}>${s}</option>`).join('')
 
-            return `<tr style="border-bottom:1px solid var(--color-border-light);">
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
               <td style="padding:12px 10px;">
-                <div style="font-weight:600;color:var(--color-text);">${pn.friendly_name || pn.phone_number}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);">${pn.phone_number}${pn.is_default ? ' · <span style="color:var(--color-primary);">Default</span>' : ''}</div>
+                <div style="font-weight:600;color:rgba(255,255,255,0.75);">${pn.friendly_name || pn.phone_number}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.35);">${pn.phone_number}${pn.is_default ? ' · <span style="color:#00d4b4;">Default</span>' : ''}</div>
               </td>
               <td style="padding:12px 10px;">
-                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid var(--color-border);border-radius:var(--radius-sm);font-size:12px;background:white;color:var(--color-text);cursor:pointer;">
+                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:12px;background:white;color:rgba(255,255,255,0.75);cursor:pointer;">
                   ${stateOptions}
                 </select>
               </td>
               <td style="padding:12px 10px;text-align:center;">${statusBadge}</td>
-              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-text-secondary);">${sentToday} / ${dailyLimit}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.35);">${sentToday} / ${dailyLimit}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${violRateColor};font-weight:${pn.violation_rate >= 10 ? 600 : 400};">${violRate}</td>
-              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-text-secondary);">${optOuts}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.35);">${optOuts}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${delivColor};font-weight:${h.delivery_rate < 90 ? 600 : 400};">${delivery}</td>
               <td style="padding:12px 10px;text-align:center;">${healthBadge(healthStatus)}</td>
-              <td style="padding:12px 10px;color:var(--color-text-secondary);">${purchased}</td>
+              <td style="padding:12px 10px;color:rgba(255,255,255,0.35);">${purchased}</td>
               <td style="padding:12px 10px;text-align:right;">
                 <div style="position:relative;display:inline-block;">
                   <button class="btn-ghost" onclick="togglePnMenu('${pn.id}')" style="padding:4px 8px;">⋯</button>
-                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:white;border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
-                    ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--color-text);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
-                    <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--color-text);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
+                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:white;border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
+                    ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
+                    <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
                     <div style="height:1px;background:var(--color-border-light);margin:4px 0;"></div>
                     <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${pnStatus}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">Release Number</button>
                   </div>
@@ -1253,9 +1253,9 @@
             <div style="font-size:14px;font-weight:600;">${inv.email}</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.35);">Expires ${expires}</div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="copyInviteLink('${link}')">Copy Link</button>
+          <button class="btn-ghost" onclick="copyInviteLink('${link}')">Copy Link</button>
           <button class="btn-ghost" onclick="resendInvite('${inv.id}', '${inv.email}')">Resend</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelInvite('${inv.id}')">Cancel</button>
+          <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="cancelInvite('${inv.id}')">Cancel</button>
         </div>`
       }).join('')
     } catch (err) { console.error(err) }
@@ -1457,8 +1457,8 @@
           <div style="font-size:12px;color:rgba(255,255,255,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">${t.body}</div>
         </div>
         <div class="disp-tag-actions">
-          <button class="btn btn-ghost btn-sm" onclick="editTemplate('${t.id}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteTemplate('${t.id}')">Delete</button>
+          <button class="btn-ghost" onclick="editTemplate('${t.id}')">Edit</button>
+          <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="deleteTemplate('${t.id}')">Delete</button>
         </div>
       </div>
     `).join('')

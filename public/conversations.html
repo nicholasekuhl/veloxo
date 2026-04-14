@@ -6,6 +6,176 @@
   <title>Conversations — Veloxo</title>
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <script src="/toast.js?v=2"></script>
+  <style>
+/* ── Conversations 3-panel layout ── */
+.conv3-layout { display: flex; height: 100vh; overflow: hidden; }
+.conv3-left { width: 320px; min-width: 260px; flex-shrink: 0; display: flex; flex-direction: column; background: #0e1419; border-right: 1px solid rgba(255,255,255,0.06); }
+.conv3-left-header { padding: 14px 14px 0; flex-shrink: 0; }
+.conv3-left-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.conv3-left-title-row h2 { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.3px; }
+.conv3-filter-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: rgba(255,255,255,0.35); padding: 4px 6px; border-radius: 6px; transition: color 0.12s, background 0.12s; }
+.conv3-filter-btn:hover, .conv3-filter-btn.active { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.7); }
+.conv3-search { width: 100%; padding: 7px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); outline: none; transition: border-color 0.12s; margin-bottom: 8px; }
+.conv3-search::placeholder { color: rgba(255,255,255,0.22); }
+.conv3-search:focus { border-color: rgba(0,201,167,0.35); }
+.conv3-tabs { display: flex; gap: 4px; padding-bottom: 10px; }
+.conv3-tab { flex: 1; padding: 5px 8px; border-radius: 7px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); background: transparent; border: none; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.conv3-tab.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
+.conv3-tab:hover:not(.active) { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); }
+.conv3-filter-bar { display: none; padding: 8px 14px 10px; border-top: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); }
+.conv3-filter-bar.open { display: block; }
+.conv3-filter-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12.5px; color: rgba(255,255,255,0.55); }
+.conv3-filter-label { font-size: 12px; color: rgba(255,255,255,0.5); }
+.conv3-filter-select { width: 100%; padding: 6px 9px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; font-size: 12.5px; color: rgba(255,255,255,0.7); outline: none; }
+.conv3-list { flex: 1; overflow-y: auto; }
+
+/* ── Conversation list items ── */
+.conv3-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); border-left: 3px solid transparent; transition: background 0.1s; position: relative; }
+.conv3-item:hover { background: rgba(255,255,255,0.03); }
+.conv3-item.active { background: rgba(0,201,167,0.06); border-left-color: #00c9a7; }
+.conv3-unread-item { background: rgba(255,255,255,0.02); }
+.conv3-avatar { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #374151, #1f2937); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.85); flex-shrink: 0; position: relative; }
+.conv3-unread-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: #3b82f6; border: 2px solid #0e1419; }
+.conv3-item-body { flex: 1; min-width: 0; }
+.conv3-item-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.conv3-item-name { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv3-item-time { font-size: 10.5px; color: rgba(255,255,255,0.3); white-space: nowrap; }
+.conv3-item-phone { font-size: 11px; color: rgba(255,255,255,0.3); margin-bottom: 2px; }
+.conv-from-number { font-size: 10.5px; color: rgba(0,201,167,0.5); margin-bottom: 2px; }
+.conv3-item-preview { font-size: 12px; color: rgba(255,255,255,0.38); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv3-item-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.conv3-item-star { background: none; border: none; cursor: pointer; font-size: 14px; color: rgba(255,255,255,0.2); padding: 2px; transition: color 0.12s; flex-shrink: 0; }
+.conv3-item-star.starred { color: #f59e0b; }
+.conv3-item-star:hover { color: #f59e0b; }
+
+/* ── Center panel ── */
+.conv3-center { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: #0b0f12; }
+.conv3-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 40px; }
+.conv3-conv-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(11,15,18,0.95); backdrop-filter: blur(8px); flex-shrink: 0; }
+.conv3-conv-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.conv3-conv-header-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv3-conv-header-meta { font-size: 11px; color: rgba(255,255,255,0.38); }
+.conv3-conv-header-via { font-size: 11px; color: rgba(0,201,167,0.6); }
+.conv3-conv-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.conv3-back-btn { display: none; }
+.conv3-icon-btn { background: none; border: none; cursor: pointer; font-size: 17px; color: rgba(255,255,255,0.4); padding: 5px 7px; border-radius: 7px; transition: color 0.12s, background 0.12s; }
+.conv3-icon-btn:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.75); }
+.conv3-subtabs { display: flex; gap: 2px; padding: 6px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+.conv3-subtab { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.38); background: transparent; border: none; cursor: pointer; transition: background 0.12s, color 0.12s; }
+.conv3-subtab.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
+.conv3-subtab:hover:not(.active) { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.6); }
+.conv3-updated { font-size: 10.5px; color: rgba(255,255,255,0.2); text-align: center; padding: 4px 0; flex-shrink: 0; }
+
+/* ── Messages ── */
+.conv3-messages { flex: 1; overflow-y: auto; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 2px; }
+.msg { display: flex; flex-direction: column; margin-bottom: 4px; }
+.msg.inbound { align-items: flex-start; }
+.msg.outbound { align-items: flex-end; }
+.msg-bubble { max-width: 72%; padding: 9px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.55; word-break: break-word; }
+.msg.inbound .msg-bubble { background: #1e2830; color: rgba(255,255,255,0.85); border-bottom-left-radius: 4px; }
+.msg.outbound .msg-bubble { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #fff; border-bottom-right-radius: 4px; }
+.msg.outbound.ai .msg-bubble { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.msg-time { font-size: 10.5px; color: rgba(255,255,255,0.28); margin-top: 3px; padding: 0 2px; display: flex; align-items: center; gap: 4px; }
+.msg-label { font-size: 10px; color: rgba(99,102,241,0.6); margin-top: 1px; padding: 0 2px; }
+.msg-date-sep { text-align: center; font-size: 11px; color: rgba(255,255,255,0.22); padding: 8px 0; }
+.msg-si { font-size: 11px; }
+.msg-si.delivered { color: #00d4b4; }
+.msg-si.failed { color: #f87171; cursor: help; }
+.msg-si.sending { color: rgba(255,255,255,0.3); }
+.msg-si.sent { color: rgba(255,255,255,0.4); }
+
+/* ── Input area ── */
+.conv3-input-area { padding: 10px 12px 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; background: #0e1419; position: relative; }
+.conv3-textarea { width: 100%; min-height: 72px; max-height: 200px; resize: vertical; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 12px; font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,0.85); font-family: inherit; outline: none; transition: border-color 0.12s; }
+.conv3-textarea:focus { border-color: rgba(0,201,167,0.35); }
+.conv3-textarea::placeholder { color: rgba(255,255,255,0.22); }
+.conv3-var-buttons { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.conv3-var-btn { padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: color 0.12s, border-color 0.12s; }
+.conv3-var-btn:hover { color: #00d4b4; border-color: rgba(0,201,167,0.3); }
+.conv3-var-warnings { font-size: 11.5px; color: #fbbf24; margin-top: 4px; }
+.conv3-input-toolbar { display: flex; align-items: center; gap: 4px; margin-top: 7px; }
+.conv3-itb { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.35); padding: 5px 7px; border-radius: 7px; transition: color 0.12s, background 0.12s; display: flex; align-items: center; }
+.conv3-itb:hover, .conv3-itb.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
+.conv3-char-count { font-size: 11px; color: rgba(255,255,255,0.28); white-space: nowrap; }
+.conv3-send-btn { display: flex; align-items: center; justify-content: center; padding: 7px 10px; border-radius: 8px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.12s; }
+.conv3-send-btn.has-text { background: linear-gradient(135deg, #00c9a7, #0ea5e9); border-color: transparent; color: #0b0f12; box-shadow: 0 2px 10px rgba(0,201,167,0.3); }
+.conv3-sched-send-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.2); color: #fbbf24; cursor: pointer; }
+.conv3-template-picker { display: none; position: absolute; bottom: calc(100% + 4px); left: 8px; background: #1a2228; border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 260px; max-height: 220px; overflow-y: auto; z-index: 200; }
+.conv3-sched-dropdown { background: #1a2228; border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); overflow: hidden; }
+.conv3-sched-option { display: block; width: 100%; text-align: left; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.65); background: none; border: none; cursor: pointer; transition: background 0.1s; }
+.conv3-sched-option:hover { background: rgba(255,255,255,0.05); }
+.conv3-sched-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; }
+.conv3-sched-custom { display: flex; gap: 6px; align-items: center; padding: 10px; }
+.conv3-sched-input { padding: 6px 9px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; font-size: 13px; color: rgba(255,255,255,0.7); outline: none; }
+.conv3-sched-pill { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.18); border-radius: 8px; margin-bottom: 6px; }
+.conv3-sched-pill-label { font-size: 12px; color: #fbbf24; }
+.conv3-sched-pill-cancel { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.35); font-size: 13px; }
+.conv3-schedule-picker { display: none; position: absolute; bottom: calc(100% + 40px); left: 8px; z-index: 300; }
+
+/* ── Right panel ── */
+.conv3-right { width: 280px; min-width: 260px; flex-shrink: 0; background: #0e1419; border-left: 1px solid rgba(255,255,255,0.06); overflow-y: auto; }
+.conv3-right-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.conv3-right-header h3 { font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,0.8); }
+.conv3-right-section { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.conv3-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.22); margin-bottom: 7px; }
+.conv3-contact-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; }
+.conv3-contact-label { font-size: 11px; color: rgba(255,255,255,0.3); }
+.conv3-contact-val { font-size: 12px; color: rgba(255,255,255,0.65); text-align: right; }
+.conv3-quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.conv3-quick-btn { padding: 6px 8px; border-radius: 7px; font-size: 11.5px; font-weight: 500; color: rgba(255,255,255,0.55); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: background 0.12s, color 0.12s; white-space: nowrap; }
+.conv3-quick-btn:hover { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.8); }
+.conv3-notes-ta { width: 100%; min-height: 80px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 7px; padding: 8px 10px; font-size: 12.5px; color: rgba(255,255,255,0.65); font-family: inherit; outline: none; }
+.conv3-notes-ta:focus { border-color: rgba(0,201,167,0.35); }
+.conv3-status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; border: 1px solid; }
+
+/* ── Handoff banner ── */
+.handoff-banner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 14px; font-size: 12.5px; font-weight: 500; flex-shrink: 0; }
+.handoff-banner.green { background: rgba(16,185,129,0.1); color: #34d399; border-bottom: 1px solid rgba(16,185,129,0.15); }
+.handoff-banner.orange { background: rgba(251,146,60,0.1); color: #fb923c; border-bottom: 1px solid rgba(251,146,60,0.15); }
+.handoff-banner.amber { background: rgba(251,191,36,0.1); color: #fbbf24; border-bottom: 1px solid rgba(251,191,36,0.15); }
+.handoff-banner.red { background: rgba(239,68,68,0.1); color: #f87171; border-bottom: 1px solid rgba(239,68,68,0.15); }
+.handoff-banner.purple { background: rgba(139,92,246,0.1); color: #a78bfa; border-bottom: 1px solid rgba(139,92,246,0.15); }
+.handoff-banner.gray { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.5); border-bottom: 1px solid rgba(255,255,255,0.07); }
+.handoff-banner-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── Actions dropdown menu ── */
+.actions-menu { position: relative; }
+.actions-dropdown { display: none; position: absolute; right: 0; top: calc(100% + 4px); background: #1a2228; border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 200px; z-index: 500; overflow: hidden; }
+.actions-dropdown.open { display: block; }
+.actions-dropdown button { display: block; width: 100%; text-align: left; padding: 8px 14px; font-size: 13px; color: rgba(255,255,255,0.65); background: none; border: none; cursor: pointer; transition: background 0.1s; }
+.actions-dropdown button:hover { background: rgba(255,255,255,0.05); }
+
+/* ── Autopilot / AI status chips ── */
+.autopilot-status { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+.autopilot-status.on { background: rgba(0,201,167,0.12); color: #00d4b4; }
+.autopilot-status.off { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+
+/* ── AI suggestion box ── */
+.ai-suggestion { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: 9px; padding: 10px 12px; margin-bottom: 8px; font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+.ai-suggestion-label { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(139,92,246,0.7); }
+
+/* ── Disposition pill ── */
+.disposition-pill { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; color: #fff; }
+
+/* ── Scheduled message items ── */
+.conv3-scheduled-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; background: rgba(251,191,36,0.06); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.conv3-scheduled-body { flex: 1; min-width: 0; font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.5; }
+.conv3-scheduled-time { font-size: 11px; color: #fbbf24; margin-top: 3px; }
+.conv3-scheduled-cancel { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.3); font-size: 14px; padding: 2px 6px; transition: color 0.12s; flex-shrink: 0; }
+.conv3-scheduled-cancel:hover { color: #f87171; }
+
+/* ── Disposition picker ── */
+.disp-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 7px; }
+
+/* ── Mobile responsive ── */
+@media (max-width: 768px) {
+  .conv3-center { display: none; }
+  .conv3-layout.conv3-open .conv3-left { display: none; }
+  .conv3-layout.conv3-open .conv3-center { display: flex; }
+  .conv3-back-btn { display: inline-flex !important; }
+  .conv3-right { display: none !important; }
+}
+  </style>
 </head>
 <body>
 
@@ -44,8 +214,8 @@
     <div class="conv3-center" id="conv3-center">
       <div class="conv3-empty" id="conv3-empty">
         <div style="font-size:40px;margin-bottom:12px;">💬</div>
-        <div style="font-size:16px;font-weight:600;color:#374151;margin-bottom:6px;">Select a conversation</div>
-        <div style="font-size:13px;color:#9ca3af;">Choose a conversation from the left to get started.</div>
+        <div style="font-size:16px;font-weight:600;color:rgba(255,255,255,0.55);margin-bottom:6px;">Select a conversation</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.28);">Choose a conversation from the left to get started.</div>
       </div>
     </div>
 
@@ -309,7 +479,7 @@
     } catch (err) {
       console.error(err)
       toast.error('Failed to load conversations', 'Please try again')
-      if (list) list.innerHTML = '<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px;">Could not load conversations.</div>'
+      if (list) list.innerHTML = '<div style="padding:24px;text-align:center;color:rgba(255,255,255,0.28);font-size:13px;">Could not load conversations.</div>'
     }
   }
 
@@ -360,8 +530,8 @@
       const [icon, title, sub] = emptyMsgs[convTab] || emptyMsgs.all
       list.innerHTML = `<div style="padding:40px 16px;text-align:center;">
         <div style="font-size:32px;margin-bottom:10px;">${icon}</div>
-        <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;">${title}</div>
-        <div style="font-size:12px;color:#9ca3af;line-height:1.5;">${sub}</div>
+        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);margin-bottom:4px;">${title}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.28);line-height:1.5;">${sub}</div>
       </div>`
       return
     }
@@ -382,12 +552,12 @@
         isBlocked ? 'conv3-blocked-item' : ''
       ].filter(Boolean).join(' ')
       const dispPill = dispTag ? `<span class="disposition-pill" style="background:${dispTag.color};font-size:10px;padding:1px 7px;">${dispTag.name}</span>` : ''
-      const blockedBadge = isBlocked ? `<span style="font-size:10px;background:#fee2e2;color:#dc2626;border-radius:20px;padding:1px 6px;font-weight:600;">Blocked</span>` : ''
+      const blockedBadge = isBlocked ? `<span style="font-size:10px;background:rgba(239,68,68,0.12);color:#f87171;border-radius:20px;padding:1px 6px;font-weight:600;">Blocked</span>` : ''
       const engStatus = c.engagement_status
       const engPill = engStatus === 'positive_ghosted'
-        ? `<span style="font-size:10px;background:#fef3c7;color:#92400e;border-radius:20px;padding:1px 6px;font-weight:600;">Went Quiet</span>`
+        ? `<span style="font-size:10px;background:rgba(251,191,36,0.12);color:#fbbf24;border-radius:20px;padding:1px 6px;font-weight:600;">Went Quiet</span>`
         : engStatus === 'ghosted_mid'
-        ? `<span style="font-size:10px;background:#f3f4f6;color:#6b7280;border-radius:20px;padding:1px 6px;font-weight:600;">No Response</span>`
+        ? `<span style="font-size:10px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.4);border-radius:20px;padding:1px 6px;font-weight:600;">No Response</span>`
         : ''
       const hotBadge = c.handoff_reason === 'quote_requested' ? `<span style="font-size:12px;" title="Hot lead — requesting quote">🔥</span>` : ''
       const avatarStyle = c.needs_agent_review ? 'background:linear-gradient(135deg,#ef4444,#f97316);' : ''
@@ -501,8 +671,8 @@
       if (!items.length) {
         container.innerHTML = `<div style="padding:40px 16px;text-align:center;">
           <div style="font-size:32px;margin-bottom:10px;">📅</div>
-          <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;">No scheduled messages</div>
-          <div style="font-size:12px;color:#9ca3af;">Use the Schedule button below to schedule a message.</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);margin-bottom:4px;">No scheduled messages</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.28);">Use the Schedule button below to schedule a message.</div>
         </div>`
         return
       }
@@ -515,7 +685,7 @@
         <button class="conv3-scheduled-cancel" onclick="deleteScheduledMessage('${sm.id}')" title="Cancel">✕</button>
       </div>`).join('')
     } catch (err) {
-      container.innerHTML = '<div style="text-align:center;color:#dc2626;font-size:13px;padding:32px;">Error loading scheduled messages</div>'
+      container.innerHTML = '<div style="text-align:center;color:#f87171;font-size:13px;padding:32px;">Error loading scheduled messages</div>'
     }
   }
 
@@ -527,8 +697,8 @@
       if (container && !container.querySelector('.conv3-scheduled-item')) {
         container.innerHTML = `<div style="padding:40px 16px;text-align:center;">
           <div style="font-size:32px;margin-bottom:10px;">📅</div>
-          <div style="font-size:14px;font-weight:600;color:#374151;margin-bottom:4px;">No scheduled messages</div>
-          <div style="font-size:12px;color:#9ca3af;">Use the Schedule button below to schedule a message.</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.55);margin-bottom:4px;">No scheduled messages</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.28);">Use the Schedule button below to schedule a message.</div>
         </div>`
       }
     } catch (err) { toast.error('Error', 'Could not cancel scheduled message') }
@@ -766,10 +936,10 @@
     const safeName = [lead?.first_name, lead?.last_name].filter(Boolean).join(' ').replace(/'/g, "\\'")
     const statusChips = () => {
       const chips = []
-      if (lead?.opted_out) chips.push(`<span class="conv3-status-chip" style="background:#fee2e2;color:#b91c1c;border-color:#fca5a5;"><span style="width:6px;height:6px;border-radius:50%;background:#b91c1c;flex-shrink:0;"></span>Opted out</span>`)
-      else chips.push(`<span class="conv3-status-chip" style="background:#dcfce7;color:#15803d;border-color:#86efac;"><span style="width:6px;height:6px;border-radius:50%;background:#15803d;flex-shrink:0;"></span>Opted in</span>`)
-      if (lead?.is_blocked) chips.push(`<span class="conv3-status-chip" style="background:#f3f4f6;color:#4b5563;border-color:#d1d5db;"><span style="width:6px;height:6px;border-radius:50%;background:#4b5563;flex-shrink:0;"></span>Blocked</span>`)
-      if (lead?.autopilot) chips.push(`<span class="conv3-status-chip" style="background:#dbeafe;color:#1d4ed8;border-color:#93c5fd;"><span style="width:6px;height:6px;border-radius:50%;background:#1d4ed8;flex-shrink:0;"></span>AI active</span>`)
+      if (lead?.opted_out) chips.push(`<span class="conv3-status-chip" style="background:rgba(239,68,68,0.1);color:#f87171;border-color:rgba(239,68,68,0.2);"><span style="width:6px;height:6px;border-radius:50%;background:#f87171;flex-shrink:0;"></span>Opted out</span>`)
+      else chips.push(`<span class="conv3-status-chip" style="background:rgba(52,211,153,0.1);color:#34d399;border-color:rgba(52,211,153,0.2);"><span style="width:6px;height:6px;border-radius:50%;background:#34d399;flex-shrink:0;"></span>Opted in</span>`)
+      if (lead?.is_blocked) chips.push(`<span class="conv3-status-chip" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.1);"><span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);flex-shrink:0;"></span>Blocked</span>`)
+      if (lead?.autopilot) chips.push(`<span class="conv3-status-chip" style="background:rgba(0,201,167,0.1);color:#00d4b4;border-color:rgba(0,201,167,0.2);"><span style="width:6px;height:6px;border-radius:50%;background:#00d4b4;flex-shrink:0;"></span>AI active</span>`)
       return chips.join('')
     }
     panel.innerHTML = `
@@ -799,10 +969,10 @@
       <div class="conv3-right-section">
         <div class="conv3-section-title">Tags</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">
-          ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color};">${dispTag.name}</span>` : '<span style="font-size:12px;color:#9ca3af;">No disposition</span>'}
+          ${dispTag ? `<span class="disposition-pill" style="background:${dispTag.color};">${dispTag.name}</span>` : '<span style="font-size:12px;color:rgba(255,255,255,0.28);">No disposition</span>'}
           ${lead?.autopilot ? `<span class="autopilot-status on" style="margin:0;font-size:11px;">⚡ Autopilot</span>` : ''}
-          ${lead?.is_cold ? `<span class="tag" style="background:#e0f2fe;color:#0369a1;">❄️ Cold</span>` : ''}
-          ${lead?.is_blocked ? `<span class="tag" style="background:#fee2e2;color:#dc2626;font-weight:600;">🚫 Blocked</span>` : ''}
+          ${lead?.is_cold ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(56,189,248,0.1);color:#38bdf8;">❄️ Cold</span>` : ''}
+          ${lead?.is_blocked ? `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.1);color:#f87171;">🚫 Blocked</span>` : ''}
         </div>
       </div>
       <div class="conv3-right-section">
@@ -863,7 +1033,7 @@
         ? `<div class="handoff-banner ${conv.engagement_status === 'positive_ghosted' ? 'amber' : 'gray'}" style="font-size:12px;">
             <span>${conv.engagement_status === 'positive_ghosted' ? '💤 This lead was engaging but went quiet — AI is sending follow-ups automatically.' : '🔇 No response after follow-ups — lead may be dormant.'}</span>
             <div class="handoff-banner-actions">
-              <button class="btn btn-sm" style="background:rgba(0,0,0,0.1);color:inherit;" onclick="reEnableAutopilot('${lead?.id}','${conv.id}')">Re-enable Autopilot</button>
+              <button class="btn-ghost" style="font-size:11.5px;padding:4px 10px;" onclick="reEnableAutopilot('${lead?.id}','${conv.id}')">Re-enable Autopilot</button>
             </div>
           </div>`
         : ''
@@ -872,8 +1042,8 @@
         ${bannerText ? `<div class="handoff-banner ${bannerColor}">
           <span>⚑ ${bannerText}</span>
           <div class="handoff-banner-actions">
-            ${isGhostedStatus ? `<button class="btn btn-sm" style="background:rgba(0,0,0,0.1);color:inherit;" onclick="reEnableAutopilot('${lead?.id}','${conv.id}')">Re-enable Autopilot</button>` : `<button class="btn btn-sm" style="background:white;color:#374151;" onclick="takeOverConversation('${conv.id}','${lead?.id}')">Take Over</button>`}
-            <button class="btn btn-sm" style="background:rgba(0,0,0,0.1);color:inherit;" onclick="markConvResolved('${conv.id}')">Mark Resolved</button>
+            ${isGhostedStatus ? `<button class="btn-ghost" style="font-size:11.5px;padding:4px 10px;" onclick="reEnableAutopilot('${lead?.id}','${conv.id}')">Re-enable Autopilot</button>` : `<button class="btn-ghost" style="font-size:11.5px;padding:4px 10px;" onclick="takeOverConversation('${conv.id}','${lead?.id}')">Take Over</button>`}
+            <button class="btn-ghost" style="font-size:11.5px;padding:4px 10px;" onclick="markConvResolved('${conv.id}')">Mark Resolved</button>
           </div>
         </div>` : ''}
         ${suggestionBanner}
@@ -918,9 +1088,9 @@
         <div class="conv3-messages" id="conv3-messages"></div>
         <div class="conv3-input-area">
           ${isOptedOut
-            ? `<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                <span style="color:#b91c1c;font-size:13px;font-weight:600;">🚫 This lead has opted out of all texts. Sending is disabled.</span>
-                <button onclick="undoOptOutConv('${lead?.id}','${conv.id}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 10px;font-size:12px;color:#b91c1c;cursor:pointer;white-space:nowrap;font-weight:500;">Remove opt-out</button>
+            ? `<div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <span style="color:#f87171;font-size:13px;font-weight:600;">🚫 This lead has opted out of all texts. Sending is disabled.</span>
+                <button onclick="undoOptOutConv('${lead?.id}','${conv.id}')" style="background:none;border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:3px 10px;font-size:12px;color:#f87171;cursor:pointer;white-space:nowrap;font-weight:500;">Remove opt-out</button>
               </div>`
             : isAutopilot ? `<div class="autopilot-status on" style="margin-bottom:8px;">⚡ Autopilot is handling this conversation</div>` : `<div class="ai-suggestion" id="ai-suggestion-box" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;"><div class="ai-suggestion-label" style="margin:0;">⚡ AI suggestion</div><button onclick="dismissAISuggestion()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9ca3af;line-height:1;padding:0 2px;" title="Dismiss">✕</button></div><div id="ai-suggestion-text"></div><div id="ai-suggestion-actions" style="margin-top:6px;display:none;"><button onclick="useAISuggestion()" style="font-size:12px;font-weight:600;background:var(--color-primary);color:white;border:none;border-radius:var(--radius-sm);padding:4px 12px;cursor:pointer;">↑ Use this</button></div></div>`}
           <div class="conv3-schedule-picker" id="conv3-schedule-picker">
@@ -944,7 +1114,7 @@
             <span class="conv3-sched-pill-label">🕐 Scheduled: —</span>
             <button class="conv3-sched-pill-cancel" onclick="clearScheduledTime()">✕</button>
           </div>
-          <div class="conv3-template-picker" id="conv3-template-picker" style="display:none;position:absolute;bottom:calc(100% + 4px);left:8px;background:white;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);min-width:260px;max-height:220px;overflow-y:auto;z-index:200;" id="template-pills"></div>
+          <div class="conv3-template-picker" id="conv3-template-picker"></div>
           <div class="conv3-var-buttons">
             <button type="button" class="conv3-var-btn" data-var="[First Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[First Name]')">First Name</button>
             <button type="button" class="conv3-var-btn" data-var="[Last Name]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Last Name]')">Last Name</button>
@@ -1174,7 +1344,7 @@
     allConversations = allConversations.filter(c => c.id !== convId)
     filterConversations(document.getElementById('conv3-search')?.value || '')
     const center = document.getElementById('conv3-center')
-    if (center) center.innerHTML = '<div class="conv3-empty"><div style="font-size:28px;margin-bottom:8px;">💬</div><div style="color:#9ca3af;font-size:13px;">Select a conversation to get started</div></div>'
+    if (center) center.innerHTML = '<div class="conv3-empty"><div style="font-size:28px;margin-bottom:8px;">💬</div><div style="color:rgba(255,255,255,0.28);font-size:13px;">Select a conversation to get started</div></div>'
     document.getElementById('conv3-layout')?.classList.remove('conv3-open')
     showToast('Conversation deleted', 'success')
   }
@@ -1458,9 +1628,9 @@
   const renderTemplatePills = (leadId) => {
     const container = document.getElementById('conv3-template-picker')
     if (!container) return
-    if (!allTemplates.length) { container.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:#9ca3af;">No templates yet.</div>'; return }
+    if (!allTemplates.length) { container.innerHTML = '<div style="padding:12px 14px;font-size:13px;color:rgba(255,255,255,0.28);">No templates yet.</div>'; return }
     container.innerHTML = allTemplates.map(t => `
-      <button style="display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background=''" onclick="useTemplate('${t.id}');document.getElementById('conv3-template-picker').style.display='none';">📝 ${t.name}</button>
+      <button style="display:block;width:100%;text-align:left;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.65);border-bottom:1px solid rgba(255,255,255,0.06);" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background=''" onclick="useTemplate('${t.id}');document.getElementById('conv3-template-picker').style.display='none';">📝 ${t.name}</button>
     `).join('')
   }
 
