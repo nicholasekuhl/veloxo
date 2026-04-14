@@ -10,7 +10,7 @@
 .lead-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 11px; overflow: hidden; transition: border-color 0.12s; }
 .lead-card:hover { border-color: rgba(255,255,255,0.12); }
 .lead-card.has-notes { border-color: rgba(0,201,167,0.18); }
-.lead-card-body { display: grid; grid-template-columns: 310px minmax(0, 420px) 185px 195px; }
+.lead-card-body { display: grid; grid-template-columns: 310px 1fr 185px 160px 160px; }
 .col-contact { overflow: hidden; }
 .lead-card-body > div { border-right: 1px solid rgba(255,255,255,0.05); padding: 14px 15px; }
 .lead-card-body > div:last-child { border-right: none; }
@@ -27,6 +27,16 @@
 .lead-status-row { margin-left: 45px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 
 .col-notes { display: flex; flex-direction: column; max-width: 420px; }
+    .col-quotes { display: flex; flex-direction: column; }
+    .quotes-textarea {
+      flex: 1; min-height: 90px; resize: vertical;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px; padding: 9px 11px; font-size: 12px; line-height: 1.6;
+      color: rgba(255,255,255,0.7); font-family: inherit; outline: none;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .quotes-textarea::placeholder { color: rgba(255,255,255,0.18); font-size: 11px; }
+    .quotes-textarea:focus { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.03); }
 .notes-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.22); margin-bottom: 6px; }
 .notes-textarea { flex: 1; min-height: 90px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 7px; padding: 9px 11px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; transition: border-color 0.12s, background 0.12s; }
 .notes-textarea::placeholder { color: rgba(255,255,255,0.2); }

@@ -1058,6 +1058,94 @@ const checkPipelineGhosts = async () => {
   }
 }
 
+const checkColdLeads = async () => {
+  try {
+    const now = new Date()
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString()
+
+    // Find conversations where autopilot is on, last outbound was 24h+ ago,
+    // and the lead has not replied since the last outbound
+    const { data: conversations } = await supabase
+      .from('conversations')
+      .select('id, lead_id, last_outbound_at, last_inbound_at, needs_agent_review')
+      .eq('needs_agent_review', false)
+      .not('last_outbound_at', 'is', null)
+      .lte('last_outbound_at', oneDayAgo)
+
+    if (!conversations || conversations.length === 0) return
+
+    let coldCount = 0
+
+    for (const conv of conversations) {
+      // Skip if lead replied after our last outbound
+      if (conv.last_inbound_at && new Date(conv.last_inbound_at) > new Date(conv.last_outbound_at)) continue
+
+      // Load the lead — must have autopilot on, not already cold/blocked/opted-out
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('id, autopilot, is_cold, is_blocked, opted_out, user_id')
+        .eq('id', conv.lead_id)
+        .single()
+
+      if (!lead) continue
+      if (!lead.autopilot) continue
+      if (lead.is_cold || lead.is_blocked || lead.opted_out) continue
+
+      // Fetch last 5 messages to count consecutive outbound at the tail
+      const { data: recentMessages } = await supabase
+        .from('messages')
+        .select('direction')
+        .eq('conversation_id', conv.id)
+        .order('sent_at', { ascending: false })
+        .limit(5)
+
+      if (!recentMessages || recentMessages.length < 3) continue
+
+      // Count how many consecutive outbound messages are at the end (most recent first)
+      let consecutiveOutbound = 0
+      for (const msg of recentMessages) {
+        if (msg.direction === 'outbound') {
+          consecutiveOutbound++
+        } else {
+          break
+        }
+      }
+
+      if (consecutiveOutbound < 3) continue
+
+      // Mark lead cold and turn off autopilot
+      await supabase
+        .from('leads')
+        .update({ autopilot: false, is_cold: true, updated_at: now.toISOString() })
+        .eq('id', lead.id)
+
+      await supabase
+        .from('conversations')
+        .update({ needs_agent_review: true, handoff_reason: 'cold_lead', updated_at: now.toISOString() })
+        .eq('id', conv.id)
+
+      coldCount++
+      console.log(`[coldLeads] Lead ${lead.id} marked cold after ${consecutiveOutbound} unanswered messages`)
+    }
+
+    if (coldCount > 0) console.log(`[coldLeads] ${coldCount} lead(s) marked cold`)
+  } catch (err) {
+    console.error('checkColdLeads error:', err.message)
+  }
+}
+
+const scheduleDailyAt9am = () => {
+  const now = new Date()
+  const next9am = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 14, 0, 0)) // 9am ET = 14:00 UTC
+  if (next9am <= now) next9am.setUTCDate(next9am.getUTCDate() + 1)
+  const msUntil = next9am - now
+  setTimeout(() => {
+    checkColdLeads()
+    scheduleDailyAt9am() // reschedule for next day
+  }, msUntil)
+  console.log(`[coldLeads] Next cold lead check scheduled in ${Math.round(msUntil / 60000)} minutes`)
+}
+
 const scheduleMidnightReset = () => {
   const now = new Date()
   const nextMidnight = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0))
@@ -1072,6 +1160,7 @@ const scheduleMidnightReset = () => {
 let isProcessingScheduled = false
 let isProcessingGhosted = false
 let isProcessingQuickFollowups = false
+let isProcessingColdLeads = false
 
 const guardedProcessScheduledMessages = async () => {
   if (isProcessingScheduled) {
@@ -1112,6 +1201,19 @@ const guardedProcessQuickFollowups = async () => {
   }
 }
 
+const guardedCheckColdLeads = async () => {
+  if (isProcessingColdLeads) {
+    console.log('[scheduler] checkColdLeads already running — skipping')
+    return
+  }
+  isProcessingColdLeads = true
+  try {
+    await checkColdLeads()
+  } finally {
+    isProcessingColdLeads = false
+  }
+}
+
 const startScheduler = () => {
   console.log('Campaign scheduler started — master Twilio account active')
   setInterval(guardedProcessScheduledMessages, 90000)   // every 90 seconds
@@ -1120,10 +1222,12 @@ const startScheduler = () => {
   setInterval(checkPipelineGhosts, 120000)              // every 2 minutes
 
   scheduleMidnightReset()
+  scheduleDailyAt9am()
   guardedProcessScheduledMessages()
   guardedProcessQuickFollowups()
   guardedCheckGhostedConversations()
   checkPipelineGhosts()
+  guardedCheckColdLeads()
 }
 
 module.exports = { startScheduler }

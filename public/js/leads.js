@@ -714,6 +714,15 @@ const renderLeads = (leads) => {
             </div>
           </div>
 
+          <div class="col-quotes">
+            <div class="notes-label">Quoted Plans</div>
+            <textarea class="notes-textarea quotes-textarea" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo" data-lead-id="${lead.id}" onblur="saveQuotes('${lead.id}', this.value)">${lead.quotes || ''}</textarea>
+            <div class="notes-footer">
+              <span class="notes-timestamp">${lead.quotes_updated_at ? 'Updated ' + timeAgo(lead.quotes_updated_at) : 'No quotes yet'}</span>
+              <button class="notes-save-btn" onclick="saveQuotes('${lead.id}', this.closest('.col-quotes').querySelector('.quotes-textarea').value)">Save</button>
+            </div>
+          </div>
+
           <div class="col-actions">
             <button class="btn-call" onclick="event.stopPropagation();openSMSModal('${lead.id}','${safeName}')">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#0b0f12" stroke-width="1.5"><path d="M14 3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3z"/><path d="M5 6h6M5 9h4"/></svg>
@@ -1287,6 +1296,10 @@ const toggleAutopilot = async (leadId, value) => {
 
 const saveNotes = async (leadId, notes) => {
   try { await fetch(`/leads/${leadId}/notes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes }) }) } catch (err) { console.error(err) }
+}
+
+const saveQuotes = async (leadId, quotes) => {
+  try { await fetch(`/leads/${leadId}/quotes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quotes }) }) } catch (err) { console.error(err) }
 }
 
 // ===== COMMUNICATION =====

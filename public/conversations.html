@@ -1129,7 +1129,7 @@
             <button type="button" class="conv3-var-btn" data-var="[Calendly Link]" onclick="insertVarAtCursor(document.getElementById('conv-input'),'[Calendly Link]')">Calendly</button>
           </div>
           <textarea class="conv3-textarea" id="conv-input" placeholder="${isOptedOut ? 'Sending disabled — lead has opted out' : isAutopilot ? 'Autopilot active — type to override' : 'Type a message...'}" oninput="updateConvCharCount(this);updateVarWarnings()" onkeydown="if((event.metaKey||event.ctrlKey)&&event.key==='Enter'){event.preventDefault();sendConvMessage('${conv.id}','${conv.lead_id}')}" ${!isAutopilot && !isOptedOut ? `onfocus="loadAISuggestion('${conv.id}','${conv.lead_id}')"` : ''} ${isOptedOut ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}></textarea>
-          ${kwChipsRowHTML("document.getElementById('conv-input')")}
+          ${/* removed: kwChipsRowHTML below-textarea duplicate; pills row above textarea still active */ ''}
           <div class="conv3-var-warnings" id="conv3-var-warnings" style="display:none;"></div>
           <div class="conv3-input-toolbar">
             <div style="position:relative;">

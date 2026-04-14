@@ -807,6 +807,23 @@ const updateNotes = async (req, res) => {
   }
 }
 
+const updateQuotes = async (req, res) => {
+  try {
+    const { quotes } = req.body
+    const { data, error } = await supabase
+      .from('leads')
+      .update({ quotes, quotes_updated_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single()
+    if (error) throw error
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 const getLeadById = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -1559,4 +1576,4 @@ const getPipelineLeads = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage }
+module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage }
