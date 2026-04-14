@@ -21,9 +21,7 @@ const { smsQueue } = require('./smsQueue')
 
 console.log('Veloxo Worker starting...')
 
-// Start the SMS queue drain
-smsQueue.start()
-console.log('smsQueue started')
+
 
 // Start the scheduler
 startScheduler()
