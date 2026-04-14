@@ -923,7 +923,7 @@
                 <span style="color:#b91c1c;font-size:13px;font-weight:600;">🚫 This lead has opted out of all texts. Sending is disabled.</span>
                 <button onclick="undoOptOutConv('${lead?.id}','${conv.id}')" style="background:none;border:1px solid #fca5a5;border-radius:6px;padding:3px 10px;font-size:12px;color:#b91c1c;cursor:pointer;white-space:nowrap;font-weight:500;">Remove opt-out</button>
               </div>`
-            : isAutopilot ? `<div class="autopilot-status on" style="margin-bottom:8px;">⚡ Autopilot is handling this conversation</div>` : `<div class="ai-suggestion" id="ai-suggestion-box" style="display:none;"><div class="ai-suggestion-label">⚡ AI suggestion</div><div id="ai-suggestion-text"></div></div>`}
+            : isAutopilot ? `<div class="autopilot-status on" style="margin-bottom:8px;">⚡ Autopilot is handling this conversation</div>` : `<div class="ai-suggestion" id="ai-suggestion-box" style="display:none;"><div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;"><div class="ai-suggestion-label" style="margin:0;">⚡ AI suggestion</div><button onclick="dismissAISuggestion()" style="background:none;border:none;cursor:pointer;font-size:13px;color:#9ca3af;line-height:1;padding:0 2px;" title="Dismiss">✕</button></div><div id="ai-suggestion-text"></div><div id="ai-suggestion-actions" style="margin-top:6px;display:none;"><button onclick="useAISuggestion()" style="font-size:12px;font-weight:600;background:var(--color-primary);color:white;border:none;border-radius:var(--radius-sm);padding:4px 12px;cursor:pointer;">↑ Use this</button></div></div>`}
           <div class="conv3-schedule-picker" id="conv3-schedule-picker">
             <div class="conv3-sched-dropdown" id="conv3-sched-dropdown">
               <button class="conv3-sched-option" onclick="selectSchedulePreset('In 10 minutes', getRelativeTime(10))">⚡ In 10 minutes</button>
@@ -1197,8 +1197,32 @@
     try {
       const res = await fetch('/messages/suggest', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conversation_id: convId, lead_id: leadId }) })
       const data = await res.json()
-      if (data.suggestion) { text.textContent = data.suggestion; const input = document.getElementById('conv-input'); if (input && !input.value) input.value = data.suggestion }
+      if (data.suggestion) {
+        text.textContent = data.suggestion
+        const actions = document.getElementById('ai-suggestion-actions')
+        if (actions) actions.style.display = 'block'
+      }
     } catch (err) { if (text) text.textContent = 'Could not generate suggestion' }
+  }
+
+  const useAISuggestion = () => {
+    const text = document.getElementById('ai-suggestion-text')
+    const input = document.getElementById('conv-input')
+    if (!text || !input) return
+    input.value = text.textContent
+    updateConvCharCount(input)
+    input.focus()
+    const box = document.getElementById('ai-suggestion-box')
+    if (box) box.style.display = 'none'
+    const actions = document.getElementById('ai-suggestion-actions')
+    if (actions) actions.style.display = 'none'
+  }
+
+  const dismissAISuggestion = () => {
+    const box = document.getElementById('ai-suggestion-box')
+    if (box) box.style.display = 'none'
+    const actions = document.getElementById('ai-suggestion-actions')
+    if (actions) actions.style.display = 'none'
   }
 
   // TCPA override state
