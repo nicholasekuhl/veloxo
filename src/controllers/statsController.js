@@ -21,12 +21,14 @@ const ERROR_DESCRIPTIONS = {
 const getDeliveryStats = async (req, res) => {
   try {
     const { days = 30 } = req.query
+    const userId = req.user.id
     const since = new Date()
     since.setDate(since.getDate() - parseInt(days))
 
     const { data, error } = await supabase
       .from('messages')
       .select('status, error_code, error_message, sent_at')
+      .eq('user_id', userId)
       .eq('direction', 'outbound')
       .gte('sent_at', since.toISOString())
 
@@ -65,6 +67,7 @@ const getDeliveryStats = async (req, res) => {
     const { data: todayData } = await supabase
       .from('messages')
       .select('status')
+      .eq('user_id', userId)
       .eq('direction', 'outbound')
       .gte('sent_at', todayStart.toISOString())
 

@@ -29,6 +29,7 @@ const getCampaign = async (req, res) => {
         campaign_leads (id, status, lead_id, next_send_at, current_step)
       `)
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
       .single()
     if (error) throw error
     res.json({ campaign: data })
@@ -116,6 +117,7 @@ const updateCampaign = async (req, res) => {
       .from('campaigns')
       .update(updates)
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
       .select()
       .single()
     if (campError) throw campError
@@ -152,6 +154,7 @@ const deleteCampaign = async (req, res) => {
       .from('campaigns')
       .delete()
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
     if (error) throw error
     res.json({ success: true })
   } catch (err) {
@@ -192,8 +195,9 @@ const enrollLeads = async (req, res) => {
       .from('campaigns')
       .select('message_1, initial_send_time')
       .eq('id', campaignId)
+      .eq('user_id', req.user.id)
       .single()
-    if (campFetchError) throw campFetchError
+    if (campFetchError || !campaign) return res.status(404).json({ error: 'Campaign not found' })
 
     const { data: messages, error: msgError } = await supabase
       .from('campaign_messages')
@@ -207,9 +211,11 @@ const enrollLeads = async (req, res) => {
       return res.status(400).json({ error: 'Campaign has no messages' })
     }
 
+    // Scope lead lookup to this user — prevents enrolling another user's leads
     const { data: leadsData } = await supabase
       .from('leads')
       .select('id, timezone')
+      .eq('user_id', req.user.id)
       .in('id', lead_ids)
 
     const enrollments = leadsData.map((lead) => {
@@ -290,6 +296,7 @@ const startCampaign = async (req, res) => {
       .from('campaigns')
       .update({ status: 'active', updated_at: new Date().toISOString() })
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
       .select()
       .single()
     if (error) throw error
@@ -305,6 +312,7 @@ const pauseCampaign = async (req, res) => {
       .from('campaigns')
       .update({ status: 'paused', updated_at: new Date().toISOString() })
       .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
       .select()
       .single()
     if (error) throw error
@@ -354,11 +362,10 @@ const enrollBucket = async (req, res) => {
     const { id: campaignId, bucketId } = req.params
 
     const [{ data: campaign, error: campFetchError }, { data: messages, error: msgError }] = await Promise.all([
-      supabase.from('campaigns').select('message_1, initial_send_time, user_id').eq('id', campaignId).single(),
+      supabase.from('campaigns').select('message_1, initial_send_time').eq('id', campaignId).eq('user_id', req.user.id).single(),
       supabase.from('campaign_messages').select('*').eq('campaign_id', campaignId).order('day_number', { ascending: true })
     ])
     if (campFetchError || !campaign) return res.status(404).json({ error: 'Campaign not found' })
-    if (campaign.user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden' })
     if (msgError) throw msgError
     if (!campaign.message_1 && messages.length === 0) return res.status(400).json({ error: 'Campaign has no messages' })
 

@@ -362,6 +362,7 @@ const uploadLeads = async (req, res) => {
         .from('campaigns')
         .select('*, campaign_messages(*)')
         .eq('id', campaignId)
+        .eq('user_id', userId)
         .single()
 
       if (campaign) {
@@ -1520,9 +1521,11 @@ const getPipelineLeads = async (req, res) => {
     const leadIds = (data || []).map(l => l.id)
     let lastMsgMap = {}
     if (leadIds.length > 0) {
+      // user_id filter is safe here — leadIds were already user-scoped above
       const { data: convs } = await supabase
         .from('conversations')
         .select('lead_id, id')
+        .eq('user_id', req.user.id)
         .in('lead_id', leadIds)
       if (convs && convs.length > 0) {
         const convIds = convs.map(c => c.id)
