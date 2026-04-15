@@ -541,6 +541,127 @@
       border-color: rgba(255,255,255,0.15) !important;
       box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
     }
+
+    /* ── Modal overlay — full screen, centered ── */
+    .modal-overlay, [class*="modal-overlay"],
+    [id*="modal-overlay"], [id*="tag-modal-overlay"],
+    [id*="disposition-modal-overlay"] {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100vw !important; height: 100vh !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 1000 !important;
+      background: rgba(0,0,0,0.75) !important;
+      backdrop-filter: blur(4px) !important;
+    }
+
+    /* ── Modal itself — centered, not left-aligned ── */
+    .modal, [class*="modal-container"],
+    [id*="disposition-modal"], [id*="tag-modal"] {
+      position: relative !important;
+      left: unset !important;
+      top: unset !important;
+      transform: none !important;
+      margin: 0 auto !important;
+      max-height: 85vh !important;
+      overflow-y: auto !important;
+    }
+
+    /* ── Insert variable label ── */
+    [class*="insert-variable-label"],
+    .modal .insert-label,
+    .modal span:has(+ [class*="variable"]) {
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.07em !important;
+      text-transform: uppercase !important;
+      color: rgba(255,255,255,0.25) !important;
+      margin-right: 6px !important;
+    }
+
+    /* ── Variable pill buttons ── */
+    .modal [class*="variable-pill"],
+    .modal [class*="variable-btn"],
+    .modal [class*="insert-var"],
+    [id*="tag-modal"] button[data-variable],
+    [id*="disposition-modal"] button[data-variable],
+    .modal .insert-variable-row button,
+    .modal .insert-variable-row span {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      background: rgba(255,255,255,0.07) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.55) !important;
+      cursor: pointer !important;
+      margin: 2px !important;
+      transition: all 0.12s !important;
+      white-space: nowrap !important;
+    }
+    .modal [class*="variable-pill"]:hover,
+    .modal [class*="variable-btn"]:hover,
+    .modal .insert-variable-row button:hover {
+      background: rgba(0,201,167,0.12) !important;
+      border-color: rgba(0,201,167,0.25) !important;
+      color: #00d4b4 !important;
+    }
+
+    /* ── Variable pills row ── */
+    .modal [class*="insert-variable-row"],
+    .modal [class*="variable-row"],
+    [id*="tag-modal"] .insert-variable,
+    [id*="disposition-modal"] .insert-variable {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 4px !important;
+      margin-top: 8px !important;
+      padding: 8px 0 !important;
+      border-top: 1px solid rgba(255,255,255,0.05) !important;
+    }
+
+    /* ── Select action dropdown ── */
+    .modal select, [id*="tag-modal"] select,
+    [id*="disposition-modal"] select {
+      background: rgba(255,255,255,0.05) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 8px !important;
+      color: rgba(255,255,255,0.7) !important;
+      padding: 8px 12px !important;
+      font-size: 13px !important;
+      outline: none !important;
+      font-family: inherit !important;
+      cursor: pointer !important;
+      flex: 1 !important;
+    }
+
+    /* ── Remove action button ── */
+    .modal [class*="remove-action"],
+    .modal button[class*="remove"] {
+      padding: 6px 14px !important;
+      border-radius: 7px !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      color: #f87171 !important;
+      background: rgba(239,68,68,0.08) !important;
+      border: 1px solid rgba(239,68,68,0.15) !important;
+      cursor: pointer !important;
+      white-space: nowrap !important;
+    }
+
+    /* ── Action row (select + remove side by side) ── */
+    .modal [class*="action-row"],
+    .modal [class*="automated-action-item"] {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      margin-top: 8px !important;
+    }
   </style>
 </head>
 <body>
