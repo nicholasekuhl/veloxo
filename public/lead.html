@@ -224,6 +224,7 @@
   </div>
 </div>
 
+<script src="/js/shared.js?v=2"></script>
 <script>
   const params = new URLSearchParams(window.location.search)
   const leadId = params.get('id')
@@ -237,29 +238,6 @@
   let dispositionHistory = []
   let callLog = []
 
-  const COPY_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><rect x="9" y="2" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`
-  const CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polyline points="20 6 9 17 4 12"/></svg>`
-
-  const copyToClipboard = async (text, btn) => {
-    if (!text) return
-    try {
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text)
-      } else {
-        const ta = document.createElement('textarea')
-        ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0'
-        document.body.appendChild(ta); ta.select()
-        if (!document.execCommand('copy')) throw new Error()
-        document.body.removeChild(ta)
-      }
-      btn.innerHTML = CHECK_SVG
-      btn.classList.add('copied')
-      btn.title = 'Copied!'
-      setTimeout(() => { btn.innerHTML = COPY_SVG; btn.classList.remove('copied'); btn.title = 'Copy' }, 2000)
-    } catch (e) { toast.error('Could not copy', 'Please copy manually') }
-  }
-
-  const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
   const formatDateTime = (iso) => {
     if (!iso) return '—'
     const d = new Date(iso)
@@ -272,17 +250,6 @@
     if (diff < 604800000) return d.toLocaleDateString('en-US', { weekday: 'short' })
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
-  const getLocalTime = (tz) => { try { return new Date().toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' }) } catch { return '' } }
-  const getInitials = (first, last) => ((first?.[0] || '') + (last?.[0] || '')).toUpperCase() || '?'
-
-  const checkAuth = async () => {
-    try {
-      const res = await fetch('/auth/me')
-      if (res.status === 401) { window.location.href = '/login.html'; return false }
-      return true
-    } catch { window.location.href = '/login.html'; return false }
-  }
-
   const init = async () => {
     const authed = await checkAuth()
     if (!authed) return
@@ -1132,7 +1099,7 @@
     } catch (err) { console.error(err) }
   }
 
-  init()
+  document.addEventListener('DOMContentLoaded', init)
 
   const editProduct = async () => {
     const val = prompt('Product:', lead.product || '')
@@ -1233,7 +1200,6 @@
   </div>
 </div>
 
-<script src="/js/shared.js?v=2"></script>
 <script>renderSidebar('leads')</script>
 </body>
 </html>
