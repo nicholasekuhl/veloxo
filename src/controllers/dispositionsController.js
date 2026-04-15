@@ -21,12 +21,12 @@ const getDispositionTags = async (req, res) => {
 
 const createDispositionTag = async (req, res) => {
   try {
-    const { name, color, description, webhook_url, messages, actions } = req.body
+    const { name, color, description, webhook_url, messages, actions, automated_action_id } = req.body
     if (!name) return res.status(400).json({ error: 'Tag name is required' })
 
     const { data: tag, error: tagError } = await supabase
       .from('disposition_tags')
-      .insert({ name, color: color || '#6366f1', description, webhook_url: webhook_url || null, user_id: req.user.id })
+      .insert({ name, color: color || '#6366f1', description, webhook_url: webhook_url || null, automated_action_id: automated_action_id || null, user_id: req.user.id })
       .select()
       .single()
     if (tagError) throw tagError
@@ -61,11 +61,14 @@ const createDispositionTag = async (req, res) => {
 
 const updateDispositionTag = async (req, res) => {
   try {
-    const { name, color, description, webhook_url, messages, actions } = req.body
+    const { name, color, description, webhook_url, messages, actions, automated_action_id } = req.body
+
+    const updates = { name, color, description, webhook_url: webhook_url || null }
+    if (automated_action_id !== undefined) updates.automated_action_id = automated_action_id || null
 
     const { data: tag, error: tagError } = await supabase
       .from('disposition_tags')
-      .update({ name, color, description, webhook_url: webhook_url || null })
+      .update(updates)
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
       .select()
@@ -200,6 +203,26 @@ const applyDisposition = async (req, res) => {
       await executeActions(freshLead || lead, tag.disposition_actions, disposition_tag_id, req.user.profile)
     }
 
+    // Execute linked automated_action sub-actions
+    if (tag.automated_action_id) {
+      const { data: autoAction } = await supabase
+        .from('automated_actions')
+        .select('*')
+        .eq('id', tag.automated_action_id)
+        .single()
+      if (autoAction && autoAction.actions && autoAction.actions.length > 0) {
+        const freshLead2 = (await supabase.from('leads').select('*').eq('id', lead_id).single()).data || lead
+        // Convert automated_action format to disposition_actions format
+        const mappedActions = autoAction.actions.map((a, i) => ({
+          action_type: a.type,
+          action_value: a.value || {},
+          action_order: i
+        }))
+        executeActions(freshLead2, mappedActions, disposition_tag_id, req.user.profile)
+          .catch(err => console.error('[disposition] automated action execution error:', err.message))
+      }
+    }
+
     // Fire outbound webhook if configured
     if (tag.webhook_url) {
       try {
@@ -321,6 +344,74 @@ const reorderDispositionTags = async (req, res) => {
   }
 }
 
+// ─── AUTOMATED ACTIONS CRUD ─────────────────────────────────────────────────
+
+const getAutomatedActions = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('automated_actions')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    res.json({ actions: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const createAutomatedAction = async (req, res) => {
+  try {
+    const { name, actions } = req.body
+    if (!name) return res.status(400).json({ error: 'Action name is required' })
+
+    const { data, error } = await supabase
+      .from('automated_actions')
+      .insert({ name, actions: actions || [], user_id: req.user.id })
+      .select()
+      .single()
+    if (error) throw error
+    res.json({ success: true, action: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const updateAutomatedAction = async (req, res) => {
+  try {
+    const { name, actions } = req.body
+    const updates = {}
+    if (name !== undefined) updates.name = name
+    if (actions !== undefined) updates.actions = actions
+
+    const { data, error } = await supabase
+      .from('automated_actions')
+      .update(updates)
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single()
+    if (error) throw error
+    res.json({ success: true, action: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const deleteAutomatedAction = async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('automated_actions')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+    if (error) throw error
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
 module.exports = {
   getDispositionTags,
   createDispositionTag,
@@ -329,5 +420,9 @@ module.exports = {
   applyDisposition,
   applyMultiDisposition,
   getLeadDispositionHistory,
-  reorderDispositionTags
+  reorderDispositionTags,
+  getAutomatedActions,
+  createAutomatedAction,
+  updateAutomatedAction,
+  deleteAutomatedAction
 }

@@ -9,572 +9,721 @@
   <script src="/toast.js?v=2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
   <style>
-    .disp-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px; }
-    .disp-tab { padding: 10px 20px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.4); cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.12s, border-color 0.12s; }
-    .disp-tab:hover { color: rgba(255,255,255,0.7); }
-    .disp-tab.active { color: #00d4b4; border-bottom-color: #00d4b4; }
-    .disp-panel { display: none; }
-    .disp-panel.active { display: block; }
-    .disp-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
-    .disp-card h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
-    .disp-card > p { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 16px; line-height: 1.6; }
-    .disp-section-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
-    .disp-tag-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 9px; margin-bottom: 6px; transition: border-color 0.12s; }
-    .disp-tag-row:hover { border-color: rgba(255,255,255,0.12); }
-    .disp-tag-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .disp-tag-name { font-size: 14px; font-weight: 500; color: #fff; flex: 1; }
-    .disp-tag-drip { font-size: 12px; color: rgba(255,255,255,0.3); margin-right: 8px; }
-    .disp-tag-actions { display: flex; gap: 6px; }
-    .drag-handle { cursor: grab; color: rgba(255,255,255,0.3); padding: 0 8px 0 0; display: flex; align-items: center; flex-shrink: 0; transition: color 0.12s; }
-    .drag-handle:hover { color: rgba(255,255,255,0.7); }
-    .drag-handle:active { cursor: grabbing; }
-    .sortable-ghost { opacity: 0.4; background: rgba(0,201,167,0.08); border-color: rgba(0,201,167,0.3); }
-    .sortable-chosen { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
-    .btn-primary { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .btn-ghost { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border-radius: 7px; padding: 5px 14px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.12s; }
-    .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .page-header { padding: 28px 28px 0; max-width: 1400px; margin: 0 auto; }
+    .page-header h1 { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 4px; }
+    .page-header p { font-size: 13px; color: rgba(255,255,255,0.45); margin: 0; }
 
-    /* Modal */
-    .modal-overlay { display: none; position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal { background: #1a2228; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 28px; width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
-    .modal h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 20px; }
-    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .modal-close { color: rgba(255,255,255,0.4); background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; }
-    .modal-close:hover { color: #fff; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
-    .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; }
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
-    .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
-    .help-text { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
-    .tip { font-size: 12px; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
-    .char-count { font-size: 11px; color: rgba(255,255,255,0.3); text-align: right; margin-top: 2px; }
+    .two-col { display: flex; gap: 20px; padding: 20px 28px 40px; max-width: 1400px; margin: 0 auto; align-items: flex-start; }
+    .col-left { width: 45%; flex-shrink: 0; }
+    .col-right { width: 55%; flex-shrink: 0; }
+
+    .col-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 24px; }
+    .col-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .col-header h2 { font-size: 15px; font-weight: 600; color: #fff; margin: 0; }
+    .col-header svg { color: rgba(255,255,255,0.4); flex-shrink: 0; }
+    .col-desc { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 18px; line-height: 1.5; }
+
+    /* Shared form styles */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-input { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; }
+    .form-input:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
+    .form-input::placeholder { color: rgba(255,255,255,0.2); }
+    select.form-input { cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 60px; }
+    .form-row { display: flex; gap: 10px; align-items: flex-end; }
+    .form-row .form-group { flex: 1; }
+
+    .btn-save { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: white; border: none; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .btn-save:hover { filter: brightness(1.1); }
+    .btn-cancel-edit { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: none; }
+    .btn-cancel-edit:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .form-actions { display: flex; gap: 8px; margin-top: 14px; }
+
+    .divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 18px 0; }
+    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 10px; }
 
     /* Color picker */
-    .color-picker-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
-    .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: transform 0.12s; border: none; outline: 2px solid transparent; outline-offset: 2px; }
+    .color-picker-row { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 4px; }
+    .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: transform 0.12s; border: none; outline: 2px solid transparent; outline-offset: 2px; }
     .color-swatch:hover { transform: scale(1.15); }
     .color-swatch.selected { outline-color: #fff; transform: scale(1.1); }
-    .color-picker-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.1); margin: 0 2px; }
-    .color-custom-wrap { display: flex; align-items: center; gap: 6px; }
-    .color-custom-input { width: 36px; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; padding: 0; background: none; }
-    .color-custom-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .color-picker-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.08); margin: 0 2px; }
+    .color-custom-input { width: 28px; height: 24px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; padding: 0; background: none; }
 
-    /* Action rows */
-    .action-row { margin-top: 8px; }
-    .action-row-header { display: flex; align-items: center; gap: 8px; }
-    .action-row-header select { flex: 1; }
-    .action-value-area { margin-top: 6px; }
-    .action-value-area label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 4px; display: block; }
-    .action-value-area select, .action-value-area input, .action-value-area textarea { width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 7px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; }
+    /* Tag rows */
+    .tag-list { max-height: 480px; overflow-y: auto; }
+    .tag-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 5px; transition: border-color 0.12s; }
+    .tag-row:hover { border-color: rgba(255,255,255,0.12); }
+    .drag-handle { cursor: grab; color: rgba(255,255,255,0.2); padding: 0 4px; display: flex; align-items: center; flex-shrink: 0; }
+    .drag-handle:hover { color: rgba(255,255,255,0.5); }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost { opacity: 0.4; background: rgba(0,201,167,0.08); border-color: rgba(0,201,167,0.3); }
+    .tag-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .tag-name { font-size: 13px; font-weight: 500; color: #fff; flex: 1; min-width: 0; }
+    .tag-action-label { font-size: 11px; color: rgba(255,255,255,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+    .tag-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .tag-btn { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 4px 5px; border-radius: 5px; transition: all 0.12s; display: flex; align-items: center; }
+    .tag-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    .tag-btn.danger:hover { background: rgba(239,68,68,0.12); color: #f87171; }
 
-    /* Message steps */
-    .message-step { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 9px; padding: 14px; margin-bottom: 8px; }
-    .message-step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.6); }
-    .day-input { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: rgba(255,255,255,0.5); }
-    .day-input input { width: 60px; text-align: center; }
-    .dstep-body { width: 100%; min-height: 60px; resize: vertical; }
+    /* Action rows (right column) */
+    .action-list { max-height: 480px; overflow-y: auto; }
+    .action-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; margin-bottom: 5px; transition: border-color 0.12s; }
+    .action-row:hover { border-color: rgba(255,255,255,0.12); }
+    .action-name { font-size: 13px; font-weight: 500; color: #fff; flex: 1; min-width: 0; }
+    .action-summary { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .action-btns { display: flex; gap: 4px; flex-shrink: 0; }
 
-    /* Automated actions overview */
-    .action-overview-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 9px; margin-bottom: 6px; }
-    .action-overview-tag { display: flex; align-items: center; gap: 6px; }
-    .action-overview-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .action-overview-name { font-size: 14px; font-weight: 500; color: #fff; }
-    .action-overview-summary { flex: 1; font-size: 12px; color: rgba(255,255,255,0.4); }
-    .action-overview-count { font-size: 12px; color: rgba(255,255,255,0.35); padding: 3px 10px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+    /* Checkbox action items */
+    .action-check-list { display: flex; flex-direction: column; gap: 6px; }
+    .action-check-item { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 10px 12px; transition: border-color 0.15s; }
+    .action-check-item.checked { border-color: rgba(0,201,167,0.2); background: rgba(0,201,167,0.03); }
+    .action-check-header { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .action-checkbox { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .action-checkbox.on { background: #00c9a7; border-color: #00c9a7; }
+    .action-checkbox.on::after { content: ''; display: block; width: 6px; height: 3px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translateY(-1px); }
+    .action-check-label { font-size: 13px; color: rgba(255,255,255,0.6); flex: 1; }
+    .action-sub-input { margin-top: 8px; padding-left: 24px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.2s ease, opacity 0.15s ease, margin 0.2s ease; }
+    .action-check-item.checked .action-sub-input { max-height: 120px; opacity: 1; margin-top: 8px; }
+
+    /* Empty states */
+    .empty-msg { text-align: center; padding: 32px 16px; color: rgba(255,255,255,0.3); font-size: 13px; }
+
+    @media (max-width: 900px) {
+      .two-col { flex-direction: column; }
+      .col-left, .col-right { width: 100%; }
+    }
   </style>
 </head>
 <body>
-
 <div id="sidebar-root"></div>
+<div id="nav-overlay" class="nav-overlay" onclick="closeNavDrawer()"></div>
+
 <div class="main-content">
-  <div class="topbar">
-    <span class="topbar-title">Dispositions</span>
+  <div class="page-header">
+    <h1>Dispositions & Automated Actions</h1>
+    <p>Create tags to categorize leads and attach automated actions that fire when a tag is applied.</p>
   </div>
-  <div style="padding: 20px 24px;">
-    <div class="disp-tabs">
-      <div class="disp-tab active" onclick="switchDispTab('tags', this)">Disposition Tags</div>
-      <div class="disp-tab" onclick="switchDispTab('actions', this)">Automated Actions</div>
-    </div>
 
-    <!-- DISPOSITION TAGS TAB -->
-    <div class="disp-panel active" id="tab-tags">
-      <div class="disp-card">
-        <h2>Disposition Tags</h2>
-        <p>Create tags to categorize leads after conversations. Each tag can optionally trigger a drip sequence and automated actions.</p>
-        <button class="btn-primary" onclick="openCreateDispositionModal()">+ New Disposition Tag</button>
-        <div class="disp-section-title" style="margin-top:24px;">Current Tags</div>
-        <div id="disposition-tags-list">
-          <div style="color:rgba(255,255,255,0.35);font-size:13px;padding:20px 0;">Loading...</div>
+  <div class="two-col">
+    <!-- LEFT COLUMN: Disposition Tags -->
+    <div class="col-left">
+      <div class="col-card">
+        <div class="col-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 5h12M4 5V3.5A1.5 1.5 0 015.5 2h5A1.5 1.5 0 0112 3.5V5M6 9l1.5 1.5L11 7"/></svg>
+          <h2>Disposition Tags</h2>
+        </div>
+        <div class="col-desc">Tags categorize leads after conversations. Attach an automated action to trigger workflows on apply.</div>
+
+        <!-- Inline create/edit form -->
+        <div id="tag-form">
+          <div class="form-group">
+            <label>Tag Name</label>
+            <input type="text" class="form-input" id="tag-name" placeholder="e.g. Hot Lead, Callback Requested">
+          </div>
+          <div class="form-group">
+            <label>Color</label>
+            <div class="color-picker-row" id="tag-color-picker"></div>
+          </div>
+          <div class="form-group">
+            <label>Automated Action</label>
+            <select class="form-input" id="tag-action-select">
+              <option value="">None (no action on apply)</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" id="tag-save-btn" onclick="saveTag()">Save Tag</button>
+            <button class="btn-cancel-edit" id="tag-cancel-btn" onclick="cancelTagEdit()">Cancel</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">Current Tags</div>
+        <div class="tag-list" id="tag-list">
+          <div class="empty-msg">Loading...</div>
         </div>
       </div>
     </div>
 
-    <!-- AUTOMATED ACTIONS TAB -->
-    <div class="disp-panel" id="tab-actions">
-      <div class="disp-card">
-        <h2>Automated Actions</h2>
-        <p>Actions execute automatically when a disposition tag is applied to a lead. Configure actions by editing a disposition tag.</p>
-        <div id="actions-overview-list">
-          <div style="color:rgba(255,255,255,0.35);font-size:13px;padding:20px 0;">Loading...</div>
+    <!-- RIGHT COLUMN: Automated Actions -->
+    <div class="col-right">
+      <div class="col-card">
+        <div class="col-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 8.5l4 1.5.5 4L13 2z"/></svg>
+          <h2>Automated Actions</h2>
+        </div>
+        <div class="col-desc">Define reusable action sets. When a tag with a linked action is applied, all checked sub-actions fire automatically.</div>
+
+        <!-- Inline create/edit form -->
+        <div id="action-form">
+          <div class="form-group">
+            <label>Action Name</label>
+            <input type="text" class="form-input" id="action-name" placeholder="e.g. New Lead Workflow">
+          </div>
+          <div class="form-group">
+            <label>Sub-Actions</label>
+            <div class="action-check-list" id="action-checks">
+              <!-- webhook -->
+              <div class="action-check-item" data-type="webhook">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Post to custom webhook</div>
+                </div>
+                <div class="action-sub-input">
+                  <input type="text" class="form-input" id="sub-webhook-url" placeholder="https://example.com/webhook">
+                </div>
+              </div>
+              <!-- send_immediate_text -->
+              <div class="action-check-item" data-type="send_immediate_text">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Send text immediately</div>
+                </div>
+                <div class="action-sub-input">
+                  <select class="form-input" id="sub-send-text-template">
+                    <option value="">Select template...</option>
+                  </select>
+                </div>
+              </div>
+              <!-- schedule_text -->
+              <div class="action-check-item" data-type="schedule_text">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Schedule text messages</div>
+                </div>
+                <div class="action-sub-input">
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">Delay:</span>
+                    <input type="number" class="form-input" id="sub-schedule-days" value="1" min="1" style="width:60px;text-align:center;">
+                    <span style="font-size:12px;color:rgba(255,255,255,0.4);">days</span>
+                  </div>
+                  <select class="form-input" id="sub-schedule-template">
+                    <option value="">Select template...</option>
+                  </select>
+                </div>
+              </div>
+              <!-- add_to_campaign -->
+              <div class="action-check-item" data-type="add_to_campaign">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Add to campaign</div>
+                </div>
+                <div class="action-sub-input">
+                  <select class="form-input" id="sub-campaign">
+                    <option value="">Select campaign...</option>
+                  </select>
+                </div>
+              </div>
+              <!-- update_status -->
+              <div class="action-check-item" data-type="update_status">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Update lead status</div>
+                </div>
+                <div class="action-sub-input">
+                  <select class="form-input" id="sub-status">
+                    <option value="">Select status...</option>
+                    <option value="new">New</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="replied">Replied</option>
+                    <option value="booked">Booked</option>
+                    <option value="sold">Sold</option>
+                    <option value="not_interested">Not Interested</option>
+                  </select>
+                </div>
+              </div>
+              <!-- add_note -->
+              <div class="action-check-item" data-type="add_note">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Update notes</div>
+                </div>
+                <div class="action-sub-input">
+                  <textarea class="form-input" id="sub-note" placeholder="Note to add..." rows="2"></textarea>
+                </div>
+              </div>
+              <!-- mark_as_sold -->
+              <div class="action-check-item" data-type="mark_as_sold">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Mark as sold</div>
+                </div>
+              </div>
+              <!-- block -->
+              <div class="action-check-item" data-type="flag_as_cold">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Flag as cold</div>
+                </div>
+              </div>
+              <!-- opt_out -->
+              <div class="action-check-item" data-type="opt_out">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Opt out lead</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-save" id="action-save-btn" onclick="saveAction()">Save Action</button>
+            <button class="btn-cancel-edit" id="action-cancel-btn" onclick="cancelActionEdit()">Cancel</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <div class="section-label">Saved Actions</div>
+        <div class="action-list" id="action-list">
+          <div class="empty-msg">Loading...</div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- CREATE/EDIT DISPOSITION TAG MODAL -->
-<div class="modal-overlay" id="disp-tag-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="disp-tag-modal-title">Create Disposition Tag</h2>
-      <button class="modal-close" onclick="closeDispTagModal()">×</button>
-    </div>
-
-    <div class="form-group">
-      <label>Tag Name</label>
-      <input type="text" id="disp-tag-name" placeholder="e.g. Positive Reply, Appointment Scheduled">
-    </div>
-
-    <div class="form-group">
-      <label>Color</label>
-      <div class="color-picker-row" id="color-picker-row"></div>
-    </div>
-
-    <div class="form-group">
-      <label>Description (optional)</label>
-      <input type="text" id="disp-tag-description" placeholder="Internal note">
-    </div>
-
-    <div class="form-group">
-      <label>Outbound Webhook <span style="font-weight:400;color:rgba(255,255,255,0.3);">(optional)</span></label>
-      <input type="text" id="disp-tag-webhook-url" placeholder="https://hook.make.com/your-webhook-url">
-      <div class="help-text">When this tag is applied to a lead, Veloxo will POST the lead data to this URL.</div>
-    </div>
-
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin:20px 0;"></div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.8);">Automated Actions</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Actions execute in order when this tag is applied to a lead</div>
-      </div>
-      <button class="btn-ghost" onclick="addActionRow()">+ Add Action</button>
-    </div>
-
-    <div id="action-rows"></div>
-
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin:20px 0;"></div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.8);">Drip Sequence</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Messages fire X days after this tag is applied</div>
-      </div>
-      <button class="btn-ghost" onclick="addDispMessageStep()">+ Add Message</button>
-    </div>
-
-    <div class="tip">Click any variable below to insert it. Use <strong>{Option 1|Option 2}</strong> to randomize.</div>
-    <div id="disp-message-steps"></div>
-
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeDispTagModal()">Cancel</button>
-      <button class="btn-primary" onclick="saveDispositionTag()">Save Tag</button>
     </div>
   </div>
 </div>
 
 <script src="/js/shared.js?v=2"></script>
 <script>
-  renderSidebar('dispositions')
+let tags = []
+let automatedActions = []
+let templates = []
+let campaigns = []
+let editingTagId = null
+let editingActionId = null
 
-  let allDispositionTags = []
-  let allCampaigns = []
-  let allBuckets = []
-  let editingDispositionId = null
-  let dispMessageStepCount = 0
-  let actionRowCount = 0
-  let selectedDispColor = '#818cf8'
+const PRESET_COLORS = ['#6366f1','#ef4444','#10b981','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#06b6d4','#f97316','#14b8a6']
+let tagColor = '#6366f1'
 
-  const COLORS = ['#f87171','#fb923c','#fbbf24','#34d399','#00d4b4','#38bdf8','#818cf8','#c084fc','#f472b6','#94a3b8']
+const ACTION_TYPE_LABELS = {
+  webhook: 'Webhook',
+  send_immediate_text: 'Send text',
+  schedule_text: 'Schedule text',
+  add_to_campaign: 'Campaign',
+  update_status: 'Status',
+  add_note: 'Notes',
+  mark_as_sold: 'Mark sold',
+  flag_as_cold: 'Flag cold',
+  opt_out: 'Opt out'
+}
 
-  const ACTION_TYPES = [
-    { value: 'pause_campaigns', label: 'Pause all active campaigns' },
-    { value: 'remove_from_campaigns', label: 'Remove from all campaigns' },
-    { value: 'add_to_campaign', label: 'Add to campaign' },
-    { value: 'remove_disposition_tags', label: 'Remove current disposition tag' },
-    { value: 'add_disposition_tag', label: 'Add another disposition tag' },
-    { value: 'send_immediate_text', label: 'Send immediate text' },
-    { value: 'update_status', label: 'Update lead status' },
-    { value: 'mark_as_sold', label: 'Mark as sold' },
-    { value: 'flag_as_cold', label: 'Flag as cold' },
-    { value: 'add_note', label: 'Add internal note' },
-    { value: 'move_to_bucket', label: 'Move to bucket' },
-    { value: 'opt_out', label: 'Opt out of all texts' }
-  ]
+// ─── INIT ───────────────────────────────────────────────────────────────────
 
-  const ACTION_LABELS = Object.fromEntries(ACTION_TYPES.map(t => [t.value, t.label]))
+document.addEventListener('DOMContentLoaded', async () => {
+  const ok = await checkAuth()
+  if (!ok) return
+  loadProfile()
+  loadNotifBadge()
+  loadCalBadge()
+  renderColorPicker()
+  await Promise.all([loadTags(), loadActions(), loadTemplates(), loadCampaigns()])
+  populateTagActionDropdown()
+  populateTemplateDropdowns()
+  populateCampaignDropdown()
+})
 
-  // ─── TABS ──────────────────────────────────────────────────────────────────
+// ─── DATA LOADING ───────────────────────────────────────────────────────────
 
-  const switchDispTab = (tab, el) => {
-    document.querySelectorAll('.disp-tab').forEach(t => t.classList.remove('active'))
-    document.querySelectorAll('.disp-panel').forEach(p => p.classList.remove('active'))
-    el.classList.add('active')
-    document.getElementById(`tab-${tab}`).classList.add('active')
-    if (tab === 'actions') renderActionsOverview()
+const loadTags = async () => {
+  try {
+    const res = await fetch('/dispositions', { credentials: 'include' })
+    const data = await res.json()
+    tags = data.tags || []
+    renderTags()
+  } catch (err) {
+    console.error('Failed to load tags:', err)
+    document.getElementById('tag-list').innerHTML = '<div class="empty-msg">Failed to load tags</div>'
+  }
+}
+
+const loadActions = async () => {
+  try {
+    const res = await fetch('/dispositions/actions', { credentials: 'include' })
+    const data = await res.json()
+    automatedActions = data.actions || []
+    renderActions()
+  } catch (err) {
+    console.error('Failed to load actions:', err)
+    document.getElementById('action-list').innerHTML = '<div class="empty-msg">Failed to load actions</div>'
+  }
+}
+
+const loadTemplates = async () => {
+  try {
+    const res = await fetch('/templates', { credentials: 'include' })
+    const data = await res.json()
+    templates = data.templates || []
+  } catch (err) { console.error('Failed to load templates:', err) }
+}
+
+const loadCampaigns = async () => {
+  try {
+    const res = await fetch('/campaigns', { credentials: 'include' })
+    const data = await res.json()
+    campaigns = data.campaigns || []
+  } catch (err) { console.error('Failed to load campaigns:', err) }
+}
+
+// ─── POPULATE DROPDOWNS ─────────────────────────────────────────────────────
+
+const populateTagActionDropdown = () => {
+  const sel = document.getElementById('tag-action-select')
+  sel.innerHTML = '<option value="">None (no action on apply)</option>' +
+    automatedActions.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('')
+}
+
+const populateTemplateDropdowns = () => {
+  const opts = '<option value="">Select template...</option>' +
+    templates.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('')
+  document.getElementById('sub-send-text-template').innerHTML = opts
+  document.getElementById('sub-schedule-template').innerHTML = opts
+}
+
+const populateCampaignDropdown = () => {
+  document.getElementById('sub-campaign').innerHTML = '<option value="">Select campaign...</option>' +
+    campaigns.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('')
+}
+
+// ─── COLOR PICKER ───────────────────────────────────────────────────────────
+
+const renderColorPicker = () => {
+  const container = document.getElementById('tag-color-picker')
+  container.innerHTML = PRESET_COLORS.map(c =>
+    `<button type="button" class="color-swatch${c === tagColor ? ' selected' : ''}" style="background:${c};" onclick="selectTagColor('${c}')"></button>`
+  ).join('') +
+  `<div class="color-picker-divider"></div>
+   <input type="color" class="color-custom-input" id="tag-custom-color" value="${tagColor}" onchange="selectTagColor(this.value)">`
+}
+
+const selectTagColor = (color) => {
+  tagColor = color
+  document.querySelectorAll('#tag-color-picker .color-swatch').forEach(s => {
+    s.classList.toggle('selected', rgbToHex(s.style.background) === color)
+  })
+  document.getElementById('tag-custom-color').value = color
+}
+
+const rgbToHex = (rgb) => {
+  if (rgb.startsWith('#')) return rgb
+  const m = rgb.match(/(\d+)/g)
+  if (!m) return rgb
+  return '#' + m.slice(0,3).map(n => parseInt(n).toString(16).padStart(2,'0')).join('')
+}
+
+// ─── RENDER TAGS ────────────────────────────────────────────────────────────
+
+const renderTags = () => {
+  const container = document.getElementById('tag-list')
+  if (!tags.length) {
+    container.innerHTML = '<div class="empty-msg">No disposition tags yet. Create one above.</div>'
+    return
   }
 
-  // ─── LOAD DATA ─────────────────────────────────────────────────────────────
-
-  const loadDispositionTags = async () => {
-    try {
-      const res = await fetch('/dispositions', { credentials: 'include' })
-      const data = await res.json()
-      allDispositionTags = data.tags || []
-      renderDispositionTags()
-    } catch (err) { console.error(err) }
-  }
-
-  const loadSupportData = async () => {
-    try {
-      const [campRes, bucketRes] = await Promise.all([
-        fetch('/campaigns', { credentials: 'include' }),
-        fetch('/buckets', { credentials: 'include' })
-      ])
-      const campData = await campRes.json()
-      const bucketData = await bucketRes.json()
-      allCampaigns = campData.campaigns || []
-      allBuckets = bucketData.buckets || []
-    } catch (err) { console.error(err) }
-  }
-
-  // ─── RENDER TAGS ───────────────────────────────────────────────────────────
-
-  const renderDispositionTags = () => {
-    const container = document.getElementById('disposition-tags-list')
-    if (!allDispositionTags.length) {
-      container.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:13px;padding:20px 0;">No disposition tags yet</div>'
-      return
-    }
-    container.innerHTML = allDispositionTags.map(tag => {
-      const actionCount = tag.disposition_actions?.length || 0
-      const dripCount = tag.disposition_messages?.length || 0
-      const webhookBadge = tag.webhook_url ? '<span style="font-size:11px;color:#38bdf8;margin-left:6px;">webhook</span>' : ''
-      return `
-      <div class="disp-tag-row" data-tag-id="${tag.id}">
+  container.innerHTML = tags.map(t => {
+    const linkedAction = automatedActions.find(a => a.id === t.automated_action_id)
+    const actionLabel = linkedAction ? `<span class="tag-action-label">&rarr; ${esc(linkedAction.name)}</span>` : ''
+    return `
+      <div class="tag-row" data-id="${t.id}">
         <div class="drag-handle" title="Drag to reorder">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <circle cx="4" cy="3" r="1.2" fill="currentColor" opacity="0.4"/>
-            <circle cx="4" cy="7" r="1.2" fill="currentColor" opacity="0.4"/>
-            <circle cx="4" cy="11" r="1.2" fill="currentColor" opacity="0.4"/>
-            <circle cx="9" cy="3" r="1.2" fill="currentColor" opacity="0.4"/>
-            <circle cx="9" cy="7" r="1.2" fill="currentColor" opacity="0.4"/>
-            <circle cx="9" cy="11" r="1.2" fill="currentColor" opacity="0.4"/>
-          </svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><circle cx="4" cy="2.5" r="1"/><circle cx="8" cy="2.5" r="1"/><circle cx="4" cy="6" r="1"/><circle cx="8" cy="6" r="1"/><circle cx="4" cy="9.5" r="1"/><circle cx="8" cy="9.5" r="1"/></svg>
         </div>
-        <div class="disp-tag-color" style="background:${tag.color}"></div>
-        <div class="disp-tag-name">${tag.name}${webhookBadge}</div>
-        <div class="disp-tag-drip">${dripCount ? `${dripCount} drip` : ''}${dripCount && actionCount ? ' · ' : ''}${actionCount ? `${actionCount} action${actionCount > 1 ? 's' : ''}` : ''}</div>
-        <div class="disp-tag-actions">
-          <button class="btn-ghost" onclick="editDispositionTag('${tag.id}')">Edit</button>
-          <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="deleteDispositionTag('${tag.id}')">Delete</button>
+        <div class="tag-dot" style="background:${t.color || '#6366f1'}"></div>
+        <div class="tag-name">${esc(t.name)}</div>
+        ${actionLabel}
+        <div class="tag-btns">
+          <button class="tag-btn" title="Edit" onclick="editTag('${t.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="tag-btn danger" title="Delete" onclick="deleteTag('${t.id}','${esc(t.name)}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          </button>
         </div>
       </div>`
-    }).join('')
+  }).join('')
 
-    if (typeof Sortable !== 'undefined') {
-      Sortable.create(container, {
-        handle: '.drag-handle',
-        animation: 150,
-        ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen',
-        onEnd: function () {
-          const items = container.querySelectorAll('[data-tag-id]')
-          const newOrder = Array.from(items).map((el, index) => ({ id: el.dataset.tagId, sort_order: index }))
-          fetch('/dispositions/reorder', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ order: newOrder })
-          }).catch(err => console.error('Reorder failed:', err))
-        }
-      })
+  // Init sortable
+  if (window._tagSortable) window._tagSortable.destroy()
+  window._tagSortable = new Sortable(container, {
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    animation: 150,
+    onEnd: async () => {
+      const order = [...container.querySelectorAll('.tag-row')].map((el, i) => ({
+        id: el.dataset.id, sort_order: i
+      }))
+      try {
+        await fetch('/dispositions/reorder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ order }),
+          credentials: 'include'
+        })
+      } catch (err) { console.error('Reorder failed:', err) }
     }
+  })
+}
+
+// ─── TAG CRUD ───────────────────────────────────────────────────────────────
+
+const editTag = (id) => {
+  const tag = tags.find(t => t.id === id)
+  if (!tag) return
+  editingTagId = id
+  document.getElementById('tag-name').value = tag.name
+  selectTagColor(tag.color || '#6366f1')
+  renderColorPicker()
+  selectTagColor(tag.color || '#6366f1')
+  document.getElementById('tag-action-select').value = tag.automated_action_id || ''
+  document.getElementById('tag-save-btn').textContent = 'Update Tag'
+  document.getElementById('tag-cancel-btn').style.display = 'inline-flex'
+  document.getElementById('tag-name').focus()
+}
+
+const cancelTagEdit = () => {
+  editingTagId = null
+  document.getElementById('tag-name').value = ''
+  tagColor = '#6366f1'
+  renderColorPicker()
+  document.getElementById('tag-action-select').value = ''
+  document.getElementById('tag-save-btn').textContent = 'Save Tag'
+  document.getElementById('tag-cancel-btn').style.display = 'none'
+}
+
+const saveTag = async () => {
+  const name = document.getElementById('tag-name').value.trim()
+  if (!name) { toast.error('Tag name is required'); return }
+
+  const body = {
+    name,
+    color: tagColor,
+    automated_action_id: document.getElementById('tag-action-select').value || null
   }
 
-  // ─── AUTOMATED ACTIONS OVERVIEW ────────────────────────────────────────────
-
-  const renderActionsOverview = () => {
-    const container = document.getElementById('actions-overview-list')
-    const tagsWithActions = allDispositionTags.filter(t =>
-      (t.disposition_actions?.length > 0) || t.webhook_url
-    )
-    if (!tagsWithActions.length) {
-      container.innerHTML = '<div style="color:rgba(255,255,255,0.35);font-size:13px;padding:20px 0;">No automated actions configured yet. Edit a disposition tag to add actions.</div>'
-      return
-    }
-    container.innerHTML = tagsWithActions.map(tag => {
-      const actions = tag.disposition_actions || []
-      const summaries = actions.map(a => ACTION_LABELS[a.action_type] || a.action_type)
-      if (tag.webhook_url) summaries.push('POST to webhook')
-      return `
-      <div class="action-overview-row">
-        <div class="action-overview-tag">
-          <div class="action-overview-dot" style="background:${tag.color}"></div>
-          <div class="action-overview-name">${tag.name}</div>
-        </div>
-        <div class="action-overview-summary">${summaries.join(', ')}</div>
-        <div class="action-overview-count">${summaries.length} action${summaries.length !== 1 ? 's' : ''}</div>
-        <button class="btn-ghost" onclick="editDispositionTag('${tag.id}')">Edit</button>
-      </div>`
-    }).join('')
-  }
-
-  // ─── CREATE / EDIT / DELETE ────────────────────────────────────────────────
-
-  const openCreateDispositionModal = () => {
-    editingDispositionId = null
-    selectedDispColor = '#818cf8'
-    actionRowCount = 0
-    document.getElementById('disp-tag-name').value = ''
-    document.getElementById('disp-tag-description').value = ''
-    document.getElementById('disp-tag-webhook-url').value = ''
-    document.getElementById('disp-message-steps').innerHTML = ''
-    document.getElementById('action-rows').innerHTML = ''
-    dispMessageStepCount = 0
-    document.getElementById('disp-tag-modal-title').textContent = 'Create Disposition Tag'
-    renderColorPicker()
-    document.getElementById('disp-tag-modal').classList.add('open')
-  }
-
-  const closeDispTagModal = () => document.getElementById('disp-tag-modal').classList.remove('open')
-
-  const editDispositionTag = (id) => {
-    const tag = allDispositionTags.find(t => t.id === id)
-    if (!tag) return
-    editingDispositionId = id
-    selectedDispColor = tag.color || '#818cf8'
-    actionRowCount = 0
-    document.getElementById('disp-tag-name').value = tag.name
-    document.getElementById('disp-tag-description').value = tag.description || ''
-    document.getElementById('disp-tag-webhook-url').value = tag.webhook_url || ''
-    document.getElementById('disp-message-steps').innerHTML = ''
-    document.getElementById('action-rows').innerHTML = ''
-    dispMessageStepCount = 0
-    document.getElementById('disp-tag-modal-title').textContent = 'Edit Disposition Tag'
-    renderColorPicker()
-
-    if (tag.disposition_actions) {
-      tag.disposition_actions.sort((a, b) => (a.action_order || 0) - (b.action_order || 0)).forEach(action => {
-        addActionRow(action)
-      })
-    }
-
-    if (tag.disposition_messages) {
-      tag.disposition_messages.sort((a, b) => a.day_number - b.day_number).forEach(msg => {
-        dispMessageStepCount++
-        const container = document.getElementById('disp-message-steps')
-        const step = document.createElement('div')
-        step.className = 'message-step'
-        step.id = `dstep-${dispMessageStepCount}`
-        step.innerHTML = `
-          <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
-          <div class="day-input">
-            <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${msg.day_number}">
-            <label>at</label><input type="time" class="dstep-time" value="${msg.send_time || '10:00'}">
-            <span style="font-size:11px;color:rgba(255,255,255,0.35);">after disposition applied</span>
-          </div>
-          <textarea class="dstep-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
-          <div class="char-count">${msg.message_body.length} / 160</div>
-          ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
-        `
-        container.appendChild(step)
-      })
-    }
-
-    document.getElementById('disp-tag-modal').classList.add('open')
-  }
-
-  const saveDispositionTag = async () => {
-    const name = document.getElementById('disp-tag-name').value.trim()
-    if (!name) return toast.error('Required', 'Please enter a tag name')
-    const description = document.getElementById('disp-tag-description').value.trim()
-    const webhook_url = document.getElementById('disp-tag-webhook-url').value.trim() || null
-    const actions = collectActions()
-    const steps = document.querySelectorAll('.message-step')
-    const messages = []
-    steps.forEach(step => {
-      const dayEl = step.querySelector('.dstep-day')
-      const timeEl = step.querySelector('.dstep-time')
-      const bodyEl = step.querySelector('.dstep-body')
-      if (!dayEl || !bodyEl) return
-      const body = bodyEl.value.trim()
-      if (!body) return
-      messages.push({ day_number: parseInt(dayEl.value), send_time: timeEl?.value || '10:00', message_body: body })
+  try {
+    const url = editingTagId ? `/dispositions/${editingTagId}` : '/dispositions'
+    const method = editingTagId ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'include'
     })
-    try {
-      const url = editingDispositionId ? `/dispositions/${editingDispositionId}` : '/dispositions'
-      const method = editingDispositionId ? 'PUT' : 'POST'
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name, color: selectedDispColor, description, webhook_url, messages, actions })
-      })
-      const data = await res.json()
-      if (data.success) { closeDispTagModal(); loadDispositionTags() }
-      else toast.error('Save failed', data.error || 'Could not save disposition tag')
-    } catch (err) { toast.error('Error', 'Something went wrong') }
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to save tag')
+
+    toast.success(editingTagId ? 'Tag updated' : 'Tag created')
+    cancelTagEdit()
+    await loadTags()
+  } catch (err) {
+    toast.error(err.message)
+  }
+}
+
+const deleteTag = async (id, name) => {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return
+  try {
+    const res = await fetch(`/dispositions/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (!res.ok) throw new Error('Failed to delete')
+    toast.success('Tag deleted')
+    loadTags()
+  } catch (err) { toast.error(err.message) }
+}
+
+// ─── RENDER ACTIONS ─────────────────────────────────────────────────────────
+
+const renderActions = () => {
+  const container = document.getElementById('action-list')
+  if (!automatedActions.length) {
+    container.innerHTML = '<div class="empty-msg">No automated actions yet. Create one above.</div>'
+    return
   }
 
-  const deleteDispositionTag = async (id) => {
-    if (!await confirmModal('Delete disposition tag?', 'This will remove the tag from all leads. This cannot be undone.', 'Delete', true)) return
-    await fetch(`/dispositions/${id}`, { method: 'DELETE', credentials: 'include' })
-    loadDispositionTags()
-  }
+  container.innerHTML = automatedActions.map(a => {
+    const subActions = a.actions || []
+    const summary = subActions.map(s => ACTION_TYPE_LABELS[s.type] || s.type).join(' &bull; ')
+    return `
+      <div class="action-row">
+        <div style="flex:1;min-width:0;">
+          <div class="action-name">${esc(a.name)}</div>
+          <div class="action-summary">${summary || 'No sub-actions'}</div>
+        </div>
+        <div class="action-btns">
+          <button class="tag-btn" title="Edit" onclick="editAction('${a.id}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="tag-btn danger" title="Delete" onclick="deleteAction('${a.id}','${esc(a.name)}')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          </button>
+        </div>
+      </div>`
+  }).join('')
+}
 
-  // ─── COLOR PICKER ──────────────────────────────────────────────────────────
+// ─── ACTION CHECKBOX TOGGLE ─────────────────────────────────────────────────
 
-  const renderColorPicker = () => {
-    const row = document.getElementById('color-picker-row')
-    row.innerHTML = COLORS.map(c => `
-      <div class="color-swatch ${c === selectedDispColor ? 'selected' : ''}" style="background:${c}" onclick="selectColor('${c}')"></div>
-    `).join('') + `
-      <div class="color-picker-divider"></div>
-      <div class="color-custom-wrap">
-        <input type="color" class="color-custom-input" id="color-custom-input" value="${selectedDispColor}" oninput="selectCustomColor(this.value)" title="Custom color">
-        <span class="color-custom-label">Custom</span>
-      </div>
-    `
-  }
+const toggleActionCheck = (header) => {
+  const item = header.closest('.action-check-item')
+  const cb = item.querySelector('.action-checkbox')
+  const isOn = cb.classList.toggle('on')
+  item.classList.toggle('checked', isOn)
+}
 
-  const selectColor = (color) => {
-    selectedDispColor = color
-    renderColorPicker()
-  }
+// ─── ACTION CRUD ────────────────────────────────────────────────────────────
 
-  const selectCustomColor = (color) => {
-    selectedDispColor = color
-    document.querySelectorAll('#color-picker-row .color-swatch').forEach(el => el.classList.remove('selected'))
-  }
+const editAction = (id) => {
+  const action = automatedActions.find(a => a.id === id)
+  if (!action) return
+  editingActionId = id
+  document.getElementById('action-name').value = action.name
 
-  // ─── ACTION ROWS ───────────────────────────────────────────────────────────
+  // Reset all checkboxes
+  document.querySelectorAll('.action-check-item').forEach(el => {
+    el.classList.remove('checked')
+    el.querySelector('.action-checkbox').classList.remove('on')
+  })
 
-  const addActionRow = (existingAction) => {
-    actionRowCount++
-    const id = `action-${actionRowCount}`
-    const container = document.getElementById('action-rows')
-    const div = document.createElement('div')
-    div.className = 'action-row'
-    div.id = id
-    const selectedType = existingAction?.action_type || ''
-    div.innerHTML = `
-      <div class="action-row-header">
-        <select class="action-type-select" onchange="updateActionValueUI('${id}', this.value)">
-          <option value="">Select action...</option>
-          ${ACTION_TYPES.map(t => `<option value="${t.value}" ${t.value === selectedType ? 'selected' : ''}>${t.label}</option>`).join('')}
-        </select>
-        <button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="document.getElementById('${id}').remove()">Remove</button>
-      </div>
-      <div class="action-value-area" id="${id}-value"></div>
-    `
-    container.appendChild(div)
-    if (selectedType) updateActionValueUI(id, selectedType, existingAction?.action_value)
-  }
+  // Set values from action.actions array
+  const subs = action.actions || []
+  subs.forEach(s => {
+    const item = document.querySelector(`.action-check-item[data-type="${s.type}"]`)
+    if (!item) return
+    item.classList.add('checked')
+    item.querySelector('.action-checkbox').classList.add('on')
 
-  const updateActionValueUI = (rowId, actionType, existingValue) => {
-    const container = document.getElementById(`${rowId}-value`)
-    if (!container) return
-    container.innerHTML = ''
-    switch (actionType) {
-      case 'add_to_campaign':
-        container.innerHTML = `<label>Select Campaign</label><select id="${rowId}-campaign"><option value="">Choose campaign...</option>${allCampaigns.map(c => `<option value="${c.id}" ${existingValue?.campaign_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('')}</select>`
-        break
-      case 'add_disposition_tag':
-        container.innerHTML = `<label>Select Tag to Add</label><select id="${rowId}-tag"><option value="">Choose tag...</option>${allDispositionTags.map(t => `<option value="${t.id}" ${existingValue?.tag_id === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}</select>`
-        break
-      case 'remove_disposition_tags':
-        container.innerHTML = `<label>Select Tag to Remove</label><select id="${rowId}-remove-tag"><option value="">Any current tag (removes all)</option>${allDispositionTags.map(t => `<option value="${t.id}" ${existingValue?.tag_id === t.id ? 'selected' : ''}>${t.name}</option>`).join('')}</select>`
+    const val = s.value || {}
+    switch (s.type) {
+      case 'webhook':
+        document.getElementById('sub-webhook-url').value = val.url || ''
         break
       case 'send_immediate_text':
-        container.innerHTML = `<label>Message Body</label><textarea id="${rowId}-message" placeholder="Hi [First Name], just wanted to follow up...">${existingValue?.message || ''}</textarea>`
+        document.getElementById('sub-send-text-template').value = val.template_id || ''
+        break
+      case 'schedule_text':
+        document.getElementById('sub-schedule-days').value = val.delay_days || 1
+        document.getElementById('sub-schedule-template').value = val.template_id || ''
+        break
+      case 'add_to_campaign':
+        document.getElementById('sub-campaign').value = val.campaign_id || ''
         break
       case 'update_status':
-        container.innerHTML = `<label>New Status</label><select id="${rowId}-status"><option value="new" ${existingValue?.status === 'new' ? 'selected' : ''}>New</option><option value="contacted" ${existingValue?.status === 'contacted' ? 'selected' : ''}>Contacted</option><option value="booked" ${existingValue?.status === 'booked' ? 'selected' : ''}>Booked</option></select>`
+        document.getElementById('sub-status').value = val.status || ''
         break
       case 'add_note':
-        container.innerHTML = `<label>Note Text</label><input type="text" id="${rowId}-note" placeholder="e.g. Appointment scheduled by agent" value="${existingValue?.note || ''}">`
-        break
-      case 'move_to_bucket':
-        container.innerHTML = `<label>Select Bucket</label><select id="${rowId}-bucket"><option value="">Choose bucket...</option>${allBuckets.map(b => `<option value="${b.id}" ${existingValue?.bucket_id === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}</select>`
+        document.getElementById('sub-note').value = val.note || ''
         break
     }
-  }
+  })
 
-  const collectActions = () => {
-    const rows = document.querySelectorAll('.action-row')
-    const actions = []
-    rows.forEach((row, i) => {
-      const typeSelect = row.querySelector('.action-type-select')
-      if (!typeSelect || !typeSelect.value) return
-      const actionType = typeSelect.value
-      const rowId = row.id
-      let actionValue = {}
-      switch (actionType) {
-        case 'add_to_campaign': { const el = document.getElementById(`${rowId}-campaign`); if (el?.value) actionValue = { campaign_id: el.value }; break }
-        case 'add_disposition_tag': { const el = document.getElementById(`${rowId}-tag`); if (el?.value) actionValue = { tag_id: el.value }; break }
-        case 'send_immediate_text': { const el = document.getElementById(`${rowId}-message`); if (el?.value) actionValue = { message: el.value }; break }
-        case 'update_status': { const el = document.getElementById(`${rowId}-status`); if (el?.value) actionValue = { status: el.value }; break }
-        case 'add_note': { const el = document.getElementById(`${rowId}-note`); if (el?.value) actionValue = { note: el.value }; break }
-        case 'remove_disposition_tags': { const el = document.getElementById(`${rowId}-remove-tag`); actionValue = el?.value ? { tag_ids: [el.value] } : { tag_ids: [] }; break }
-        case 'move_to_bucket': { const el = document.getElementById(`${rowId}-bucket`); if (el?.value) actionValue = { bucket_id: el.value }; break }
-      }
-      actions.push({ action_type: actionType, action_value: actionValue, action_order: i })
+  document.getElementById('action-save-btn').textContent = 'Update Action'
+  document.getElementById('action-cancel-btn').style.display = 'inline-flex'
+  document.getElementById('action-name').focus()
+}
+
+const cancelActionEdit = () => {
+  editingActionId = null
+  document.getElementById('action-name').value = ''
+  document.querySelectorAll('.action-check-item').forEach(el => {
+    el.classList.remove('checked')
+    el.querySelector('.action-checkbox').classList.remove('on')
+  })
+  // Reset sub-inputs
+  document.getElementById('sub-webhook-url').value = ''
+  document.getElementById('sub-send-text-template').value = ''
+  document.getElementById('sub-schedule-days').value = '1'
+  document.getElementById('sub-schedule-template').value = ''
+  document.getElementById('sub-campaign').value = ''
+  document.getElementById('sub-status').value = ''
+  document.getElementById('sub-note').value = ''
+  document.getElementById('action-save-btn').textContent = 'Save Action'
+  document.getElementById('action-cancel-btn').style.display = 'none'
+}
+
+const saveAction = async () => {
+  const name = document.getElementById('action-name').value.trim()
+  if (!name) { toast.error('Action name is required'); return }
+
+  // Collect checked sub-actions
+  const subActions = []
+  document.querySelectorAll('.action-check-item.checked').forEach(item => {
+    const type = item.dataset.type
+    let value = {}
+
+    switch (type) {
+      case 'webhook':
+        value = { url: document.getElementById('sub-webhook-url').value.trim() }
+        if (!value.url) { toast.error('Webhook URL is required'); return }
+        break
+      case 'send_immediate_text':
+        value = { template_id: document.getElementById('sub-send-text-template').value }
+        break
+      case 'schedule_text':
+        value = {
+          delay_days: parseInt(document.getElementById('sub-schedule-days').value) || 1,
+          template_id: document.getElementById('sub-schedule-template').value
+        }
+        break
+      case 'add_to_campaign':
+        value = { campaign_id: document.getElementById('sub-campaign').value }
+        break
+      case 'update_status':
+        value = { status: document.getElementById('sub-status').value }
+        break
+      case 'add_note':
+        value = { note: document.getElementById('sub-note').value.trim() }
+        break
+      case 'mark_as_sold':
+      case 'flag_as_cold':
+      case 'opt_out':
+        value = {}
+        break
+    }
+
+    subActions.push({ type, value })
+  })
+
+  const body = { name, actions: subActions }
+
+  try {
+    const url = editingActionId ? `/dispositions/actions/${editingActionId}` : '/dispositions/actions'
+    const method = editingActionId ? 'PUT' : 'POST'
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      credentials: 'include'
     })
-    return actions
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Failed to save action')
+
+    toast.success(editingActionId ? 'Action updated' : 'Action created')
+    cancelActionEdit()
+    await loadActions()
+    populateTagActionDropdown()
+  } catch (err) {
+    toast.error(err.message)
   }
+}
 
-  // ─── DRIP MESSAGE STEPS ────────────────────────────────────────────────────
+const deleteAction = async (id, name) => {
+  if (!confirm(`Delete "${name}"? Tags linked to this action will be unlinked.`)) return
+  try {
+    const res = await fetch(`/dispositions/actions/${id}`, { method: 'DELETE', credentials: 'include' })
+    if (!res.ok) throw new Error('Failed to delete')
+    toast.success('Action deleted')
+    await loadActions()
+    populateTagActionDropdown()
+    // Refresh tags since linked action IDs may have been set to null
+    loadTags()
+  } catch (err) { toast.error(err.message) }
+}
 
-  const addDispMessageStep = () => {
-    dispMessageStepCount++
-    const container = document.getElementById('disp-message-steps')
-    const step = document.createElement('div')
-    step.className = 'message-step'
-    step.id = `dstep-${dispMessageStepCount}`
-    step.innerHTML = `
-      <div class="message-step-header"><span>Message ${dispMessageStepCount}</span><button class="btn-ghost" style="color:#f87171;border-color:rgba(239,68,68,0.3);" onclick="removeDispStep('dstep-${dispMessageStepCount}')">Remove</button></div>
-      <div class="day-input">
-        <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${dispMessageStepCount}">
-        <label>at</label><input type="time" class="dstep-time" value="10:00">
-        <span style="font-size:11px;color:rgba(255,255,255,0.35);">after disposition applied</span>
-      </div>
-      <textarea class="dstep-body" rows="3" placeholder="Enter message..." oninput="updateCharCount(this)"></textarea>
-      <div class="char-count">0 / 160</div>
-      ${kwChipsRowHTML("this.closest('.message-step').querySelector('textarea')")}
-    `
-    container.appendChild(step)
-  }
+// ─── HELPERS ────────────────────────────────────────────────────────────────
 
-  const removeDispStep = (id) => document.getElementById(id)?.remove()
-
-  const updateCharCount = (textarea) => {
-    const countEl = textarea.nextElementSibling
-    if (countEl && countEl.classList.contains('char-count')) countEl.textContent = `${textarea.value.length} / 160`
-  }
-
-  // ─── INIT ──────────────────────────────────────────────────────────────────
-
-  const init = async () => {
-    const authed = await checkAuth()
-    if (!authed) return
-    await Promise.all([loadDispositionTags(), loadSupportData(), loadProfile()])
-  }
-
-  document.addEventListener('DOMContentLoaded', init)
+const esc = (s) => {
+  if (!s) return ''
+  const d = document.createElement('div')
+  d.textContent = s
+  return d.innerHTML
+}
 </script>
 </body>
 </html>
