@@ -847,7 +847,7 @@ const getLeadById = async (req, res) => {
 
 const createLead = async (req, res) => {
   try {
-    const { first_name, last_name, phone, email, date_of_birth, state, zip_code, product, address, notes, autopilot } = req.body
+    const { first_name, last_name, phone, email, date_of_birth, state, zip_code, product, address, gender, notes, autopilot } = req.body
     if (!phone) return res.status(400).json({ error: 'Phone is required' })
     const normalizedPhone = normalizePhone(phone)
     if (!normalizedPhone) return res.status(400).json({ error: 'Invalid phone number format' })
@@ -866,6 +866,7 @@ const createLead = async (req, res) => {
         zip_code: zip_code || null,
         product: product || null,
         address: address || null,
+        gender: gender || null,
         notes: notes || null,
         autopilot: autopilot === true || autopilot === 'true',
         status: 'new',

@@ -867,6 +867,8 @@ const renderLeads = (leads) => {
               </div>
             </div>
             <div class="lead-meta-line">${lead.state || ''} · <span>${lead.zip_code || ''}</span></div>
+            ${(lead.address || lead.lead_tier === 'priority') ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5C2.5 7.25 6 11 6 11s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z"/><circle cx="6" cy="4.5" r="1.2"/></svg>${lead.address || '—'}</div>` : ''}
+            ${(lead.household || lead.lead_tier === 'priority') ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="4" cy="4" r="2"/><circle cx="8" cy="4" r="2"/><path d="M0 10c0-2 1.8-3 4-3s4 1 4 3"/><path d="M4 10c0-2 1.8-3 4-3s4 1 4 3"/></svg>Household: ${lead.household || '—'}</div>` : ''}
             ${localTime ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="5"/><path d="M6 3v3l1.5 1.5"/></svg>${localTime} local</div>` : ''}
             <div class="lead-status-row">
               <span class="status-pill sp-${lead.status}"><span class="sp-dot"></span>${lead.status}</span>
@@ -916,8 +918,9 @@ const renderLeads = (leads) => {
             <div class="meta-sms-line">Last contact: <strong>${lead.last_contacted_at ? new Date(lead.last_contacted_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : '—'}</strong></div>
             <div class="divider"></div>
             <div class="meta-row"><span class="meta-key">Added</span><span class="meta-val">${lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : '—'}</span></div>
-            <div class="meta-row"><span class="meta-key">State</span><span class="meta-val">${lead.state || '—'}</span></div>
-            <div class="meta-row"><span class="meta-key">Zip</span><span class="meta-val">${lead.zip_code || '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Gender</span><span class="meta-val">${lead.gender === 'M' || lead.gender === 'Male' ? 'Male' : lead.gender === 'F' || lead.gender === 'Female' ? 'Female' : lead.gender || '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Lead Cost</span><span class="meta-val">${lead.lead_cost ? '$' + parseFloat(lead.lead_cost).toFixed(2) : '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Income</span><span class="meta-val">${lead.income || '—'}</span></div>
             <div class="meta-row"><span class="meta-key">DOB</span><span class="meta-val">${lead.date_of_birth || '—'}</span></div>
             <div class="divider"></div>
             <div class="meta-bucket-row">
@@ -2470,6 +2473,7 @@ const openCreateLeadModal = () => {
   document.getElementById('cl-zip').value = ''
   document.getElementById('cl-product').value = ''
   document.getElementById('cl-address').value = ''
+  document.getElementById('cl-gender').value = ''
   document.getElementById('cl-notes').value = ''
   document.getElementById('cl-autopilot').checked = false
   document.getElementById('cl-error').style.display = 'none'
@@ -2505,6 +2509,7 @@ const saveCreateLead = async () => {
     zip_code: document.getElementById('cl-zip').value.trim(),
     product: document.getElementById('cl-product').value.trim(),
     address: document.getElementById('cl-address').value.trim(),
+    gender: document.getElementById('cl-gender').value || null,
     notes: document.getElementById('cl-notes').value.trim(),
     autopilot: document.getElementById('cl-autopilot').checked
   }

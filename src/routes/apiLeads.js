@@ -77,12 +77,7 @@ router.post('/inbound/:userId', async (req, res) => {
       bucketId = newBucket?.id
     }
 
-    const noteParts = []
-    if (income) noteParts.push('Income: ' + income)
-    if (household) noteParts.push('Household: ' + household)
-    if (gender) noteParts.push('Gender: ' + gender)
-    if (age) noteParts.push('Age: ' + age)
-    const notes = noteParts.join(' | ')
+    const notes = age ? 'Age: ' + age : null
 
     const { data: newLead, error } = await supabase
       .from('leads')
@@ -94,7 +89,10 @@ router.post('/inbound/:userId', async (req, res) => {
         state: state || null,
         zip_code: zip_code || null,
         date_of_birth: date_of_birth || null,
-        notes: notes || null,
+        gender: gender || null,
+        income: income || null,
+        household: household || null,
+        notes: notes,
         user_id: userId,
         bucket_id: bucketId,
         lead_tier: 'priority',
