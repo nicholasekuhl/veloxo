@@ -260,7 +260,7 @@
     }
 
     try {
-      const leadRes = await fetch(`/leads/${leadId}`)
+      const leadRes = await fetch(`/leads/${leadId}`, { credentials: 'include' })
       const leadData = await leadRes.json()
       lead = leadData.lead
 
@@ -271,9 +271,9 @@
 
       // Load secondary data in parallel — failures won't block the page
       const [templatesData, dispositionsData, campaignsData] = await Promise.all([
-        fetch('/templates').then(r => r.json()).catch(() => ({})),
-        fetch('/dispositions').then(r => r.json()).catch(() => ({})),
-        fetch('/campaigns').then(r => r.json()).catch(() => ({}))
+        fetch('/templates', { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+        fetch('/dispositions', { credentials: 'include' }).then(r => r.json()).catch(() => ({})),
+        fetch('/campaigns', { credentials: 'include' }).then(r => r.json()).catch(() => ({}))
       ])
 
       allTemplates = templatesData.templates || []
@@ -566,7 +566,7 @@
 
   const loadLeadAppointments = async () => {
     try {
-      const res = await fetch(`/appointments/lead/${leadId}`)
+      const res = await fetch(`/appointments/lead/${leadId}`, { credentials: 'include' })
       const data = await res.json()
       const container = document.getElementById('lead-appts-list')
       if (!data.appointments?.length) {
@@ -599,11 +599,11 @@
         </div>`).join('')
     }
     try {
-      const res = await fetch('/conversations')
+      const res = await fetch('/conversations', { credentials: 'include' })
       const data = await res.json()
       const conv = (data.conversations || []).find(c => c.lead_id === leadId)
       if (!conv) { if (smsHistory) renderSMSHistory(); return }
-      const res2 = await fetch(`/conversations/${conv.id}`)
+      const res2 = await fetch(`/conversations/${conv.id}`, { credentials: 'include' })
       const data2 = await res2.json()
       conversation = data2.conversation
       renderSMSHistory()
@@ -724,14 +724,14 @@
     const body = input?.value.trim()
     if (!body) return toast.error('Required', 'Please enter a message')
     if (!conversation) {
-      const res = await fetch('/conversations')
+      const res = await fetch('/conversations', { credentials: 'include' })
       const data = await res.json()
       conversation = (data.conversations || []).find(c => c.lead_id === leadId)
       if (!conversation) {
         toast.warning('No conversation', 'Send the first message from the leads page')
         return
       }
-      const res2 = await fetch(`/conversations/${conversation.id}`)
+      const res2 = await fetch(`/conversations/${conversation.id}`, { credentials: 'include' })
       const data2 = await res2.json()
       conversation = data2.conversation
     }
@@ -739,7 +739,8 @@
       const res = await fetch('/messages/send-manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversation_id: conversation.id, lead_id: leadId, body })
+        body: JSON.stringify({ conversation_id: conversation.id, lead_id: leadId, body }),
+        credentials: 'include'
       })
       const data = await res.json()
       if (data.success) {
@@ -766,7 +767,7 @@
         </div>`).join('')
     }
     try {
-      const res = await fetch(`/tasks/${leadId}`)
+      const res = await fetch(`/tasks/${leadId}`, { credentials: 'include' })
       const data = await res.json()
       tasks = data.tasks || []
       renderTasks()
@@ -825,7 +826,8 @@
       const res = await fetch('/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId, title, due_date: new Date(due_date).toISOString(), notes })
+        body: JSON.stringify({ lead_id: leadId, title, due_date: new Date(due_date).toISOString(), notes }),
+        credentials: 'include'
       })
       const data = await res.json()
       if (data.success) {
@@ -848,10 +850,11 @@
       await fetch(`/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ completed })
+        body: JSON.stringify({ completed }),
+        credentials: 'include'
       })
       await loadTasks()
-      const res = await fetch(`/leads/${leadId}`)
+      const res = await fetch(`/leads/${leadId}`, { credentials: 'include' })
       const data = await res.json()
       if (data.lead) {
         lead.next_followup_at = data.lead.next_followup_at
@@ -863,14 +866,14 @@
   const deleteTask = async (taskId) => {
     if (!await confirmModal('Delete task?', 'This task will be permanently removed.', 'Delete', true)) return
     try {
-      await fetch(`/tasks/${taskId}`, { method: 'DELETE' })
+      await fetch(`/tasks/${taskId}`, { method: 'DELETE', credentials: 'include' })
       await loadTasks()
     } catch (err) { console.error(err) }
   }
 
   const loadDispositionHistory = async () => {
     try {
-      const res = await fetch(`/dispositions/history/${leadId}`)
+      const res = await fetch(`/dispositions/history/${leadId}`, { credentials: 'include' })
       const data = await res.json()
       dispositionHistory = data.history || []
       renderDispositionHistory()
@@ -918,7 +921,8 @@
       await fetch(`/leads/${leadId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: updated })
+        body: JSON.stringify({ notes: updated }),
+        credentials: 'include'
       })
     }
   }
@@ -957,7 +961,8 @@
           conversation_id: conversation?.id || 'none',
           lead_id: leadId,
           mode: 'insights'
-        })
+        }),
+        credentials: 'include'
       })
       const data = await res.json()
 
@@ -1001,11 +1006,12 @@
       const res = await fetch('/dispositions/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId, disposition_tag_id: tagId })
+        body: JSON.stringify({ lead_id: leadId, disposition_tag_id: tagId }),
+        credentials: 'include'
       })
       const data = await res.json()
       if (data.success) {
-        const res2 = await fetch(`/leads/${leadId}`)
+        const res2 = await fetch(`/leads/${leadId}`, { credentials: 'include' })
         const data2 = await res2.json()
         lead = data2.lead
         renderPage()
@@ -1023,7 +1029,8 @@
       await fetch(`/leads/${leadId}/autopilot`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ autopilot: value })
+        body: JSON.stringify({ autopilot: value }),
+        credentials: 'include'
       })
       lead.autopilot = value
     } catch (err) { console.error(err) }
@@ -1034,12 +1041,14 @@
       await fetch(`/leads/${leadId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: lead.notes })
+        body: JSON.stringify({ notes: lead.notes }),
+        credentials: 'include'
       })
       const res = await fetch('/leads/' + leadId, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
+        credentials: 'include'
       })
       lead.status = status
     } catch (err) { console.error(err) }
@@ -1050,7 +1059,8 @@
       await fetch(`/leads/${leadId}/notes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes })
+        body: JSON.stringify({ notes }),
+        credentials: 'include'
       })
       lead.notes = notes
     } catch (err) { console.error(err) }
@@ -1061,7 +1071,8 @@
       await fetch(`/leads/${leadId}/quotes`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quotes })
+        body: JSON.stringify({ quotes }),
+        credentials: 'include'
       })
       lead.quotes = quotes
       const ts = document.getElementById('lead-quotes-ts')
@@ -1071,7 +1082,7 @@
 
   const loadActiveCampaigns = async () => {
     try {
-      const res = await fetch('/campaigns')
+      const res = await fetch('/campaigns', { credentials: 'include' })
       const data = await res.json()
       const campaigns = data.campaigns || []
       const container = document.getElementById('active-campaigns-list')
@@ -1103,7 +1114,7 @@
     const val = prompt('Product:', lead.product || '')
     if (val === null) return
     try {
-      const res = await fetch(`/leads/${leadId}/product`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product: val.trim() || null }) })
+      const res = await fetch(`/leads/${leadId}/product`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product: val.trim() || null }), credentials: 'include' })
       const data = await res.json()
       if (data.success) { lead = data.lead; renderPage() }
     } catch (e) { toast.error('Error', 'Could not update product') }
@@ -1127,6 +1138,7 @@
     const notes = document.getElementById('lp-sold-notes').value.trim()
     try {
       const res = await fetch(`/leads/${leadId}/sold`, {
+        credentials: 'include',
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sold_plan_type: planType || null, sold_premium: premium, sold_notes: notes || null, commission: commission || null })
@@ -1151,7 +1163,7 @@
     const ok = await confirmModal(`Remove sold status from ${name}?`, 'This will restore their previous status.', 'Remove', true)
     if (!ok) return
     try {
-      const res = await fetch(`/leads/${leadId}/unsold`, { method: 'PATCH' })
+      const res = await fetch(`/leads/${leadId}/unsold`, { method: 'PATCH', credentials: 'include' })
       const data = await res.json()
       if (!data.success) throw new Error(data.error)
       lead = data.lead
