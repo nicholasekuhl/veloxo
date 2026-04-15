@@ -669,6 +669,79 @@
       gap: 8px !important;
       margin-top: 8px !important;
     }
+
+    /* ── Disposition modal inner card background ── */
+    [id*="tag-modal"] > div,
+    [id*="disposition-modal"] > div,
+    [class*="disposition-modal"] > div {
+      background: #1a2228 !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      border-radius: 14px !important;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important;
+    }
+
+    /* ── Variable chips row (kw-chips from shared.js) ── */
+    .kw-chips {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 4px !important;
+      margin-top: 8px !important;
+      padding: 8px 0 4px !important;
+      border-top: 1px solid rgba(255,255,255,0.05) !important;
+    }
+    .kw-chips-label {
+      font-size: 10px !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.07em !important;
+      text-transform: uppercase !important;
+      color: rgba(255,255,255,0.25) !important;
+      margin-right: 4px !important;
+      white-space: nowrap !important;
+    }
+    .kw-chip {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      background: rgba(255,255,255,0.07) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.55) !important;
+      cursor: pointer !important;
+      transition: all 0.12s !important;
+      white-space: nowrap !important;
+    }
+    .kw-chip:hover {
+      background: rgba(0,201,167,0.12) !important;
+      border-color: rgba(0,201,167,0.25) !important;
+      color: #00d4b4 !important;
+    }
+
+    /* ── Broad catch-all for unclassed variable-type buttons inside modals ── */
+    .modal button:not([type="submit"]):not([class*="cancel"]):not([class*="save"]):not([class*="close"]):not([class*="remove"]):not([class*="add"]):not([class*="delete"]):not([class*="btn-"]):not([class*="modal-"]),
+    [id*="modal"] button:not([type="submit"]):not([class*="cancel"]):not([class*="save"]):not([class*="close"]):not([class*="remove"]):not([class*="add"]):not([class*="delete"]):not([class*="btn-"]):not([class*="modal-"]) {
+      display: inline-flex !important;
+      align-items: center !important;
+      padding: 4px 10px !important;
+      border-radius: 6px !important;
+      font-size: 12px !important;
+      font-weight: 500 !important;
+      background: rgba(255,255,255,0.07) !important;
+      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: rgba(255,255,255,0.55) !important;
+      cursor: pointer !important;
+      margin: 2px !important;
+      transition: all 0.12s !important;
+      white-space: nowrap !important;
+    }
+    .modal button:not([type="submit"]):not([class*="cancel"]):not([class*="save"]):not([class*="close"]):not([class*="remove"]):not([class*="add"]):not([class*="delete"]):not([class*="btn-"]):not([class*="modal-"]):hover,
+    [id*="modal"] button:not([type="submit"]):not([class*="cancel"]):not([class*="save"]):not([class*="close"]):not([class*="remove"]):not([class*="add"]):not([class*="delete"]):not([class*="btn-"]):not([class*="modal-"]):hover {
+      background: rgba(0,201,167,0.12) !important;
+      border-color: rgba(0,201,167,0.25) !important;
+      color: #00d4b4 !important;
+    }
   </style>
 </head>
 <body>
@@ -1028,6 +1101,7 @@
       <label>Message</label>
       <textarea id="template-modal-body" rows="4" placeholder="Hi [First Name], just following up..." oninput="document.getElementById('template-modal-char').textContent = this.value.length + ' / 160'"></textarea>
       <div class="char-count" id="template-modal-char">0 / 160</div>
+      <div id="template-modal-chips"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeTemplateModal()">Cancel</button>
@@ -2156,6 +2230,8 @@
     document.getElementById('template-modal-body').value = ''
     document.getElementById('template-modal-char').textContent = '0 / 160'
     document.getElementById('template-modal-title').textContent = 'Create Template'
+    const chips = document.getElementById('template-modal-chips')
+    if (chips && typeof kwChipsRowHTML !== 'undefined') chips.innerHTML = kwChipsRowHTML("document.getElementById('template-modal-body')")
     document.getElementById('template-modal').classList.add('open')
   }
 
@@ -2169,6 +2245,8 @@
     document.getElementById('template-modal-body').value = t.body
     document.getElementById('template-modal-char').textContent = `${t.body.length} / 160`
     document.getElementById('template-modal-title').textContent = 'Edit Template'
+    const chips = document.getElementById('template-modal-chips')
+    if (chips && typeof kwChipsRowHTML !== 'undefined') chips.innerHTML = kwChipsRowHTML("document.getElementById('template-modal-body')")
     document.getElementById('template-modal').classList.add('open')
   }
 
