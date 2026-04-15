@@ -484,7 +484,7 @@ const applyFilters = async () => {
   isSearchActive = true
   currentLeadsPage = 1
   const params = new URLSearchParams()
-  params.set('limit', '200')
+  params.set('limit', '500')
   params.set('page', '1')
   const search = document.getElementById('sf-search')?.value?.trim()
   if (search) params.set('search', search)

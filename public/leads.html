@@ -345,7 +345,7 @@
     </div>
   </div>
   <div class="leads-filter-bar">
-    <input type="text" id="sf-search" placeholder="Search leads by name, phone, email...">
+    <input type="text" id="sf-search" placeholder="Search leads by name, phone, email..." onkeydown="if(event.key==='Enter'){applyFilters();}">
     <button class="btn-ghost" id="filters-toggle-btn" onclick="toggleFilters()" style="white-space:nowrap;flex-shrink:0;">Filters <span id="filters-count-badge" style="display:none;background:rgba(0,201,167,0.2);color:#00d4b4;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:2px;"></span><span id="filters-arrow" style="font-size:10px;margin-left:4px;">▼</span></button>
   </div>
   <div class="search-panel" id="search-panel">

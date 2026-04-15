@@ -604,7 +604,8 @@ const uploadLeads = async (req, res) => {
 const getLeads = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1
-    const limit = Math.min(parseInt(req.query.limit) || 50, 200)
+    const hasFilters = !!(req.query.search || req.query.status || req.query.state || req.query.bucket_id || req.query.campaign_id || req.query.autopilot || req.query.is_sold || req.query.date_from || req.query.date_to)
+    const limit = Math.min(parseInt(req.query.limit) || (hasFilters ? 500 : 50), 500)
     const offset = (page - 1) * limit
 
     // Handle campaign_id filter first (requires async lookup)
