@@ -233,7 +233,7 @@ const backfillStatuses = async (req, res) => {
     // Update leads that have status = 'contacted' AND have at least one inbound message
     const { data: updated, error: updateError } = await supabase
       .from('leads')
-      .update({ status: 'replied', has_replied: true, updated_at: new Date().toISOString() })
+      .update({ status: 'replied', updated_at: new Date().toISOString() })
       .eq('status', 'contacted')
       .in('id', leadIds)
       .select('id')
