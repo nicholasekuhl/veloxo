@@ -7,10 +7,12 @@ const {
   deleteDispositionTag,
   applyDisposition,
   applyMultiDisposition,
-  getLeadDispositionHistory
+  getLeadDispositionHistory,
+  reorderDispositionTags
 } = require('../controllers/dispositionsController')
 
 router.get('/', getDispositionTags)
+router.post('/reorder', reorderDispositionTags)
 router.post('/', createDispositionTag)
 router.put('/:id', updateDispositionTag)
 router.delete('/:id', deleteDispositionTag)

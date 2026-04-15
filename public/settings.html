@@ -1056,7 +1056,17 @@
       return
     }
     container.innerHTML = allDispositionTags.map(tag => `
-      <div class="disp-tag-row">
+      <div class="disp-tag-row" data-tag-id="${tag.id}">
+        <div class="drag-handle" title="Drag to reorder">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <circle cx="4" cy="3" r="1.2" fill="currentColor" opacity="0.4"/>
+            <circle cx="4" cy="7" r="1.2" fill="currentColor" opacity="0.4"/>
+            <circle cx="4" cy="11" r="1.2" fill="currentColor" opacity="0.4"/>
+            <circle cx="9" cy="3" r="1.2" fill="currentColor" opacity="0.4"/>
+            <circle cx="9" cy="7" r="1.2" fill="currentColor" opacity="0.4"/>
+            <circle cx="9" cy="11" r="1.2" fill="currentColor" opacity="0.4"/>
+          </svg>
+        </div>
         <div class="disp-tag-color" style="background:${tag.color}"></div>
         <div class="disp-tag-name">${tag.name}</div>
         <div class="disp-tag-drip">${tag.disposition_messages?.length ? `${tag.disposition_messages.length} message drip` : 'No drip'}</div>
@@ -1066,6 +1076,26 @@
         </div>
       </div>
     `).join('')
+    if (typeof Sortable !== 'undefined') {
+      Sortable.create(container, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function () {
+          const items = container.querySelectorAll('[data-tag-id]')
+          const newOrder = Array.from(items).map((el, index) => ({
+            id: el.dataset.tagId,
+            sort_order: index
+          }))
+          fetch('/dispositions/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: newOrder })
+          }).catch(err => console.error('Disposition reorder failed:', err))
+        }
+      })
+    }
   }
 
   const openCreateDispositionModal = () => {

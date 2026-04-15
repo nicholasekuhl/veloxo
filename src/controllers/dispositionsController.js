@@ -11,7 +11,7 @@ const getDispositionTags = async (req, res) => {
         disposition_actions (id, action_type, action_value, action_order)
       `)
       .eq('user_id', req.user.id)
-      .order('created_at', { ascending: true })
+      .order('sort_order', { ascending: true })
     if (error) throw error
     res.json({ tags: data })
   } catch (err) {
@@ -269,6 +269,22 @@ const getLeadDispositionHistory = async (req, res) => {
   }
 }
 
+const reorderDispositionTags = async (req, res) => {
+  try {
+    const { order } = req.body
+    if (!order || !Array.isArray(order)) return res.status(400).json({ error: 'Invalid order data' })
+    await Promise.all(
+      order.map(({ id, sort_order }) =>
+        supabase.from('disposition_tags').update({ sort_order }).eq('id', id).eq('user_id', req.user.id)
+      )
+    )
+    res.json({ success: true })
+  } catch (err) {
+    console.error('Disposition reorder error:', err)
+    res.status(500).json({ error: err.message })
+  }
+}
+
 module.exports = {
   getDispositionTags,
   createDispositionTag,
@@ -276,5 +292,6 @@ module.exports = {
   deleteDispositionTag,
   applyDisposition,
   applyMultiDisposition,
-  getLeadDispositionHistory
+  getLeadDispositionHistory,
+  reorderDispositionTags
 }
