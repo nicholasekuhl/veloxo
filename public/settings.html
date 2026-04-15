@@ -852,7 +852,7 @@
               <label>Area Code</label>
               <input type="text" id="pn-search-areacode" placeholder="555" maxlength="3" style="width:100%;">
             </div>
-            <button class="btn-primary" onclick="searchNumbers()" id="pn-search-btn" style="margin-bottom:0;white-space:nowrap;">Search</button>
+            <button class="btn-primary" onclick="searchNumbers()" id="pn-search-btn" style="margin-bottom:0;white-space:nowrap;width:auto;align-self:flex-end;flex-shrink:0;">Search</button>
           </div>
           <div id="pn-search-results" style="margin-top:16px;"></div>
 
@@ -1681,12 +1681,12 @@
 
   const healthBadge = (status) => {
     const map = {
-      good:     { label: 'Good',     bg: '#dcfce7', color: '#166534' },
-      warning:  { label: 'Warning',  bg: '#fef9c3', color: '#854d0e' },
-      critical: { label: 'Critical', bg: '#fee2e2', color: '#991b1b' }
+      good:     { label: 'Good',     bg: 'rgba(16,185,129,0.12)',  color: '#10b981' },
+      warning:  { label: 'Warning',  bg: 'rgba(245,158,11,0.12)',  color: '#f59e0b' },
+      critical: { label: 'Critical', bg: 'rgba(220,38,38,0.12)',   color: '#ef4444' }
     }
     const s = map[status] || map.good
-    return `<span style="background:${s.bg};color:${s.color};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;">${s.label}</span>`
+    return `<span style="background:${s.bg};color:${s.color};padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;">${s.label}</span>`
   }
 
   const renderPhoneNumbers = () => {
@@ -1732,14 +1732,14 @@
             const pnStatus = pn.status || 'active'
             let statusBadge = ''
             if (pnStatus === 'active') {
-              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#059669;"><span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span>Active</span>`
+              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:#10b981;background:rgba(16,185,129,0.12);padding:3px 9px;border-radius:20px;white-space:nowrap;">Active</span>`
             } else if (pnStatus === 'cooling') {
               const coolUntil = pn.cooloff_until ? new Date(pn.cooloff_until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—'
-              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#d97706;" title="Cooling off until ${coolUntil}"><span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>Cooling until ${coolUntil}</span>`
+              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:#f59e0b;background:rgba(245,158,11,0.12);padding:3px 9px;border-radius:20px;white-space:nowrap;" title="Cooling off until ${coolUntil}">Cooling</span>`
             } else if (pnStatus === 'flagged') {
-              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#dc2626;"><span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;"></span>Consider replacing</span>`
+              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:#ef4444;background:rgba(220,38,38,0.12);padding:3px 9px;border-radius:20px;white-space:nowrap;">Replace</span>`
             } else if (pnStatus === 'retired') {
-              statusBadge = `<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);"><span style="width:7px;height:7px;border-radius:50%;background:#9ca3af;display:inline-block;"></span>Retired</span>`
+              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.06);padding:3px 9px;border-radius:20px;white-space:nowrap;">Retired</span>`
             }
 
             const sentToday = pn.sent_today != null ? pn.sent_today : '—'
@@ -1756,7 +1756,7 @@
                 <div style="font-size:11px;color:rgba(255,255,255,0.35);">${pn.phone_number}${pn.is_default ? ' · <span style="color:#00d4b4;">Default</span>' : ''}</div>
               </td>
               <td style="padding:12px 10px;">
-                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:12px;background:white;color:rgba(255,255,255,0.75);cursor:pointer;">
+                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:12px;background:#131a1f;color:rgba(255,255,255,0.75);cursor:pointer;">
                   ${stateOptions}
                 </select>
               </td>
@@ -1770,11 +1770,11 @@
               <td style="padding:12px 10px;text-align:right;">
                 <div style="position:relative;display:inline-block;">
                   <button class="btn-ghost" onclick="togglePnMenu('${pn.id}')" style="padding:4px 8px;">⋯</button>
-                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:white;border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
+                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#131a1f;border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
                     ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
                     <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
                     <div style="height:1px;background:var(--color-border-light);margin:4px 0;"></div>
-                    <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${pnStatus}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">Release Number</button>
+                    <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${pnStatus}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='rgba(220,38,38,0.12)'" onmouseout="this.style.background='none'">Release Number</button>
                   </div>
                 </div>
               </td>
