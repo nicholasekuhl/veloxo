@@ -18,7 +18,7 @@ router.post('/inbound/:userId', async (req, res) => {
 
     const { first_name, last_name, phone, email, state,
             zip_code, date_of_birth, income, household,
-            gender, age, lead_cost, bucket_name, source } = req.body
+            gender, age, lead_cost, source } = req.body
 
     if (!phone) return res.status(400).json({ error: 'Phone required' })
 
@@ -55,28 +55,6 @@ router.post('/inbound/:userId', async (req, res) => {
       })
     }
 
-    let bucketId = null
-    const targetBucket = bucket_name || 'Priority Leads'
-    const { data: bucket } = await supabase
-      .from('buckets').select('id')
-      .eq('name', targetBucket)
-      .eq('user_id', userId)
-      .single()
-
-    if (bucket) {
-      bucketId = bucket.id
-    } else {
-      const { data: newBucket } = await supabase
-        .from('buckets')
-        .insert({
-          name: targetBucket,
-          user_id: userId,
-          color: '#f59e0b'
-        })
-        .select('id').single()
-      bucketId = newBucket?.id
-    }
-
     const notes = age ? 'Age: ' + age : null
 
     const { data: newLead, error } = await supabase
@@ -94,7 +72,7 @@ router.post('/inbound/:userId', async (req, res) => {
         household: household || null,
         notes: notes,
         user_id: userId,
-        bucket_id: bucketId,
+        bucket_id: null,
         lead_tier: 'priority',
         lead_source: source || 'webhook',
         lead_cost: lead_cost || null,
