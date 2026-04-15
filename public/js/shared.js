@@ -399,17 +399,18 @@ const renderSidebar = () => {
   root.innerHTML = `
 <div class="sidebar" id="nav-drawer">
   <div class="sidebar-logo">
-    <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 20 20" fill="none" width="20" height="20">
-          <path d="M4 10h9" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-linecap="round"/>
-          <path d="M4 7h6" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-linecap="round"/>
-          <path d="M4 13h5" stroke="rgba(255,255,255,0.15)" stroke-width="1" stroke-linecap="round"/>
-          <path d="M11 5.5L16 10L11 14.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+    <a href="/leads.html" class="logo-link" title="Home">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 36 36" fill="none" width="20" height="20">
+            <path d="M8 10L14 18L8 26" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+            <path d="M15 10L23 18L15 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 10L29 18L21 26" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+          </svg>
+        </div>
+        <span class="logo-text"><span class="logo-velox">velox</span>o</span>
       </div>
-      <span class="logo-text"><span class="logo-velox">velox</span>o</span>
-    </div>
+    </a>
   </div>
   <nav class="sidebar-nav">
     <span class="nav-section-label">Lead Management</span>

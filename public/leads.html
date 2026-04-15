@@ -278,8 +278,16 @@
     #leads-grid, .leads-grid { padding: 12px 28px 40px 28px !important; background: transparent !important; display: flex !important; flex-direction: column !important; gap: 8px !important; }
     /* ── FLOATING CARD — must override shared.css ── */
     .lead-card { border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 16px rgba(0,0,0,0.4) !important; }
+    /* ── COLUMN PADDING ── */
+    .col-notes { padding: 14px 18px !important; }
+    .col-quotes { padding: 14px 18px !important; }
+    .col-actions { padding: 18px 20px !important; }
+    .col-meta { padding: 18px 18px !important; }
+    /* ── TEXTAREA HEIGHT ── */
+    .notes-textarea { min-height: 160px !important; }
+    .quotes-textarea { min-height: 160px !important; }
     /* ── GRID — must be last to win cascade ── */
-    .lead-card-body { grid-template-columns: 300px 1fr 220px 200px 170px !important; }
+    .lead-card-body { grid-template-columns: 260px 1fr 280px 240px 200px !important; }
   </style>
   <script src="/toast.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
