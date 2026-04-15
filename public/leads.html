@@ -328,6 +328,90 @@
       box-shadow: 0 4px 24px rgba(0,201,167,0.2) !important;
     }
 
+    /* ── Priority mode toggle ── */
+    .lead-mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 16px;
+    }
+    .lead-mode-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: color 0.15s;
+      user-select: none;
+    }
+    .lead-mode-label.active { color: rgba(255,255,255,0.85); }
+    .lead-mode-label.active-priority { color: #f59e0b; }
+    .mode-switch {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+    }
+    .mode-switch input { display: none; }
+    .mode-switch-track {
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.12);
+      border-radius: 11px;
+      transition: background 0.2s;
+    }
+    .mode-switch input:checked + .mode-switch-track {
+      background: #f59e0b;
+    }
+    .mode-switch-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .mode-switch input:checked ~ .mode-switch-thumb {
+      transform: translateX(18px);
+    }
+
+    /* Priority mode amber border */
+    .main-content.priority-mode {
+      border-top: 3px solid #f59e0b;
+    }
+    .main-content.priority-mode .topbar {
+      background: rgba(245,158,11,0.06);
+    }
+
+    /* Priority badge on lead cards */
+    .priority-lead-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #f59e0b;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 10px;
+      padding: 1px 7px;
+      margin-left: 4px;
+      line-height: 1.4;
+    }
+
+    /* Priority worked pill in bucket bar */
+    .bucket-tab.priority-worked {
+      background: transparent;
+      color: #d97706;
+      border-color: #d97706;
+    }
+    .bucket-tab.priority-worked.active {
+      background: #d97706;
+      color: #fff;
+    }
+
   </style>
   <script src="/toast.js?v=2"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
@@ -350,7 +434,18 @@
     </div>
   </div>
   <div class="topbar">
-    <div class="topbar-title">Leads</div>
+    <div style="display:flex;align-items:center;">
+      <div class="topbar-title" id="leads-page-title">Leads</div>
+      <div class="lead-mode-toggle">
+        <span class="lead-mode-label active" id="mode-label-pool" onclick="setLeadMode('pool')">Lead Pool</span>
+        <label class="mode-switch">
+          <input type="checkbox" id="priority-mode-toggle" onchange="setLeadMode(this.checked ? 'priority' : 'pool')">
+          <div class="mode-switch-track"></div>
+          <div class="mode-switch-thumb"></div>
+        </label>
+        <span class="lead-mode-label" id="mode-label-priority" onclick="setLeadMode('priority')">Priority</span>
+      </div>
+    </div>
     <div class="topbar-actions">
       <button class="btn-ghost" onclick="openUploadModal()">⬆ Import</button>
       <button class="btn-primary" onclick="openCreateLeadModal()">+ Create Lead</button>

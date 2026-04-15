@@ -126,6 +126,8 @@ const loadProfile = async () => {
     if (apptNotif) apptNotif.checked = p.notify_appointment_sms !== false
     const afterHours = document.getElementById('ai-afterhours-response')
     if (afterHours) afterHours.value = p.ai_afterhours_response || 'queue'
+    const priorityAp = document.getElementById('priority-autopilot-enabled')
+    if (priorityAp) priorityAp.checked = p.priority_autopilot === true
     if (typeof loadChecklist === 'function') loadChecklist(p)
   } catch (err) { console.error('Profile load error:', err) }
 }
@@ -414,7 +416,7 @@ const renderSidebar = () => {
   </div>
   <nav class="sidebar-nav">
     <span class="nav-section-label">Lead Management</span>
-    <a href="/leads.html" class="nav-item${a('/leads.html')}">${SVG_LEADS}<span>Leads</span></a>
+    <a href="/leads.html" class="nav-item${a('/leads.html')}">${SVG_LEADS}<span>Leads</span><span class="nav-priority-badge" id="priority-count-badge" style="display:none;"></span></a>
     <a href="/buckets.html" class="nav-item${a('/buckets.html')}">${SVG_BUCKETS}<span>Buckets</span></a>
     <a href="/archive.html" class="nav-item${a('/archive.html')}">${SVG_ARCHIVE}<span>Archive</span></a>
     <a href="/pipeline.html" class="nav-item${a('/pipeline.html')}">${SVG_PIPELINE}<span>Pipeline</span></a>

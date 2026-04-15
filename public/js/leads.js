@@ -43,6 +43,128 @@ let deleteTargetLeadId = null
 let deleteTargetLeadName = null
 let scheduleFollowupLeadId = null
 let dragBucketId = null
+let currentLeadMode = localStorage.getItem('leadMode') || 'pool'
+let priorityLeadCount = 0
+let priorityCountInterval = null
+
+// ===== PRIORITY MODE =====
+const setLeadMode = (mode) => {
+  currentLeadMode = mode
+  localStorage.setItem('leadMode', mode)
+
+  const toggle = document.getElementById('priority-mode-toggle')
+  const labelPool = document.getElementById('mode-label-pool')
+  const labelPriority = document.getElementById('mode-label-priority')
+  const mainContent = document.querySelector('.main-content')
+  const titleEl = document.getElementById('leads-page-title')
+
+  if (toggle) toggle.checked = mode === 'priority'
+  if (labelPool) {
+    labelPool.classList.toggle('active', mode === 'pool')
+    labelPool.classList.remove('active-priority')
+  }
+  if (labelPriority) {
+    labelPriority.classList.toggle('active-priority', mode === 'priority')
+    labelPriority.classList.remove('active')
+  }
+  if (mainContent) mainContent.classList.toggle('priority-mode', mode === 'priority')
+
+  // Reset bucket selection
+  activeBucket = ''
+  activeFolderId = ''
+
+  if (mode === 'priority') {
+    loadPriorityLeads()
+  } else {
+    if (titleEl) titleEl.textContent = 'Leads'
+    loadLeads()
+  }
+}
+
+const loadPriorityLeads = async () => {
+  const grid = document.getElementById('leads-grid')
+  if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading priority leads...</div>'
+
+  try {
+    const res = await fetch('/leads?tier=priority&limit=500&page=1')
+    const data = await res.json()
+    allLeads = data.leads || []
+    totalLeads = data.total || allLeads.length
+    hasMoreLeads = false
+
+    const titleEl = document.getElementById('leads-page-title')
+    if (titleEl) titleEl.textContent = `${totalLeads} Priority Leads`
+
+    const countEl = document.getElementById('leads-count')
+    if (countEl) countEl.textContent = `Showing ${allLeads.length} priority leads`
+
+    renderBucketPills()
+    renderLeads(allLeads)
+  } catch (err) {
+    console.error('Failed to load priority leads:', err)
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#9ca3af;">Could not load priority leads.</div>'
+  }
+}
+
+const loadPriorityCount = async () => {
+  try {
+    const res = await fetch('/leads?tier=priority&limit=1&page=1')
+    const data = await res.json()
+    priorityLeadCount = data.total || 0
+    updatePriorityBadge()
+  } catch (err) { /* silent */ }
+}
+
+const updatePriorityBadge = () => {
+  const badge = document.getElementById('priority-count-badge')
+  if (!badge) return
+  if (priorityLeadCount > 0) {
+    badge.textContent = priorityLeadCount
+    badge.style.display = 'inline'
+  } else {
+    badge.style.display = 'none'
+  }
+}
+
+const moveToLeadPool = async (leadId) => {
+  if (!confirm('Move this lead to your main lead pool? They will no longer appear in Priority view.')) return
+  try {
+    const res = await fetch(`/leads/${leadId}/lead-info`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_tier: 'standard' })
+    })
+    const data = await res.json()
+    if (data.success) {
+      allLeads = allLeads.filter(l => l.id !== leadId)
+      renderLeads(allLeads)
+      toast.success('Lead moved to pool', '')
+      loadPriorityCount()
+      if (currentLeadMode === 'priority') {
+        const titleEl = document.getElementById('leads-page-title')
+        if (titleEl) titleEl.textContent = `${allLeads.length} Priority Leads`
+      }
+    } else toast.error('Error', data.error || 'Could not move lead')
+  } catch (err) { toast.error('Error', 'Something went wrong') }
+}
+
+const markAsPriority = async (leadId) => {
+  try {
+    const res = await fetch(`/leads/${leadId}/lead-info`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lead_tier: 'priority', queued_at: new Date().toISOString() })
+    })
+    const data = await res.json()
+    if (data.success) {
+      const lead = allLeads.find(l => l.id === leadId)
+      if (lead) { lead.lead_tier = 'priority'; lead.queued_at = data.lead.queued_at }
+      renderLeads(allLeads)
+      toast.success('Marked as priority', '')
+      loadPriorityCount()
+    } else toast.error('Error', data.error || 'Could not mark as priority')
+  } catch (err) { toast.error('Error', 'Something went wrong') }
+}
 
 const IMPORT_FIELDS = [
   { key: 'phone', label: 'Phone', required: true },
@@ -121,8 +243,12 @@ const selectBucket = async (bucketId) => {
   renderBucketPills()
 
   if (!bucketId) {
-    // All Leads — reset to normal paginated view
-    await loadLeads()
+    // All Leads — in priority mode load priority leads, otherwise normal
+    if (currentLeadMode === 'priority') {
+      await loadPriorityLeads()
+    } else {
+      await loadLeads()
+    }
     return
   }
 
@@ -144,6 +270,26 @@ const selectBucket = async (bucketId) => {
     if (loadMoreWrapper) loadMoreWrapper.style.display = (data.total > allLeads.length) ? 'block' : 'none'
   } catch (err) {
     console.error('Bucket filter error:', err)
+  }
+}
+
+const selectWorkedPriority = async () => {
+  activeBucket = '__priority_worked'
+  activeFolderId = ''
+  renderBucketPills()
+  const grid = document.getElementById('leads-grid')
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+  try {
+    const res = await fetch('/leads?tier=worked&limit=500&page=1')
+    const data = await res.json()
+    allLeads = data.leads || []
+    document.getElementById('leads-count').textContent =
+      'Showing ' + allLeads.length + ' of ' + (data.total || allLeads.length) + ' priority leads moved to pool'
+    renderLeads(allLeads)
+    const loadMoreWrapper = document.getElementById('load-more-wrapper')
+    if (loadMoreWrapper) loadMoreWrapper.style.display = 'none'
+  } catch (err) {
+    console.error('Worked priority filter error:', err)
   }
 }
 
@@ -258,6 +404,29 @@ const renderBucketPills = () => {
     const c = optedOutBucketObj.color || '#ef4444'
     const isActive = activeBucket === optedOutBucketObj.id
     html += `<button class="bucket-tab" data-bucket-id="${optedOutBucketObj.id}" style="background:${isActive ? c : 'transparent'};color:${isActive ? '#fff' : c};border-color:${c};" onclick="selectBucket('${optedOutBucketObj.id}')">🚫 Opted Out<span style="opacity:0.8;font-size:11px;margin-left:4px;">${optedOutBucketObj.lead_count || 0}</span></button>`
+  }
+
+  // ── Priority worked pill (pool mode only) ──
+  if (currentLeadMode === 'pool') {
+    const isWorkedActive = activeBucket === '__priority_worked'
+    html += `<button class="bucket-tab priority-worked${isWorkedActive ? ' active' : ''}" onclick="selectWorkedPriority()">↩ Priority</button>`
+  }
+
+  // ── In priority mode, hide dynamic folders/buckets ──
+  if (currentLeadMode === 'priority') {
+    container.innerHTML = html
+    // Still handle sold commission banner
+    const soldBktP = allBuckets.find(b => b.system_key === 'sold')
+    const bannerP = document.getElementById('sold-commission-banner')
+    if (bannerP) bannerP.style.display = 'none'
+    if (bannerP && activeBucket && soldBktP && activeBucket === soldBktP.id) {
+      const soldLeads = allLeads.filter(l => l.bucket_id === soldBktP.id)
+      const total = soldLeads.reduce((sum, l) => sum + (l.commission || 0), 0)
+      const pending = soldLeads.filter(l => l.commission_status === 'pending').reduce((sum, l) => sum + (l.commission || 0), 0)
+      bannerP.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:#6b7280;font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
+      bannerP.style.display = 'flex'
+    }
+    return
   }
 
   // ── Draggable dynamic items ─────────────────────────────────────────────────
@@ -683,6 +852,7 @@ const renderLeads = (leads) => {
                     <a href="/lead.html?id=${lead.id}" target="_blank" style="color:inherit;text-decoration:none;" onmouseover="this.style.color='#00d4b4'" onmouseout="this.style.color='inherit'">${name}</a>
                     ${lead.opted_out ? '<span style="font-size:10px;font-weight:700;color:#f87171;margin-left:4px;">🚫 OPT-OUT</span>' : ''}
                     ${lead.is_sold ? '<span style="font-size:10px;font-weight:700;color:#34d399;margin-left:4px;">✓ SOLD</span>' : ''}
+                    ${(lead.lead_tier === 'priority' || (lead.lead_tier === 'standard' && lead.lead_source)) ? '<span class="priority-lead-badge">★ Priority</span>' : ''}
                   </div>
                   <button class="copy-btn" data-copy="${name}" title="Copy name"><svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="8" height="8" rx="1.5"/><path d="M2 10V2h8"/></svg></button>
                 </div>
@@ -2724,6 +2894,10 @@ const openLeadActionsMenu = (leadId, leadName, btn) => {
       <button class="ami-item" onclick="closeLeadActionsMenu();markAsCalled('${leadId}')">
         <span class="ami-icon">📞</span> Mark as Called
       </button>
+      ${lead.lead_tier === 'priority'
+        ? `<button class="ami-item" onclick="closeLeadActionsMenu();moveToLeadPool('${leadId}')"><span class="ami-icon">↩</span> Move to Lead Pool</button>`
+        : `<button class="ami-item" onclick="closeLeadActionsMenu();markAsPriority('${leadId}')"><span class="ami-icon">★</span> Mark as Priority</button>`
+      }
       <div class="ami-divider"></div>
       <div class="ami-section">LEAD MANAGEMENT</div>
       ${lead.is_blocked
@@ -3043,8 +3217,26 @@ const init = async () => {
   if (bucketIdParam) activeBucket = bucketIdParam
   if (stateParam) { const el = document.getElementById('sf-state'); if (el) el.value = stateParam }
 
-  // Phase 1: show leads immediately (leads+buckets fetched in parallel inside loadLeads)
-  loadLeads()
+  // Apply saved lead mode
+  const savedMode = localStorage.getItem('leadMode') || 'pool'
+  currentLeadMode = savedMode
+
+  // Set toggle UI before loading
+  const toggleEl = document.getElementById('priority-mode-toggle')
+  if (toggleEl) toggleEl.checked = savedMode === 'priority'
+  const labelPool = document.getElementById('mode-label-pool')
+  const labelPriority = document.getElementById('mode-label-priority')
+  if (labelPool) { labelPool.classList.toggle('active', savedMode === 'pool'); labelPool.classList.remove('active-priority') }
+  if (labelPriority) { labelPriority.classList.toggle('active-priority', savedMode === 'priority'); labelPriority.classList.remove('active') }
+  const mainEl = document.querySelector('.main-content')
+  if (mainEl) mainEl.classList.toggle('priority-mode', savedMode === 'priority')
+
+  // Phase 1: show leads immediately (loads priority or pool based on mode)
+  if (savedMode === 'priority') {
+    loadBuckets().then(() => { renderBucketPills(); loadPriorityLeads() })
+  } else {
+    loadLeads()
+  }
 
   // Phase 2: load aux data in background, re-render cards when ready
   Promise.all([loadCampaigns(), loadDispositionTags(), loadTemplates(), loadProfile()]).then(() => {
@@ -3086,6 +3278,10 @@ const init = async () => {
   loadCalBadge()
   loadNotifBadge()
   setInterval(loadNotifBadge, 30000)
+
+  // Priority count badge in sidebar
+  loadPriorityCount()
+  priorityCountInterval = setInterval(loadPriorityCount, 60000)
 }
 
 function toggleNewBucketDropdown(e) {

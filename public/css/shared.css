@@ -24,6 +24,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #0b0f12; c
 .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.8; }
 .nav-badge { margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 10px; background: rgba(0,201,167,0.15); color: #00d4b4; }
 .nav-badge.alert { background: rgba(239,68,68,0.2); color: #f87171; }
+.nav-priority-badge { background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 1px 6px; margin-left: auto; min-width: 14px; text-align: center; line-height: 1.5; }
 
 .sidebar-footer { padding: 12px 8px; border-top: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
 .user-row { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 7px; cursor: pointer; transition: background 0.12s; }
