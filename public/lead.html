@@ -243,13 +243,7 @@
     const d = new Date(iso)
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
   }
-  const formatTime = (iso) => {
-    if (!iso) return ''
-    const d = new Date(iso), now = new Date(), diff = now - d
-    if (diff < 86400000) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-    if (diff < 604800000) return d.toLocaleDateString('en-US', { weekday: 'short' })
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
+
   const init = async () => {
     const authed = await checkAuth()
     if (!authed) return
