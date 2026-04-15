@@ -707,7 +707,7 @@ const renderLeads = (leads) => {
 
           <div class="col-notes">
             <div class="notes-label">Notes</div>
-            <textarea class="notes-textarea" placeholder="Add notes about this lead…" data-lead-id="${lead.id}" onblur="saveNotes('${lead.id}', this.value)">${lead.notes || ''}</textarea>
+            <textarea class="notes-textarea" style="min-height:180px;" placeholder="Add notes about this lead…" data-lead-id="${lead.id}" onblur="saveNotes('${lead.id}', this.value)">${lead.notes || ''}</textarea>
             <div class="notes-footer">
               <span class="notes-timestamp">${lead.notes_updated_at ? 'Last edited ' + timeAgo(lead.notes_updated_at) : 'No notes yet'}</span>
               <button class="notes-save-btn" onclick="saveNotes('${lead.id}', this.closest('.col-notes').querySelector('.notes-textarea').value)">Save</button>
@@ -716,7 +716,7 @@ const renderLeads = (leads) => {
 
           <div class="col-quotes">
             <div class="notes-label">Quoted Plans</div>
-            <textarea class="notes-textarea quotes-textarea" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo" data-lead-id="${lead.id}" onblur="saveQuotes('${lead.id}', this.value)">${lead.quotes || ''}</textarea>
+            <textarea class="notes-textarea quotes-textarea" style="min-height:180px;" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo" data-lead-id="${lead.id}" onblur="saveQuotes('${lead.id}', this.value)">${lead.quotes || ''}</textarea>
             <div class="notes-footer">
               <span class="notes-timestamp">${lead.quotes_updated_at ? 'Updated ' + timeAgo(lead.quotes_updated_at) : 'No quotes yet'}</span>
               <button class="notes-save-btn" onclick="saveQuotes('${lead.id}', this.closest('.col-quotes').querySelector('.quotes-textarea').value)">Save</button>
@@ -724,11 +724,11 @@ const renderLeads = (leads) => {
           </div>
 
           <div class="col-actions">
-            <button class="btn-call" onclick="event.stopPropagation();openSMSModal('${lead.id}','${safeName}')">
+            <button class="btn-call" style="width:100%;padding:13px 10px;font-size:14px;" onclick="event.stopPropagation();openSMSModal('${lead.id}','${safeName}')">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#0b0f12" stroke-width="1.5"><path d="M14 3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3z"/><path d="M5 6h6M5 9h4"/></svg>
               Send Text
             </button>
-            <button class="btn-disposition" onclick="event.stopPropagation();openDispositionModal('${lead.id}','${safeName}')">Disposition</button>
+            <button class="btn-disposition" style="width:100%;padding:12px 10px;font-size:14px;" onclick="event.stopPropagation();openDispositionModal('${lead.id}','${safeName}')">Disposition</button>
             <div class="action-tags">
               ${leadDispTags.map(t => `<span class="action-tag" style="background:${t.color}18;border-color:${t.color}30;color:${t.color}">${t.name}</span>`).join('')}
               ${campProgress ? `<span class="action-tag teal">${hasActiveCampaign ? (lead.campaign_day != null ? `⚡ Day ${lead.campaign_day}` : '⚡ Active') : '✓ Done'}</span>` : ''}
