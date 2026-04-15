@@ -23,7 +23,12 @@ const numbersRouter = require('./routes/numbers')
 const { authMiddleware, authMiddlewareBasic, adminMiddleware } = require('./middleware/auth')
 const adminRouter = require('./routes/admin')
 const creditsRouter = require('./routes/credits')
+const apiLeadsRouter = require('./routes/apiLeads')
 const { smsQueue } = require('./smsQueue')
+
+if (!process.env.MAKE_WEBHOOK_SECRET) {
+  console.warn('[webhook] MAKE_WEBHOOK_SECRET not set — inbound lead webhook will reject all requests')
+}
 
 const app = express()
 app.set('trust proxy', 1)
@@ -46,6 +51,9 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
+
+// Public webhook — no auth required, registered before static files
+app.use('/api/leads', apiLeadsRouter)
 
 // Must run BEFORE express.static — static middleware auto-serves index.html for GET /
 // and would bypass this handler entirely if it came after.

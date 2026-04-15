@@ -649,6 +649,11 @@ const getLeads = async (req, res) => {
       if (req.query.date_from) q = q.gte('created_at', req.query.date_from)
       if (req.query.date_to) q = q.lte('created_at', req.query.date_to + 'T23:59:59Z')
       if (enrolledIds) q = q.in('id', enrolledIds)
+      if (req.query.tier === 'priority') {
+        q = q.eq('lead_tier', 'priority')
+      } else if (req.query.tier === 'worked') {
+        q = q.eq('lead_tier', 'standard').not('lead_source', 'is', null)
+      }
       return q
     }
 
@@ -1577,4 +1582,30 @@ const getPipelineLeads = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage }
+const patchLead = async (req, res) => {
+  try {
+    const allowed = ['lead_tier', 'lead_cost', 'lead_source', 'queued_at']
+    const updates = {}
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key]
+    }
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' })
+    }
+    updates.updated_at = new Date().toISOString()
+
+    const { data, error } = await supabase
+      .from('leads')
+      .update(updates)
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .select()
+      .single()
+    if (error) throw error
+    res.json({ success: true, lead: data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage, patchLead }
