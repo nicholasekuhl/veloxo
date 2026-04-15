@@ -671,7 +671,7 @@ const renderLeads = (leads) => {
     const bucket = lead.bucket_id ? allBuckets.find(b => b.id === lead.bucket_id) : null
     return `
       <div class="lead-card ${lead.notes ? 'has-notes' : ''}" data-lead-id="${lead.id}">
-        <div class="lead-card-body">
+        <div class="lead-card-body" style="display:grid;grid-template-columns:320px 1.8fr 1fr 260px 185px;width:100%;">
 
           <div class="col-contact">
             <div class="col-contact-top">
