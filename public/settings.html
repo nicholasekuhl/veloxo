@@ -105,7 +105,14 @@
       display: none !important;
     }
     .modal-overlay.open {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
       display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 1000 !important;
       background: rgba(0,0,0,0.75) !important;
       backdrop-filter: blur(4px) !important;
     }
@@ -546,22 +553,6 @@
     }
 
     /* ── Modal overlay — hidden by default, shown when .open ── */
-    .modal-overlay, [class*="modal-overlay"],
-    [id*="modal-overlay"], [id*="tag-modal-overlay"],
-    [id*="disposition-modal-overlay"] {
-      display: none !important;
-    }
-    .modal-overlay.open {
-      position: fixed !important;
-      top: 0 !important; left: 0 !important;
-      width: 100vw !important; height: 100vh !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      z-index: 1000 !important;
-      background: rgba(0,0,0,0.75) !important;
-      backdrop-filter: blur(4px) !important;
-    }
 
     /* ── Modal itself — centered, not left-aligned ── */
     .modal, [class*="modal-container"],
