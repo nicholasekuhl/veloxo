@@ -1073,6 +1073,14 @@
             <div style="font-size:13px;color:rgba(255,255,255,0.35);">Loading...</div>
           </div>
         </div>
+
+        <div class="settings-card">
+          <h2>Outbound Webhooks</h2>
+          <p>When a disposition tag with a webhook URL is applied to a lead, Veloxo sends the lead data to that URL automatically.</p>
+          <div id="outbound-webhooks-list">
+            <div style="font-size:13px;color:rgba(255,255,255,0.35);">Loading...</div>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -1100,6 +1108,12 @@
     <div class="form-group">
       <label>Description (optional)</label>
       <input type="text" id="disp-tag-description" placeholder="Internal note">
+    </div>
+
+    <div class="form-group">
+      <label>Webhook URL <span style="font-weight:400;color:rgba(255,255,255,0.3);">(optional)</span></label>
+      <input type="text" id="disp-tag-webhook-url" placeholder="https://hook.make.com/your-webhook-url">
+      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">When this tag is applied, Veloxo sends lead data to this URL via POST.</div>
     </div>
 
     <div style="border-top:1px solid rgba(255,255,255,0.07);margin:20px 0;"></div>
@@ -1299,6 +1313,47 @@
       console.error('Failed to load recent webhook leads:', err)
       document.getElementById('recent-webhook-leads').innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.35);">Could not load recent leads</div>'
     }
+
+    // Load outbound webhooks
+    try {
+      const res = await fetch('/dispositions', { credentials: 'include' })
+      const data = await res.json()
+      const tags = (data.tags || []).filter(t => t.webhook_url)
+      const container = document.getElementById('outbound-webhooks-list')
+      if (!tags.length) {
+        container.innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.35);">No outbound webhooks configured. Add a webhook URL to any disposition tag to get started.</div>'
+      } else {
+        container.innerHTML = `
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:rgba(255,255,255,0.28);padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);">Tag</th>
+                <th style="font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:rgba(255,255,255,0.28);padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);">Webhook URL</th>
+                <th style="font-size:10.5px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:rgba(255,255,255,0.28);padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06);">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tags.map(t => `
+                <tr>
+                  <td style="padding:10px 12px;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <span style="display:inline-flex;align-items:center;gap:7px;">
+                      <span style="width:8px;height:8px;border-radius:50%;background:${t.color};flex-shrink:0;"></span>
+                      <span style="color:rgba(255,255,255,0.65);">${t.name}</span>
+                    </span>
+                  </td>
+                  <td style="padding:10px 12px;font-size:12px;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.04);font-family:monospace;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.webhook_url}</td>
+                  <td style="padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <button class="btn-edit" onclick="showSettingsPanel('dispositions', document.querySelector('.settings-nav-item'));setTimeout(() => editDispositionTag('${t.id}'), 200)">Edit</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`
+      }
+    } catch (err) {
+      console.error('Failed to load outbound webhooks:', err)
+      document.getElementById('outbound-webhooks-list').innerHTML = '<div style="font-size:13px;color:rgba(255,255,255,0.35);">Could not load outbound webhooks</div>'
+    }
   }
 
   const copyWebhookUrl = () => {
@@ -1469,6 +1524,7 @@
     actionRowCount = 0
     document.getElementById('disp-tag-name').value = ''
     document.getElementById('disp-tag-description').value = ''
+    document.getElementById('disp-tag-webhook-url').value = ''
     document.getElementById('disp-message-steps').innerHTML = ''
     document.getElementById('action-rows').innerHTML = ''
     dispMessageStepCount = 0
@@ -1515,6 +1571,7 @@
     actionRowCount = 0
     document.getElementById('disp-tag-name').value = tag.name
     document.getElementById('disp-tag-description').value = tag.description || ''
+    document.getElementById('disp-tag-webhook-url').value = tag.webhook_url || ''
     document.getElementById('disp-message-steps').innerHTML = ''
     document.getElementById('action-rows').innerHTML = ''
     dispMessageStepCount = 0
@@ -1581,6 +1638,7 @@
     const name = document.getElementById('disp-tag-name').value.trim()
     if (!name) return toast.error('Required', 'Please enter a tag name')
     const description = document.getElementById('disp-tag-description').value.trim()
+    const webhook_url = document.getElementById('disp-tag-webhook-url').value.trim() || null
     const actions = collectActions()
     const steps = document.querySelectorAll('.message-step')
     const messages = []
@@ -1599,7 +1657,7 @@
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color: selectedDispColor, description, messages, actions })
+        body: JSON.stringify({ name, color: selectedDispColor, description, webhook_url, messages, actions })
       })
       const data = await res.json()
       if (data.success) { closeDispTagModal(); loadDispositionTags() }

@@ -21,12 +21,12 @@ const getDispositionTags = async (req, res) => {
 
 const createDispositionTag = async (req, res) => {
   try {
-    const { name, color, description, messages, actions } = req.body
+    const { name, color, description, webhook_url, messages, actions } = req.body
     if (!name) return res.status(400).json({ error: 'Tag name is required' })
 
     const { data: tag, error: tagError } = await supabase
       .from('disposition_tags')
-      .insert({ name, color: color || '#6366f1', description, user_id: req.user.id })
+      .insert({ name, color: color || '#6366f1', description, webhook_url: webhook_url || null, user_id: req.user.id })
       .select()
       .single()
     if (tagError) throw tagError
@@ -61,11 +61,11 @@ const createDispositionTag = async (req, res) => {
 
 const updateDispositionTag = async (req, res) => {
   try {
-    const { name, color, description, messages, actions } = req.body
+    const { name, color, description, webhook_url, messages, actions } = req.body
 
     const { data: tag, error: tagError } = await supabase
       .from('disposition_tags')
-      .update({ name, color, description })
+      .update({ name, color, description, webhook_url: webhook_url || null })
       .eq('id', req.params.id)
       .eq('user_id', req.user.id)
       .select()
@@ -198,6 +198,42 @@ const applyDisposition = async (req, res) => {
     if (tag.disposition_actions && tag.disposition_actions.length > 0) {
       const freshLead = (await supabase.from('leads').select('*').eq('id', lead_id).single()).data
       await executeActions(freshLead || lead, tag.disposition_actions, disposition_tag_id, req.user.profile)
+    }
+
+    // Fire outbound webhook if configured
+    if (tag.webhook_url) {
+      try {
+        const profile = req.user.profile || {}
+        fetch(tag.webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'disposition_applied',
+            lead: {
+              id: lead.id,
+              first_name: lead.first_name,
+              last_name: lead.last_name,
+              phone: lead.phone,
+              email: lead.email,
+              state: lead.state,
+              status: lead.status
+            },
+            disposition: {
+              id: tag.id,
+              name: tag.name,
+              color: tag.color
+            },
+            agent: {
+              id: req.user.id,
+              name: profile.agent_name || '',
+              email: req.user.email || ''
+            },
+            timestamp: new Date().toISOString()
+          })
+        }).catch(err => console.error('[webhook] outbound disposition webhook failed:', err.message))
+      } catch (err) {
+        console.error('[webhook] outbound disposition webhook error:', err.message)
+      }
     }
 
     res.json({ success: true, tag })
