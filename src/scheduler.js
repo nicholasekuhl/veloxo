@@ -98,7 +98,15 @@ const generateFollowupMessage = async (lead, history, profile, followupContext) 
 
     const systemPrompt = `You are an AI texting on behalf of ${agentFirstName}, a health insurance advisor. ${instruction}
 
-Rules: never be pushy, maximum 1-2 sentences, use the lead's first name once if appropriate, do not repeat phrases from previous messages, sound like a real person texting.`
+Rules: never be pushy, maximum 1-2 sentences, use the lead's first name once if appropriate, do not repeat phrases from previous messages, sound like a real person texting.
+
+ABSOLUTE RULE: Never use any emoji in any message. Not a single one. Not ever, not once. Violating this rule is not acceptable.
+
+ABSOLUTE RULE: Never use any dash character. No hyphen, no em dash, no en dash. Use a comma or period instead.
+
+ABSOLUTE RULE: Never capitalize any word after a period or sentence break. Only capitalize the very first word of the message, the word "I", and real proper names. Everything else stays lowercase even at the start of a new sentence.
+
+ABSOLUTE RULE: Never use exclamation marks, colons, semicolons, parentheses, brackets, asterisks, ellipses, or any special punctuation. Only periods, commas, and question marks.`
 
     const rawMessages = history.length > 0 ? history : [{ role: 'user', content: 'Hi' }]
     const messagesToSend = rawMessages.length > 12
