@@ -260,27 +260,25 @@
     }
 
     try {
-      const [leadRes, templatesRes, dispositionsRes, campaignsRes] = await Promise.all([
-        fetch(`/leads/${leadId}`),
-        fetch('/templates'),
-        fetch('/dispositions'),
-        fetch('/campaigns')
-      ])
-
+      const leadRes = await fetch(`/leads/${leadId}`)
       const leadData = await leadRes.json()
-      const templatesData = await templatesRes.json()
-      const dispositionsData = await dispositionsRes.json()
-      const campaignsData = await campaignsRes.json()
-
       lead = leadData.lead
-      allTemplates = templatesData.templates || []
-      allDispositionTags = dispositionsData.tags || []
-      allCampaigns = campaignsData.campaigns || []
 
       if (!lead) {
         document.getElementById('main-container').innerHTML = '<div class="empty-state">Lead not found</div>'
         return
       }
+
+      // Load secondary data in parallel — failures won't block the page
+      const [templatesData, dispositionsData, campaignsData] = await Promise.all([
+        fetch('/templates').then(r => r.json()).catch(() => ({})),
+        fetch('/dispositions').then(r => r.json()).catch(() => ({})),
+        fetch('/campaigns').then(r => r.json()).catch(() => ({}))
+      ])
+
+      allTemplates = templatesData.templates || []
+      allDispositionTags = dispositionsData.tags || []
+      allCampaigns = campaignsData.campaigns || []
 
       renderPage()
       loadConversation()
