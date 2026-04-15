@@ -212,4 +212,41 @@ const addUserCredits = async (req, res) => {
   }
 }
 
-module.exports = { getUsers, getStats, suspendUser, unsuspendUser, deleteUser, getComplianceOverrides, addUserCredits }
+const backfillStatuses = async (req, res) => {
+  try {
+    // Find all lead IDs that have at least one inbound message
+    const { data: inboundMessages, error: msgError } = await supabase
+      .from('messages')
+      .select('conversation_id, conversations(lead_id)')
+      .eq('direction', 'inbound')
+
+    if (msgError) throw msgError
+
+    const leadIds = [...new Set(
+      (inboundMessages || [])
+        .map(m => m.conversations?.lead_id)
+        .filter(Boolean)
+    )]
+
+    if (!leadIds.length) return res.json({ updated: 0, message: 'No inbound messages found' })
+
+    // Update leads that have status = 'contacted' AND have at least one inbound message
+    const { data: updated, error: updateError } = await supabase
+      .from('leads')
+      .update({ status: 'replied', has_replied: true, updated_at: new Date().toISOString() })
+      .eq('status', 'contacted')
+      .in('id', leadIds)
+      .select('id')
+
+    if (updateError) throw updateError
+
+    const count = updated?.length ?? 0
+    console.log(`[backfill] Updated ${count} leads from contacted → replied`)
+    res.json({ updated: count, message: `Backfilled ${count} leads to status 'replied'` })
+  } catch (err) {
+    console.error('Backfill error:', err)
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { getUsers, getStats, suspendUser, unsuspendUser, deleteUser, getComplianceOverrides, addUserCredits, backfillStatuses }
