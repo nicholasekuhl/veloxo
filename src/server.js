@@ -34,6 +34,7 @@ const creditsRouter = require('./routes/credits')
 const apiLeadsRouter = require('./routes/apiLeads')
 const leadVendorsRouter = require('./routes/leadVendors')
 const dripsRouter = require('./routes/drips')
+const advisorRouter = require('./routes/advisor')
 const { smsQueue } = require('./smsQueue')
 
 if (!process.env.MAKE_WEBHOOK_SECRET) {
@@ -56,11 +57,26 @@ app.use((req, res, next) => {
   next()
 })
 
+// Detect requests from reputableadvisor.com
+app.use((req, res, next) => {
+  const host = req.hostname
+  if (host === 'reputableadvisor.com' || host === 'www.reputableadvisor.com') {
+    req.isAdvisorSite = true
+  }
+  next()
+})
+
 app.use(compression())
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 app.use(cookieParser())
+
+// Advisor compliance pages on reputableadvisor.com
+app.use('/', (req, res, next) => {
+  if (req.isAdvisorSite) return advisorRouter(req, res, next)
+  next()
+})
 
 // Public webhook — no auth required, registered before static files
 app.use('/api/leads', apiLeadsRouter)

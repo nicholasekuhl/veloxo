@@ -953,13 +953,6 @@
               <input type="text" id="profile-agency-name" placeholder="Your agency">
             </div>
           </div>
-          <div class="form-group" id="field-agent-nickname">
-            <label>AI Nickname <span style="font-weight:400;color:var(--text-muted);">(optional but recommended)</span></label>
-            <input type="text" id="profile-agent-nickname" placeholder="e.g. Alex">
-            <div class="nickname-tip">
-              Add a nickname — the AI will use this in conversations. Leave blank to use first name from Agent Name.
-            </div>
-          </div>
           <div class="form-group">
             <label>Calendly URL</label>
             <input type="text" id="profile-calendly-url" placeholder="https://calendly.com/your-link">
@@ -980,9 +973,27 @@
             <label>Email</label>
             <input type="text" id="profile-email" readonly>
           </div>
+          <div class="form-group">
+            <label>Personal Phone</label>
+            <input type="tel" id="profile-personal-phone" placeholder="+1 (555) 000-0000">
+            <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Your personal contact number. Not used for sending messages.</div>
+          </div>
           <div id="profile-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
           <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
         </div>
+
+        <div class="settings-card" id="compliance-page-card">
+          <h2>Your Compliance Page</h2>
+          <p>Use this URL when registering your A2P/10DLC SMS campaign with your carrier.</p>
+          <div id="compliance-page-content" style="margin-top:16px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <code id="compliance-page-url" style="font-size:13px;padding:8px 12px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;color:var(--text-secondary);flex:1;min-width:200px;"></code>
+              <span id="compliance-page-badge"></span>
+            </div>
+            <div id="compliance-page-actions" style="display:flex;gap:8px;margin-top:12px;"></div>
+          </div>
+        </div>
+
         <div class="settings-card">
           <h2>Compliance Footer</h2>
           <p>Automatically appended to the first message sent to each lead. Required for TCPA compliance.</p>
@@ -2486,9 +2497,9 @@
       const body = {
         agent_name: document.getElementById('profile-agent-name').value.trim(),
         agency_name: document.getElementById('profile-agency-name').value.trim(),
-        agent_nickname: document.getElementById('profile-agent-nickname').value.trim() || null,
         calendly_url: document.getElementById('profile-calendly-url').value.trim(),
-        timezone: document.getElementById('profile-timezone').value
+        timezone: document.getElementById('profile-timezone').value,
+        personal_phone: document.getElementById('profile-personal-phone').value.trim()
       }
       const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
@@ -2771,6 +2782,59 @@
     // On settings page all steps are accessible, no need to show checklist
   }
 
+  // ─── COMPLIANCE PAGE ─────────────────────────────────────────────────────────
+
+  const renderCompliancePage = (profile) => {
+    if (!profile) return
+    const slug = profile.agent_slug
+    const enabled = profile.advisor_page_enabled
+    const urlEl = document.getElementById('compliance-page-url')
+    const badgeEl = document.getElementById('compliance-page-badge')
+    const actionsEl = document.getElementById('compliance-page-actions')
+    if (!urlEl) return
+
+    const pageUrl = slug ? `reputableadvisor.com/${slug}` : 'Generating...'
+    urlEl.textContent = pageUrl
+    urlEl.style.opacity = enabled ? '1' : '0.5'
+
+    if (enabled) {
+      badgeEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#10b981;background:rgba(16,185,129,0.12);padding:3px 10px;border-radius:20px;">Active</span>'
+      actionsEl.innerHTML = `
+        <button class="btn-ghost" onclick="copyComplianceUrl()" style="font-size:12px;padding:6px 14px;">Copy URL</button>
+        <a href="https://${pageUrl}" target="_blank" class="btn-ghost" style="font-size:12px;padding:6px 14px;text-decoration:none;">View Page</a>
+      `
+    } else {
+      badgeEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#f59e0b;background:rgba(245,158,11,0.12);padding:3px 10px;border-radius:20px;">Inactive</span>'
+      actionsEl.innerHTML = `
+        <button class="btn-primary" onclick="activateCompliancePage()" style="font-size:12px;padding:6px 14px;">Activate Page</button>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Activate your compliance page to use it for A2P/10DLC registration.</div>
+      `
+    }
+  }
+
+  const copyComplianceUrl = () => {
+    const url = document.getElementById('compliance-page-url').textContent
+    navigator.clipboard.writeText('https://' + url).then(() => {
+      toast.success('URL copied')
+    }).catch(() => toast.error('Could not copy'))
+  }
+
+  const activateCompliancePage = async () => {
+    try {
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ advisor_page_enabled: true }) })
+      const data = await res.json()
+      if (data.success) {
+        currentUser.advisor_page_enabled = true
+        renderCompliancePage(currentUser)
+        toast.success('Compliance page activated')
+      } else {
+        toast.error('Failed to activate', data.error)
+      }
+    } catch (err) {
+      toast.error('Error', 'Could not activate page')
+    }
+  }
+
   // ─── INIT ─────────────────────────────────────────────────────────────────────
 
   const init = async () => {
@@ -2786,6 +2850,7 @@
     } catch (e) {}
 
     await Promise.all([loadDispositionTags(), loadTemplates(), loadProfile()])
+    renderCompliancePage(currentUser)
     loadCalBadge()
     loadNotifBadge()
     setInterval(loadNotifBadge, 30000)

@@ -11,6 +11,27 @@ const COOKIE_OPTS = {
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+const generateSlug = async (name) => {
+  let base = name.toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+  if (!base) base = 'agent'
+  let slug = base
+  let count = 2
+  while (true) {
+    const { data } = await supabase
+      .from('user_profiles')
+      .select('id')
+      .eq('agent_slug', slug)
+      .single()
+    if (!data) break
+    slug = base + '-' + count
+    count++
+  }
+  return slug
+}
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body
@@ -76,6 +97,7 @@ const updateProfile = async (req, res) => {
     if (state !== undefined) updates.state = state
     if (priority_autopilot !== undefined) updates.priority_autopilot = priority_autopilot
     if (ai_afterhours_response !== undefined) updates.ai_afterhours_response = ai_afterhours_response
+    if (req.body.advisor_page_enabled !== undefined) updates.advisor_page_enabled = req.body.advisor_page_enabled
 
     // Auto-mark profile complete when all required fields are present
     const existing = req.user.profile
@@ -83,6 +105,11 @@ const updateProfile = async (req, res) => {
     const required = ['agent_name', 'agency_name', 'personal_phone', 'state', 'calendly_url']
     if (!existing.profile_complete && required.every(f => merged[f])) {
       updates.profile_complete = true
+    }
+
+    // Auto-generate slug if not set and agent_name is available
+    if (!existing.agent_slug && merged.agent_name) {
+      updates.agent_slug = await generateSlug(merged.agent_name)
     }
 
     const { data, error } = await supabase
@@ -346,12 +373,14 @@ const acceptInvite = async (req, res) => {
     if (createError) return res.status(400).json({ error: createError.message })
 
     const agentName = `${first_name} ${last_name}`.trim()
+    const agentSlug = await generateSlug(agentName)
     await supabase.from('user_profiles').insert({
       id: userData.user.id,
       email: invite.email,
       first_name,
       last_name,
       agent_name: agentName,
+      agent_slug: agentSlug,
       tos_agreed: true,
       tos_agreed_at: new Date().toISOString(),
       profile_complete: false
