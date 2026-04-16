@@ -1,5 +1,24 @@
 // shared.js — shared utilities loaded on every page
 
+// ─── THEME PERSISTENCE (runs before render to prevent flash) ─────────────────
+;(function() {
+  const saved = localStorage.getItem('theme')
+  if (saved) document.documentElement.setAttribute('data-theme', saved)
+})()
+
+function toggleTheme() {
+  const html = document.documentElement
+  const current = html.getAttribute('data-theme')
+  const next = current === 'light' ? 'dark' : 'light'
+  if (next === 'dark') {
+    html.removeAttribute('data-theme')
+    localStorage.setItem('theme', 'dark')
+  } else {
+    html.setAttribute('data-theme', 'light')
+    localStorage.setItem('theme', 'light')
+  }
+}
+
 let currentUser = null
 
 // ─── GLOBAL ERROR BOUNDARY ───────────────────────────────────────────────────
@@ -506,11 +525,18 @@ const renderSidebar = () => {
         <div class="notif-footer">Showing last 30 notifications</div>
       </div>
     </div>
+    <div style="padding:0 8px 4px;">
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <svg class="theme-icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 8.5a5.5 5.5 0 01-6-6 5.5 5.5 0 106 6z"/></svg>
+        <svg class="theme-icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+        <span>Toggle theme</span>
+      </button>
+    </div>
     <div style="position:relative;" id="profile-menu">
-      <div id="profile-dropdown" style="display:none;position:absolute;bottom:70px;left:8px;right:8px;background:#1a2228;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px;z-index:300;">
-        <div id="profile-dropdown-name" style="font-size:13px;color:rgba(255,255,255,0.8);font-weight:500;padding:6px 8px 2px;"></div>
-        <div id="profile-dropdown-email" style="font-size:11px;color:rgba(255,255,255,0.35);padding:0 8px 8px;"></div>
-        <div style="border-top:1px solid rgba(255,255,255,0.07);margin:4px 0;"></div>
+      <div id="profile-dropdown" style="display:none;position:absolute;bottom:70px;left:8px;right:8px;background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:10px;padding:8px;z-index:300;">
+        <div id="profile-dropdown-name" class="profile-user-name"></div>
+        <div id="profile-dropdown-email" class="profile-user-email"></div>
+        <div class="dropdown-divider"></div>
         <button class="nav-item" onclick="goToSettings('account');document.getElementById('profile-dropdown').style.display='none';">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="2.5"/><path d="M2.5 13c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/></svg>
           Profile &amp; Settings
@@ -519,7 +545,7 @@ const renderSidebar = () => {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l1.5 3 3.5.5-2.5 2.5.5 3.5L8 10l-3 1.5.5-3.5L3 5.5 6.5 5z"/></svg>
           Admin Panel
         </a>
-        <div style="border-top:1px solid rgba(255,255,255,0.07);margin:4px 0;"></div>
+        <div class="dropdown-divider"></div>
         <button class="nav-item" onclick="logout()">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/></svg>
           Log out
