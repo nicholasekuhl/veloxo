@@ -491,7 +491,7 @@ const renderSidebar = () => {
     <a href="/stats.html" class="nav-item${a('/stats.html')}">${SVG_STATS}<span>Stats</span></a>
     <a href="/calendar.html" class="nav-item${a('/calendar.html')}" id="nav-calendar">${SVG_CAL}<span>Calendar</span><span id="today-appt-badge" class="nav-badge alert" style="display:none;"></span></a>
 
-    <div style="border-top:1px solid rgba(255,255,255,0.06);margin:6px 0;"></div>
+    <div style="border-top:1px solid var(--sidebar-border);margin:6px 0;"></div>
     <a href="/settings.html" class="nav-item${a('/settings.html')}">${SVG_SETTINGS}<span>Settings</span></a>
     <a href="/admin.html" id="admin-nav-link" class="nav-item${a('/admin.html')}" style="display:none;">${SVG_ADMIN}<span>Admin</span></a>
   </nav>

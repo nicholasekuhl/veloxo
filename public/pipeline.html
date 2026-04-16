@@ -8,7 +8,8 @@
   <title>Pipeline — Veloxo</title>
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <style>
-    .pipeline-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; margin-left: 212px; }
+    .pipeline-container { display: flex; flex-direction: column; height: 100vh; overflow: hidden; margin-left: 52px; transition: margin-left 0.2s ease; }
+    body:has(.sidebar:hover) .pipeline-container { margin-left: 212px; }
     .pipeline-header { padding: 15px 20px 0; flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--topbar-bg); backdrop-filter: blur(8px); }
     .pipeline-title-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
     .pipeline-title-row h1 { margin: 0; font-size: 18px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; }

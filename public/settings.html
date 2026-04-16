@@ -11,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
   <style>
     .settings-layout { display: grid; grid-template-columns: 192px 1fr; min-height: calc(100vh - 60px); }
-    .settings-nav { background: #0e1419; border-right: 1px solid rgba(255,255,255,0.06); padding: 12px 8px; }
+    .settings-nav { background: var(--sidebar-bg); border-right: 1px solid var(--sidebar-border); padding: 12px 8px; }
     .settings-nav-item { display: block; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--sidebar-text-muted); cursor: pointer; margin-bottom: 2px; transition: background 0.12s, color 0.12s; }
     .settings-nav-item:hover { background: var(--bg-hover); color: var(--sidebar-text); }
     .settings-nav-item.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
@@ -79,9 +79,9 @@
 
     /* ── SETTINGS LAYOUT ── */
     .settings-layout, .settings-container { display: grid !important; grid-template-columns: 200px 1fr !important; min-height: calc(100vh - 60px) !important; gap: 0 !important; }
-    .settings-subnav, .settings-sidebar, .settings-nav { background: #0e1419 !important; border-right: 1px solid rgba(255,255,255,0.06) !important; padding: 12px 8px !important; }
-    .settings-subnav a, .settings-nav a, .settings-nav-item { display: flex !important; align-items: center !important; gap: 8px !important; padding: 7px 10px !important; border-radius: 7px !important; font-size: 13px !important; font-weight: 500 !important; color: rgba(255,255,255,0.45) !important; text-decoration: none !important; margin-bottom: 2px !important; transition: background 0.12s, color 0.12s !important; }
-    .settings-subnav a:hover, .settings-nav a:hover, .settings-nav-item:hover { background: rgba(255,255,255,0.05) !important; color: rgba(255,255,255,0.75) !important; }
+    .settings-subnav, .settings-sidebar, .settings-nav { background: var(--sidebar-bg) !important; border-right: 1px solid var(--sidebar-border) !important; padding: 12px 8px !important; }
+    .settings-subnav a, .settings-nav a, .settings-nav-item { display: flex !important; align-items: center !important; gap: 8px !important; padding: 7px 10px !important; border-radius: 7px !important; font-size: 13px !important; font-weight: 500 !important; color: var(--sidebar-text-muted) !important; text-decoration: none !important; margin-bottom: 2px !important; transition: background 0.12s, color 0.12s !important; }
+    .settings-subnav a:hover, .settings-nav a:hover, .settings-nav-item:hover { background: var(--bg-hover) !important; color: var(--sidebar-text-secondary) !important; }
     .settings-subnav a.active, .settings-nav a.active, .settings-nav-item.active { background: rgba(0,201,167,0.12) !important; color: #00d4b4 !important; }
     .settings-content, .settings-panel { background: var(--bg-base) !important; padding: 24px 28px !important; }
     .settings-section { background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; padding: 24px !important; margin-bottom: 16px !important; }
