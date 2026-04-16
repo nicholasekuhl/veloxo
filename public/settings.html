@@ -2476,7 +2476,7 @@
         compliance_footer_enabled: document.getElementById('compliance-enabled').checked,
         compliance_footer: document.getElementById('compliance-footer').value.trim() || null
       }
-      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
         statusEl.style.color = '#059669'
@@ -2501,7 +2501,7 @@
         timezone: document.getElementById('profile-timezone').value,
         personal_phone: document.getElementById('profile-personal-phone').value.trim()
       }
-      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
         document.getElementById('header-agent-name').textContent = body.agent_name || body.agency_name || ''
@@ -2523,7 +2523,7 @@
         inapp_notifications_enabled: document.getElementById('inapp-notif-enabled').checked,
         notify_appointment_sms: document.getElementById('appt-notif-enabled').checked
       }
-      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
         toast.success('Settings saved', 'Notification preferences updated')
@@ -2539,7 +2539,7 @@
     statusEl.textContent = 'Saving...'
     try {
       const body = { ai_afterhours_response: document.getElementById('ai-afterhours-response').value }
-      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
         statusEl.style.color = '#059669'
@@ -2562,7 +2562,7 @@
     statusEl.textContent = 'Saving...'
     try {
       const body = { priority_autopilot: document.getElementById('priority-autopilot-enabled').checked }
-      const res = await fetch('/auth/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       if (data.success) {
         statusEl.style.color = '#059669'
