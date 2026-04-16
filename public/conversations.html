@@ -1015,10 +1015,11 @@
               <option value=""${!lead?.pipeline_stage ? ' selected' : ''}>None</option>
               <option value="new_lead"${lead?.pipeline_stage === 'new_lead' ? ' selected' : ''}>New Lead</option>
               <option value="contacted"${lead?.pipeline_stage === 'contacted' ? ' selected' : ''}>Contacted</option>
+              <option value="replied"${lead?.pipeline_stage === 'replied' ? ' selected' : ''}>Replied</option>
               <option value="quoted"${lead?.pipeline_stage === 'quoted' ? ' selected' : ''}>Quoted</option>
               <option value="appointment_set"${lead?.pipeline_stage === 'appointment_set' ? ' selected' : ''}>Appointment Set</option>
-              <option value="closed_won"${lead?.pipeline_stage === 'closed_won' ? ' selected' : ''}>Closed Won</option>
-              <option value="closed_lost"${lead?.pipeline_stage === 'closed_lost' ? ' selected' : ''}>Closed Lost</option>
+              <option value="sold"${lead?.pipeline_stage === 'sold' ? ' selected' : ''}>Sold</option>
+              <option value="lost"${lead?.pipeline_stage === 'lost' ? ' selected' : ''}>Lost</option>
             </select>
           </div>
         </div>

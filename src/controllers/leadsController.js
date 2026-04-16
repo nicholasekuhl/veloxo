@@ -1517,21 +1517,18 @@ const riskCheck = async (req, res) => {
 }
 
 const PIPELINE_STAGES = [
+  'new_lead',
+  'contacted',
   'replied',
-  'household_confirmed',
-  'income_provided',
-  'medical_shared',
-  'budget_provided',
-  'appointment_scheduled',
-  'sold'
+  'quoted',
+  'appointment_set',
+  'sold',
+  'lost'
 ]
 
 const updatePipelineStage = async (req, res) => {
   try {
     const { pipeline_stage } = req.body
-    if (!PIPELINE_STAGES.includes(pipeline_stage)) {
-      return res.status(400).json({ error: 'Invalid pipeline stage' })
-    }
     const now = new Date().toISOString()
     const { data, error } = await supabase
       .from('leads')
