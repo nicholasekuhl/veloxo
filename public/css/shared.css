@@ -35,7 +35,7 @@
 }
 [data-theme="light"] {
   --bg-base: #f4f6f8;
-  --bg-sidebar: #ffffff;
+  --bg-sidebar: #0e1419;
   --bg-card: #ffffff;
   --bg-elevated: #f9fafb;
   --bg-hover: rgba(0,0,0,0.03);
@@ -55,8 +55,8 @@
   --color-warning: #d97706;
   --color-error: #dc2626;
   --color-info: #0284c7;
-  --sidebar-bg: #ffffff;
-  --sidebar-border: rgba(0,0,0,0.08);
+  --sidebar-bg: #0e1419;
+  --sidebar-border: rgba(255,255,255,0.06);
   --scrollbar-thumb: rgba(0,0,0,0.12);
   --input-bg: rgba(0,0,0,0.04);
   --input-border: rgba(0,0,0,0.1);

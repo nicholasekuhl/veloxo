@@ -9,43 +9,43 @@
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <style>
 .lead-list { display: flex; flex-direction: column; gap: 8px; padding: 16px 28px 40px 28px !important; max-width: 1600px; margin-left: auto; margin-right: auto; background: transparent !important; }
-.lead-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 12px rgba(0,0,0,0.35) !important; transition: border-color 0.12s; }
-.lead-card:hover { border-color: rgba(255,255,255,0.12); }
+.lead-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px !important; overflow: hidden !important; box-shadow: 0 2px 12px var(--modal-shadow) !important; transition: border-color 0.12s; }
+.lead-card:hover { border-color: var(--border-strong); }
 .lead-card.has-notes { border-color: rgba(0,201,167,0.18); }
 
 .col-contact-top { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 10px; }
 .lead-cb { margin-top: 3px; accent-color: #00c9a7; cursor: pointer; flex-shrink: 0; }
 .lead-avatar { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.lead-name { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.lead-name { font-size: 15px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .lead-phone { font-size: 13px; color: #00d4b4; font-weight: 500; margin-top: 1px; }
-.lead-email { font-size: 12px; color: rgba(255,255,255,0.32); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
-.lead-meta-line { font-size: 13px; color: rgba(255,255,255,0.38); margin-left: 45px; line-height: 1.7; }
-.lead-meta-line span { color: rgba(255,255,255,0.6); }
-.lead-local-time { display: flex; align-items: center; gap: 4px; font-size: 12px; color: rgba(255,255,255,0.28); margin: 5px 0 8px 45px; }
+.lead-email { font-size: 12px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; display: block; }
+.lead-meta-line { font-size: 13px; color: var(--text-muted); margin-left: 45px; line-height: 1.7; }
+.lead-meta-line span { color: var(--text-secondary); }
+.lead-local-time { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-muted); margin: 5px 0 8px 45px; }
 .lead-status-row { margin-left: 45px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
 
-.notes-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.22); margin-bottom: 6px; }
+.notes-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-disabled); margin-bottom: 6px; }
 .notes-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-.notes-timestamp { font-size: 11.5px; color: rgba(255,255,255,0.2); }
+.notes-timestamp { font-size: 11.5px; color: var(--text-disabled); }
 .notes-save-btn { font-size: 12px; font-weight: 500; color: rgba(0,201,167,0.6); cursor: pointer; background: none; border: none; transition: color 0.12s; }
 .notes-save-btn:hover { color: #00d4b4; }
 
 .btn-call:hover { box-shadow: 0 4px 16px rgba(0,201,167,0.45); transform: translateY(-1px); }
-.btn-disposition:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-disposition:hover { background: var(--bg-active); color: var(--text-primary); }
 .action-tags { display: flex; flex-direction: column; gap: 5px; margin-top: 2px; }
-.action-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+.action-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; background: var(--bg-active); border: 1px solid var(--border); color: var(--text-muted); }
 .action-tag.teal { background: rgba(0,201,167,0.1); border-color: rgba(0,201,167,0.2); color: #00d4b4; }
 .action-tag.amber { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.2); color: #fbbf24; }
 .action-tag.red { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); color: #f87171; }
 
-.meta-sms-line { font-size: 12px; color: rgba(255,255,255,0.3); padding: 2px 0; }
-.meta-sms-line strong { color: rgba(255,255,255,0.55); font-weight: 500; }
+.meta-sms-line { font-size: 12px; color: var(--text-muted); padding: 2px 0; }
+.meta-sms-line strong { color: var(--text-secondary); font-weight: 500; }
 .meta-row { display: flex; justify-content: space-between; align-items: baseline; padding: 2.5px 0; }
-.meta-key { font-size: 12px; color: rgba(255,255,255,0.28); }
-.meta-val { font-size: 12.5px; color: rgba(255,255,255,0.6); }
+.meta-key { font-size: 12px; color: var(--text-muted); }
+.meta-val { font-size: 12.5px; color: var(--text-secondary); }
 .meta-bucket-row { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
 .meta-bucket-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.meta-bucket-name { font-size: 12px; color: rgba(255,255,255,0.4); }
+.meta-bucket-name { font-size: 12px; color: var(--text-muted); }
 
     .lead-3dot-btn {
       background: none;
@@ -54,20 +54,20 @@
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
-      color: rgba(255,255,255,0.3);
+      color: var(--text-muted);
       padding: 2px 6px;
       line-height: 1;
       transition: color 0.12s;
       font-family: inherit;
     }
-    .lead-3dot-btn:hover { color: rgba(255,255,255,0.7); }
+    .lead-3dot-btn:hover { color: var(--text-secondary); }
     #lead-actions-menu {
       display: none;
       position: absolute;
-      background: #1a2228;
-      border: 1px solid rgba(255,255,255,0.09);
+      background: var(--dropdown-bg);
+      border: 1px solid var(--input-border);
       border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 32px var(--modal-shadow);
       z-index: 1000;
       min-width: 230px;
       overflow: hidden;
@@ -77,7 +77,7 @@
     .ami-section {
       font-size: 10px;
       font-weight: 700;
-      color: rgba(255,255,255,0.25);
+      color: var(--text-disabled);
       letter-spacing: 0.08em;
       padding: 8px 14px 4px;
       text-transform: uppercase;
@@ -89,37 +89,37 @@
       width: 100%;
       padding: 8px 14px;
       font-size: 13px;
-      color: rgba(255,255,255,0.65);
+      color: var(--text-secondary);
       background: none;
       border: none;
       cursor: pointer;
       text-align: left;
       transition: background 0.1s;
     }
-    .ami-item:hover { background: rgba(255,255,255,0.05); }
+    .ami-item:hover { background: var(--bg-hover); }
     .ami-item.ami-danger { color: #f87171; }
     .ami-item.ami-danger:hover { background: rgba(239,68,68,0.08); }
     .ami-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
-    .ami-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 4px 0; }
+    .ami-divider { height: 1px; background: var(--border); margin: 4px 0; }
     #bulk-actions { display: none !important; }
     .ami-sub-item {
       display: flex;
       align-items: center;
       padding: 7px 14px 7px 28px;
       font-size: 13px;
-      color: rgba(255,255,255,0.55);
+      color: var(--text-secondary);
       cursor: pointer;
       transition: background 0.1s;
     }
-    .ami-sub-item:hover { background: rgba(255,255,255,0.05); }
+    .ami-sub-item:hover { background: var(--bg-hover); }
     .bulk-dd {
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      background: #1a2228;
-      border: 1px solid rgba(255,255,255,0.09);
+      background: var(--dropdown-bg);
+      border: 1px solid var(--input-border);
       border-radius: 10px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      box-shadow: 0 8px 32px var(--modal-shadow);
       z-index: 300;
       min-width: 200px;
       max-height: 300px;
@@ -129,7 +129,7 @@
     .bulk-dd-label {
       font-size: 11px;
       font-weight: 700;
-      color: rgba(255,255,255,0.25);
+      color: var(--text-disabled);
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 4px 8px 8px;
@@ -152,21 +152,21 @@
       text-align: left;
       padding: 8px 12px;
       font-size: 13px;
-      color: rgba(255,255,255,0.6);
+      color: var(--text-secondary);
       background: none;
       border: none;
       cursor: pointer;
       border-radius: 6px;
       transition: background 0.1s;
     }
-    .bulk-dd-item:hover { background: rgba(255,255,255,0.05); }
+    .bulk-dd-item:hover { background: var(--bg-hover); }
     .map-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .map-table th { padding: 8px 10px; text-align: left; font-weight: 600; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
-    .map-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; color: rgba(255,255,255,0.65); }
+    .map-table th { padding: 8px 10px; text-align: left; font-weight: 600; color: var(--text-muted); background: var(--bg-hover); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .map-table td { padding: 6px 10px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; color: var(--text-secondary); }
     .map-table tr:last-child td { border-bottom: none; }
     .copy-btn {
       background: none; border: none; cursor: pointer; padding: 2px;
-      color: rgba(255,255,255,0.25); border-radius: 4px;
+      color: var(--text-disabled); border-radius: 4px;
       display: inline-flex; align-items: center; justify-content: center;
       transition: color 0.12s, background 0.12s; flex-shrink: 0;
     }
@@ -178,28 +178,28 @@
 
     /* ── Disposition modal shell ── */
     #disposition-modal .modal {
-      background: #1a2228;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--dropdown-bg);
+      border: 1px solid var(--input-border);
       border-radius: 12px;
-      color: #fff;
+      color: var(--text-primary);
     }
     #disposition-modal .modal h2,
     #disposition-modal .modal h3 {
-      font-size: 16px; font-weight: 600; color: #fff;
+      font-size: 16px; font-weight: 600; color: var(--text-primary);
     }
     #disposition-modal .modal p,
     #disposition-modal .modal label {
-      color: rgba(255,255,255,0.65);
+      color: var(--text-secondary);
     }
     #disposition-modal .modal input[type="checkbox"] {
       accent-color: #00c9a7;
     }
     #disposition-modal .modal textarea,
     #disposition-modal .modal input[type="text"] {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      color: rgba(255,255,255,0.7);
+      color: var(--input-text);
       padding: 8px 11px;
       width: 100%;
       font-family: inherit;
@@ -211,23 +211,23 @@
     }
     #disposition-modal .modal .btn-ghost,
     #disposition-modal .modal .modal-close {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: rgba(255,255,255,0.6);
+      background: var(--bg-hover);
+      border: 1px solid var(--input-border);
+      color: var(--text-secondary);
       border-radius: 8px;
       padding: 7px 16px;
       cursor: pointer;
       font-size: 13px;
     }
-    #disposition-modal .modal .btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    #disposition-modal .modal .btn-ghost:hover { background: var(--bg-active); color: var(--text-primary); }
     #disposition-modal .modal .modal-close {
       padding: 0 6px; border-radius: 6px; font-size: 18px; line-height: 1.4;
-      background: none; border: none; color: rgba(255,255,255,0.4);
+      background: none; border: none; color: var(--text-muted);
     }
-    #disposition-modal .modal .modal-close:hover { color: #fff; }
-    .map-select { width: 100%; padding: 5px 8px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 13px; outline: none; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+    #disposition-modal .modal .modal-close:hover { color: var(--text-primary); }
+    .map-select { width: 100%; padding: 5px 8px; border: 1px solid var(--input-border); border-radius: 6px; font-size: 13px; outline: none; background: var(--input-bg); color: var(--input-text); }
     .map-select:focus { border-color: rgba(0,201,167,0.4); }
-    .map-preview-cell { color: rgba(255,255,255,0.35); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+    .map-preview-cell { color: var(--text-muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
 
     /* ── Font size overrides ── */
     .status-pill { font-size: 12px !important; padding: 3px 10px !important; }
@@ -245,7 +245,7 @@
     .action-tag { font-size: 12px !important; padding: 4px 10px !important; }
 
     /* ── Page background + alignment ── */
-    .main-content { background: #0b0f12 !important; }
+    .main-content { background: var(--bg-base) !important; }
     .page-content, .lead-page-content, #leads-container { background: transparent !important; }
     .filter-row { padding-left: 28px !important; padding-right: 28px !important; }
     .section-meta, .list-meta { padding-left: 28px !important; padding-right: 28px !important; }
@@ -264,8 +264,8 @@
     }
     .stat-card {
       flex: 1 !important;
-      background: #131a1f !important;
-      border: 1px solid rgba(255,255,255,0.07) !important;
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border) !important;
       border-radius: 10px !important;
       padding: 13px 16px !important;
       visibility: visible !important;
@@ -277,13 +277,13 @@
     .stat-value {
       font-size: 21px !important;
       font-weight: 700 !important;
-      color: #fff !important;
+      color: var(--text-primary) !important;
       letter-spacing: -0.5px !important;
       display: block !important;
     }
     .stat-label {
       font-size: 11px !important;
-      color: rgba(255,255,255,0.35) !important;
+      color: var(--text-muted) !important;
       margin-top: 3px !important;
       display: block !important;
     }
@@ -292,7 +292,7 @@
     .buckets-label {
       display: inline !important;
       visibility: visible !important;
-      color: rgba(255,255,255,0.2) !important;
+      color: var(--text-disabled) !important;
       font-size: 10px !important;
       font-weight: 600 !important;
       letter-spacing: 0.09em !important;
@@ -311,9 +311,9 @@
       gap: 8px !important;
       padding: 10px 18px !important;
       border-radius: 10px !important;
-      background: #131a1f !important;
+      background: var(--bg-card) !important;
       border: 1px solid rgba(0,201,167,0.3) !important;
-      color: #00d4b4 !important;
+      color: var(--accent-hover) !important;
       font-size: 13px !important;
       font-weight: 600 !important;
       cursor: pointer !important;
@@ -338,12 +338,12 @@
     .lead-mode-label {
       font-size: 13px;
       font-weight: 600;
-      color: rgba(255,255,255,0.35);
+      color: var(--text-muted);
       cursor: pointer;
       transition: color 0.15s;
       user-select: none;
     }
-    .lead-mode-label.active { color: rgba(255,255,255,0.85); }
+    .lead-mode-label.active { color: var(--text-primary); }
     .lead-mode-label.active-priority { color: #f59e0b; }
     .mode-switch {
       position: relative;
@@ -355,7 +355,7 @@
     .mode-switch-track {
       position: absolute;
       inset: 0;
-      background: rgba(255,255,255,0.12);
+      background: var(--border-strong);
       border-radius: 11px;
       transition: background 0.2s;
     }
@@ -425,7 +425,7 @@
       <div class="checklist-header">
         <div>
           <h3>Get started with Veloxo</h3>
-          <div style="font-size:13px;color:rgba(255,255,255,0.4);margin-top:2px;">Complete these steps to start texting leads</div>
+          <div style="font-size:13px;color:var(--text-muted);margin-top:2px;">Complete these steps to start texting leads</div>
         </div>
         <button class="checklist-dismiss" onclick="dismissChecklist()">Dismiss</button>
       </div>
@@ -459,10 +459,10 @@
     <div class="stat-card"><div class="stat-accent" style="background:#a78bfa"></div><div class="stat-value" id="stat-autopilot">0</div><div class="stat-label">On Autopilot</div></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:10px 20px 0;">
-    <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:0.08em;text-transform:uppercase;">Buckets</div>
+    <div style="font-size:10px;font-weight:700;color:var(--text-disabled);letter-spacing:0.08em;text-transform:uppercase;">Buckets</div>
     <div style="position:relative;" id="new-bucket-dropdown-wrap">
-      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);font-size:13px;padding:2px 8px;border-radius:6px;font-weight:500;font-family:inherit;">+ New ▾</button>
-      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#1a2228;border:1px solid rgba(255,255,255,0.09);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-width:160px;z-index:500;padding:6px 0;overflow:hidden;">
+      <button onclick="toggleNewBucketDropdown(event)" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;padding:2px 8px;border-radius:6px;font-weight:500;font-family:inherit;">+ New ▾</button>
+      <div id="new-bucket-dropdown" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:10px;box-shadow:0 4px 20px var(--modal-shadow);min-width:160px;z-index:500;padding:6px 0;overflow:hidden;">
         <button onclick="closeNewBucketDropdown();openNewBucketModal()" class="new-dd-item">🏷 New Bucket</button>
         <button onclick="closeNewBucketDropdown();openNewFolderModal()" class="new-dd-item">📁 New Folder</button>
       </div>
@@ -471,12 +471,12 @@
   <div class="bucket-tabs" id="bucket-tabs">
     <div class="bucket-tab active" onclick="selectBucket('', this)">All Leads</div>
   </div>
-  <div id="sold-commission-banner" style="display:none;align-items:center;gap:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:8px 14px;font-size:13px;margin:8px 20px 0;color:rgba(255,255,255,0.7);"></div>
+  <div id="sold-commission-banner" style="display:none;align-items:center;gap:8px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:8px 14px;font-size:13px;margin:8px 20px 0;color:var(--text-secondary);"></div>
   <div style="display:flex;gap:8px;margin-bottom:0;flex-wrap:wrap;align-items:center;padding:10px 20px 0;">
     <div style="position:relative;">
-      <input type="text" id="campaign-quick-input" placeholder="⚡ Filter by campaign..." oninput="showCampaignDropdown()" autocomplete="off" title="Filter by active drip campaign" style="padding:6px 12px;border:1px solid rgba(255,255,255,0.1);border-radius:20px;font-size:13px;outline:none;width:190px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);">
-      <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.3);font-size:16px;line-height:1;">×</button>
-      <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:#1a2228;border:1px solid rgba(255,255,255,0.09);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
+      <input type="text" id="campaign-quick-input" placeholder="⚡ Filter by campaign..." oninput="showCampaignDropdown()" autocomplete="off" title="Filter by active drip campaign" style="padding:6px 12px;border:1px solid var(--input-border);border-radius:20px;font-size:13px;outline:none;width:190px;background:var(--input-bg);color:var(--input-text);">
+      <button id="campaign-clear-btn" onclick="clearCampaignQuickFilter()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;line-height:1;">×</button>
+      <div id="campaign-quick-dropdown" style="display:none;position:absolute;top:100%;left:0;background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:8px;box-shadow:0 4px 20px var(--modal-shadow);min-width:200px;max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
     </div>
   </div>
   <div class="leads-filter-bar">
@@ -588,10 +588,10 @@
     <div class="active-filters" id="active-filters"></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 28px;">
-    <div style="font-size:13px;color:rgba(255,255,255,0.35);" id="leads-count"></div>
+    <div style="font-size:13px;color:var(--text-muted);" id="leads-count"></div>
     <div style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="accent-color:#00c9a7;">
-      <label for="select-all" style="font-size:13px;color:rgba(255,255,255,0.35);cursor:pointer;">Select all</label>
+      <label for="select-all" style="font-size:13px;color:var(--text-muted);cursor:pointer;">Select all</label>
     </div>
   </div>
   <div class="leads-grid" id="leads-grid"></div>
@@ -604,10 +604,10 @@
       <h2 id="upload-modal-title">Import Lead Sheet</h2>
       <button class="modal-close" onclick="closeUploadModal()">×</button>
     </div>
-    <div style="display:flex;margin-bottom:20px;border:1px solid rgba(255,255,255,0.09);border-radius:8px;overflow:hidden;">
-      <div id="step-ind-1" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:rgba(0,201,167,0.1);color:#00d4b4;border-right:1px solid rgba(255,255,255,0.07);">1 · File &amp; Settings</div>
-      <div id="step-ind-2" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.35);border-right:1px solid #e5e7eb;">2 · Map Columns</div>
-      <div id="step-ind-3" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.35);">3 · Risk Preview</div>
+    <div style="display:flex;margin-bottom:20px;border:1px solid var(--input-border);border-radius:8px;overflow:hidden;">
+      <div id="step-ind-1" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:var(--accent-subtle);color:var(--accent);border-right:1px solid var(--border);">1 · File &amp; Settings</div>
+      <div id="step-ind-2" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-muted);border-right:1px solid var(--border);">2 · Map Columns</div>
+      <div id="step-ind-3" style="flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-muted);">3 · Risk Preview</div>
     </div>
     <!-- STEP 1 -->
     <div id="upload-step-1">
@@ -622,10 +622,10 @@
         <select id="import-bucket-id" onchange="onBucketSelectChange(this)">
           <option value="">No bucket</option>
         </select>
-        <div id="new-bucket-form" style="display:none;margin-top:10px;padding:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:10px;">
+        <div id="new-bucket-form" style="display:none;margin-top:10px;padding:12px;background:var(--bg-hover);border:1px solid var(--input-border);border-radius:10px;">
           <div style="margin-bottom:8px;">
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Bucket Name</label>
-            <input type="text" id="new-bucket-name" placeholder="New Leads" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:13px;outline:none;">
+            <input type="text" id="new-bucket-name" placeholder="New Leads" style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid var(--input-border);border-radius:7px;font-size:13px;outline:none;background:var(--input-bg);color:var(--input-text);">
           </div>
           <div style="margin-bottom:8px;">
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Color</label>
@@ -634,7 +634,7 @@
           </div>
           <div>
             <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Parent Folder (optional)</label>
-            <select id="new-bucket-parent" style="width:100%;padding:6px 10px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:13px;">
+            <select id="new-bucket-parent" style="width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:7px;font-size:13px;background:var(--input-bg);color:var(--input-text);">
               <option value="">No folder</option>
             </select>
           </div>
@@ -650,19 +650,19 @@
         <select id="import-disposition">
           <option value="">No disposition tag</option>
         </select>
-        <p style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;">Tag will be applied to every lead in this import and trigger any attached drip sequence.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Tag will be applied to every lead in this import and trigger any attached drip sequence.</p>
       </div>
       <div class="form-group">
         <label>Import as</label>
-        <div style="display:flex;gap:0;border:1px solid rgba(255,255,255,0.09);border-radius:8px;overflow:hidden;">
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.03);transition:background 0.12s;" id="tier-option-pool">
+        <div style="display:flex;gap:0;border:1px solid var(--input-border);border-radius:8px;overflow:hidden;">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text-secondary);background:var(--bg-hover);transition:background 0.12s;" id="tier-option-pool">
             <input type="radio" name="import-lead-tier" value="pool" checked style="accent-color:#00d4b4;"> Lead Pool
           </label>
-          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.6);border-left:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.03);transition:background 0.12s;" id="tier-option-priority">
+          <label style="flex:1;display:flex;align-items:center;gap:8px;padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text-secondary);border-left:1px solid var(--input-border);background:var(--bg-hover);transition:background 0.12s;" id="tier-option-priority">
             <input type="radio" name="import-lead-tier" value="priority" style="accent-color:#00d4b4;"> Priority
           </label>
         </div>
-        <p style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;">Priority leads appear in your Priority queue and can trigger automated actions on receipt.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">Priority leads appear in your Priority queue and can trigger automated actions on receipt.</p>
       </div>
       <div class="toggle-row">
         <div>
@@ -679,7 +679,7 @@
     </div>
     <!-- STEP 2 -->
     <div id="upload-step-2" style="display:none;">
-      <div id="mapping-table-container" style="max-height:420px;overflow-y:auto;margin-bottom:12px;border:1px solid rgba(255,255,255,0.09);border-radius:8px;"></div>
+      <div id="mapping-table-container" style="max-height:420px;overflow-y:auto;margin-bottom:12px;border:1px solid var(--input-border);border-radius:8px;"></div>
       <div class="status-bar" id="import-status-bar"></div>
       <div class="modal-footer">
         <button class="btn-ghost" onclick="goBackToStep1()">← Back</button>
@@ -706,7 +706,7 @@
           <div class="import-stat-label">Total Rows</div>
         </div>
       </div>
-      <div id="risk-table-container" style="max-height:280px;overflow-y:auto;border:1px solid rgba(255,255,255,0.09);border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
+      <div id="risk-table-container" style="max-height:280px;overflow-y:auto;border:1px solid var(--input-border);border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
       <div class="status-bar" id="risk-status-bar"></div>
       <div class="modal-footer" style="flex-direction:column;gap:8px;align-items:stretch;">
         <div style="display:flex;gap:8px;">
@@ -744,14 +744,14 @@
         <div class="import-stat-label">Invalid Phones</div>
       </div>
     </div>
-    <p id="import-results-message" style="display:none;font-size:13px;color:rgba(255,255,255,0.35);margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.09);"></p>
+    <p id="import-results-message" style="display:none;font-size:13px;color:var(--text-muted);margin-top:12px;padding:10px 12px;background:var(--bg-hover);border-radius:10px;border:1px solid var(--input-border);"></p>
     <div id="import-results-download-wrap" style="display:none;margin-top:16px;">
       <button class="btn-ghost" style="width:100%;" onclick="downloadSkippedCSV()">↓ Download Skipped Rows CSV</button>
-      <p style="font-size:12px;color:rgba(255,255,255,0.35);text-align:center;margin-top:6px;">Fix these rows and re-import to add them</p>
+      <p style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:6px;">Fix these rows and re-import to add them</p>
     </div>
-    <div style="margin-top:16px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px dashed rgba(255,255,255,0.1);">
-      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.35);margin-bottom:4px;">DNC Scrub</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.35);">Automatically scrub against national Do-Not-Call lists before importing. <span class="badge" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.35);font-size:10px;padding:2px 6px;">Coming Soon</span></div>
+    <div style="margin-top:16px;padding:12px 16px;background:var(--bg-hover);border-radius:10px;border:1px dashed var(--input-border);">
+      <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">DNC Scrub</div>
+      <div style="font-size:12px;color:var(--text-muted);">Automatically scrub against national Do-Not-Call lists before importing. <span class="badge" style="background:var(--bg-active);color:var(--text-muted);font-size:10px;padding:2px 6px;">Coming Soon</span></div>
     </div>
     <div class="modal-footer">
       <button class="btn-primary" onclick="closeImportResults()">Done</button>
@@ -797,14 +797,14 @@
     <div class="form-group">
       <label>Expected Commission</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="sold-commission" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
     <div class="form-group">
       <label>Monthly Premium</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="sold-premium" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
@@ -825,7 +825,7 @@
     <div class="modal-header">
       <div>
         <h2 style="font-size:17px;">Send Text</h2>
-        <div id="sms-to-label" style="font-size:13px;color:rgba(255,255,255,0.35);margin-top:2px;"></div>
+        <div id="sms-to-label" style="font-size:13px;color:var(--text-muted);margin-top:2px;"></div>
       </div>
       <button class="modal-close" onclick="document.getElementById('sms-modal').classList.remove('open')">×</button>
     </div>
@@ -854,7 +854,7 @@
       <h2>Disposition Tags</h2>
       <button class="modal-close" onclick="document.getElementById('disposition-modal').classList.remove('open')">×</button>
     </div>
-    <div id="disposition-lead-name" style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:14px;"></div>
+    <div id="disposition-lead-name" style="font-size:13px;color:var(--text-muted);margin-bottom:14px;"></div>
     <div id="disp-picker-grid" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;margin-bottom:16px;"></div>
     <div class="form-group">
       <label>Notes (optional)</label>
@@ -930,11 +930,11 @@
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Add to Campaign <span style="color:rgba(255,255,255,0.35);">(optional)</span></label>
+        <label>Add to Campaign <span style="color:var(--text-muted);">(optional)</span></label>
         <select id="cl-campaign"><option value="">No campaign</option></select>
       </div>
       <div class="form-group">
-        <label>Apply Disposition <span style="color:rgba(255,255,255,0.35);">(optional)</span></label>
+        <label>Apply Disposition <span style="color:var(--text-muted);">(optional)</span></label>
         <select id="cl-disposition"><option value="">No disposition</option></select>
       </div>
     </div>
@@ -986,7 +986,7 @@
         <div style="font-size:14px;font-weight:600;">Follow-up Tasks</div>
         <button class="btn btn-primary btn-sm" onclick="openAddTaskForm()">+ Add Task</button>
       </div>
-      <div id="add-task-form" style="display:none;background:rgba(255,255,255,0.04);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.09);">
+      <div id="add-task-form" style="display:none;background:var(--bg-hover);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid var(--input-border);">
         <div class="form-row">
           <div class="form-group">
             <label>Task</label>
@@ -1052,7 +1052,7 @@
       <h2 id="run-campaign-modal-title">Assign Campaign</h2>
       <button class="modal-close" onclick="closeRunCampaignModal()">×</button>
     </div>
-    <p id="run-campaign-lead-count" style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 16px;"></p>
+    <p id="run-campaign-lead-count" style="font-size:13px;color:var(--text-muted);margin:0 0 16px;"></p>
     <div class="form-group">
       <label>Campaign</label>
       <select id="run-campaign-select" onchange="onRunCampaignChange()">
@@ -1074,7 +1074,7 @@
       <h2 style="font-size:17px;" id="bulk-sold-title">Mark as Sold</h2>
       <button class="modal-close" onclick="document.getElementById('bulk-sold-modal').classList.remove('open')">×</button>
     </div>
-    <div id="bulk-sold-note" style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:16px;background:#f9fafb;border-radius:8px;padding:10px 14px;"></div>
+    <div id="bulk-sold-note" style="font-size:13px;color:var(--text-muted);margin-bottom:16px;background:var(--bg-elevated);border-radius:8px;padding:10px 14px;"></div>
     <div class="form-group">
       <label>Product Sold</label>
       <input type="text" id="bulk-sold-plan" placeholder="e.g. UHC PPO $245/mo, Term Life $500k...">
@@ -1082,7 +1082,7 @@
     <div class="form-group">
       <label>Commission per Lead (optional)</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:14px;pointer-events:none;">$</span>
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;">$</span>
         <input type="number" id="bulk-sold-commission" placeholder="0.00" step="0.01" min="0" style="padding-left:26px;">
       </div>
     </div>
@@ -1100,7 +1100,7 @@
       <h2 style="font-size:17px;" id="bulk-delete-title">Delete Leads?</h2>
       <button class="modal-close" onclick="closeBulkDeleteModal()">×</button>
     </div>
-    <p id="bulk-delete-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
+    <p id="bulk-delete-body" style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;"></p>
     <div class="form-group">
       <label>Type <strong>DELETE</strong> to confirm</label>
       <input type="text" id="bulk-delete-input" placeholder="DELETE" oninput="checkBulkDeleteInput()" autocomplete="off">
@@ -1122,7 +1122,7 @@
       <h2 style="font-size:17px;" id="opt-out-modal-title">Opt Out Lead?</h2>
       <button class="modal-close" onclick="closeOptOutModal()">×</button>
     </div>
-    <p id="opt-out-modal-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
+    <p id="opt-out-modal-body" style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;"></p>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeOptOutModal()">Cancel</button>
       <button class="btn" id="opt-out-confirm-btn" style="background:#ef4444;color:white;font-weight:600;" onclick="executeOptOut()">Opt Out</button>
@@ -1137,7 +1137,7 @@
       <h2 style="font-size:17px;" id="undo-opt-out-modal-title">Remove Opt-Out?</h2>
       <button class="modal-close" onclick="closeUndoOptOutModal()">×</button>
     </div>
-    <p id="undo-opt-out-modal-body" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;"></p>
+    <p id="undo-opt-out-modal-body" style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;"></p>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeUndoOptOutModal()">Cancel</button>
       <button class="btn-primary" id="undo-opt-out-confirm-btn" onclick="executeUndoOptOut()">Remove Opt-Out</button>
@@ -1152,7 +1152,7 @@
       <h2 style="font-size:17px;" id="delete-modal-title">Delete Lead?</h2>
       <button class="modal-close" onclick="closeDeleteModal()">×</button>
     </div>
-    <p style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:20px;line-height:1.5;">This will permanently delete this lead and all their conversation history, tasks, and activity. This cannot be undone.</p>
+    <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.5;">This will permanently delete this lead and all their conversation history, tasks, and activity. This cannot be undone.</p>
     <div class="form-group">
       <label>Type <strong>DELETE</strong> to confirm</label>
       <input type="text" id="delete-confirm-input" placeholder="DELETE" oninput="checkDeleteInput()" autocomplete="off">
@@ -1171,7 +1171,7 @@
       <h2 style="font-size:17px;">Schedule Follow-up</h2>
       <button class="modal-close" onclick="document.getElementById('schedule-followup-modal').classList.remove('open')">×</button>
     </div>
-    <div id="schedule-followup-lead-name" style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:16px;"></div>
+    <div id="schedule-followup-lead-name" style="font-size:14px;color:var(--text-muted);margin-bottom:16px;"></div>
     <div class="form-group">
       <label>Task / Reminder</label>
       <input type="text" id="schedule-followup-title" placeholder="e.g. Follow up call, Send quote">
