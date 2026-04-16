@@ -575,32 +575,14 @@ const renderSidebar = () => {
   }
 }
 
-function toggleDarkMode() {
-  const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-  setDarkMode(!isDark)
-}
-
-function setDarkMode(dark) {
-  const html = document.documentElement
-  const sw = document.getElementById('dark-mode-switch')
-  const knob = document.getElementById('dark-mode-knob')
-  if (dark) {
-    html.setAttribute('data-theme', 'dark')
-    if (sw) sw.style.background = '#6366f1'
-    if (knob) knob.style.transform = 'translateX(16px)'
-    localStorage.setItem('theme', 'dark')
-  } else {
-    html.removeAttribute('data-theme')
-    if (sw) sw.style.background = 'var(--gray-300)'
-    if (knob) knob.style.transform = 'translateX(0)'
-    localStorage.setItem('theme', 'light')
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar()
   const savedTheme = localStorage.getItem('theme')
-  if (savedTheme === 'dark') setDarkMode(true)
+  if (savedTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light')
+  } else {
+    document.documentElement.removeAttribute('data-theme')
+  }
 })
 
 // ─── CONFETTI ────────────────────────────────────────────────────────────────

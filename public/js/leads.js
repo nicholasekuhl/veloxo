@@ -83,7 +83,7 @@ const setLeadMode = (mode) => {
 
 const loadPriorityLeads = async () => {
   const grid = document.getElementById('leads-grid')
-  if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading priority leads...</div>'
+  if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Loading priority leads...</div>'
 
   try {
     const res = await fetch('/leads?tier=priority&limit=500&page=1')
@@ -102,7 +102,7 @@ const loadPriorityLeads = async () => {
     renderLeads(allLeads)
   } catch (err) {
     console.error('Failed to load priority leads:', err)
-    if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#9ca3af;">Could not load priority leads.</div>'
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-muted);">Could not load priority leads.</div>'
   }
 }
 
@@ -199,7 +199,7 @@ const renderMsOptions = (key) => {
   const matches = query ? allDispositionTags.filter(t => t.name.toLowerCase().includes(query)) : allDispositionTags
   const el = document.getElementById(`sf-${key}-options`)
   if (!el) return
-  if (!matches.length) { el.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:#9ca3af;">No tags found</div>'; return }
+  if (!matches.length) { el.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--text-muted);">No tags found</div>'; return }
   el.innerHTML = matches.map(t => {
     const sel = selectedIds.includes(t.id)
     return `<div class="ms-option ${sel ? 'ms-selected' : ''}" onclick="toggleMsOption('${key}','${t.id}','${t.name.replace(/'/g, "\\'")}')">
@@ -254,7 +254,7 @@ const selectBucket = async (bucketId) => {
 
   // Server-side fetch for this specific bucket
   const grid = document.getElementById('leads-grid')
-  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>'
 
   try {
     const res = await fetch('/leads?bucket_id=' + bucketId + '&limit=200&page=1')
@@ -278,7 +278,7 @@ const selectWorkedPriority = async () => {
   activeFolderId = ''
   renderBucketPills()
   const grid = document.getElementById('leads-grid')
-  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>'
   try {
     const res = await fetch('/leads?tier=worked&limit=500&page=1')
     const data = await res.json()
@@ -316,7 +316,7 @@ const selectFolder = async (folderId) => {
   }
 
   const grid = document.getElementById('leads-grid')
-  grid.innerHTML = '<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+  grid.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>'
 
   try {
     const results = await Promise.all(
@@ -423,7 +423,7 @@ const renderBucketPills = () => {
       const soldLeads = allLeads.filter(l => l.bucket_id === soldBktP.id)
       const total = soldLeads.reduce((sum, l) => sum + (l.commission || 0), 0)
       const pending = soldLeads.filter(l => l.commission_status === 'pending').reduce((sum, l) => sum + (l.commission || 0), 0)
-      bannerP.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:#6b7280;font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
+      bannerP.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:var(--text-muted);font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
       bannerP.style.display = 'flex'
     }
     return
@@ -441,7 +441,7 @@ const renderBucketPills = () => {
 
       // Folder wrapper: block-level div so it's actually draggable as a unit
       html += `<div data-drag-id="${folder.id}" data-id="${folder.id}" style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;">
-        <button class="bucket-tab" style="color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${folder.id}',event)">
+        <button class="bucket-tab" style="color:var(--text-secondary);border-color:var(--border);" onclick="toggleFolderCollapse('${folder.id}',event)">
           <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
           ${folder.name}<span style="opacity:0.7;font-size:11px;margin-left:2px;">${folderCount}</span><span style="font-size:10px;opacity:0.5;margin-left:2px;">${chevron}</span>
         </button>`
@@ -456,7 +456,7 @@ const renderBucketPills = () => {
           const subBuckets = dynamicBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
           const subCount = getFolderCount(sub.id, allBuckets)
           html += `<div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:6px;">
-            <button class="bucket-tab" style="font-size:11px;color:var(--color-text-secondary,#6b7280);border-color:var(--border-default,#e5e7eb);" onclick="toggleFolderCollapse('${sub.id}',event)">
+            <button class="bucket-tab" style="font-size:11px;color:var(--text-secondary);border-color:var(--border);" onclick="toggleFolderCollapse('${sub.id}',event)">
               <svg width="11" height="11" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink:0"><path d="M1.5 3A1.5 1.5 0 000 4.5v8A1.5 1.5 0 001.5 14h13a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H7.621a1.5 1.5 0 01-1.06-.44L5.5 3H1.5z"/></svg>
               ${sub.name}<span style="opacity:0.7;font-size:10px;margin-left:2px;">${subCount}</span><span style="font-size:9px;opacity:0.5;margin-left:2px;">${subChevron}</span>
             </button>`
@@ -538,7 +538,7 @@ const renderBucketPills = () => {
       const soldLeads = allLeads.filter(l => l.bucket_id === soldBkt.id)
       const total = soldLeads.reduce((sum, l) => sum + (l.commission || 0), 0)
       const pending = soldLeads.filter(l => l.commission_status === 'pending').reduce((sum, l) => sum + (l.commission || 0), 0)
-      banner.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:#6b7280;font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
+      banner.innerHTML = `<span style="font-weight:700;color:#166534;">Total Commission: ${fmtComm(total)}</span>${pending > 0 ? `<span style="color:var(--text-muted);font-size:12px;margin-left:10px;">${fmtComm(pending)} pending</span>` : ''}`
       banner.style.display = 'flex'
     } else {
       banner.style.display = 'none'
@@ -635,7 +635,7 @@ const filterLeads = () => {
 const serverSearchLeads = async (query) => {
   isSearchActive = true
   const grid = document.getElementById('leads-grid')
-  grid.innerHTML = `<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Searching...</div>`
+  grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Searching...</div>`
   try {
     const res = await fetch('/leads?search=' + encodeURIComponent(query) + '&limit=200&page=1')
     const data = await res.json()
@@ -674,7 +674,7 @@ const applyFilters = async () => {
   const dateTo = document.getElementById('sf-date-to')?.value
   if (dateTo) params.set('date_to', dateTo)
   const grid = document.getElementById('leads-grid')
-  grid.innerHTML = `<div style="padding:40px;text-align:center;color:#9ca3af;font-size:13px;">Filtering...</div>`
+  grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);font-size:13px;">Filtering...</div>`
   try {
     const res = await fetch('/leads?' + params.toString())
     const data = await res.json()
@@ -780,7 +780,7 @@ const lastContactHtml = (lead) => {
     const text = days === 0 ? 'Today' : days === 1 ? '1d ago' : `${days}d ago`
     return `<span style="font-size:11px;color:${color};font-weight:500;">🕐 ${text}</span>`
   }
-  return lead.status !== 'new' ? `<span style="font-size:11px;color:#d1d5db;">Never contacted</span>` : ''
+  return lead.status !== 'new' ? `<span style="font-size:11px;color:var(--text-muted);">Never contacted</span>` : ''
 }
 
 // ===== RENDER LEADS =====
@@ -790,12 +790,12 @@ const renderLeads = (leads) => {
     if (!allLeads.length) {
       grid.innerHTML = `<div style="text-align:center;padding:72px 20px;">
         <div style="font-size:40px;margin-bottom:14px;">👥</div>
-        <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">No leads yet</div>
-        <div style="font-size:13px;color:#9ca3af;margin-bottom:20px;">Import a CSV file or create a lead manually to get started.</div>
+        <div style="font-size:17px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">No leads yet</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Import a CSV file or create a lead manually to get started.</div>
         <button class="btn btn-primary" style="width:auto;padding:8px 20px;" onclick="openUploadModal()">Import Leads</button>
       </div>`
     } else {
-      grid.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#d1d5db;"><div style="font-size:28px;margin-bottom:8px;">🔍</div><div style="font-size:14px;">No leads match your filters</div></div>`
+      grid.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted);"><div style="font-size:28px;margin-bottom:8px;">🔍</div><div style="font-size:14px;">No leads match your filters</div></div>`
     }
     return
   }
@@ -818,7 +818,7 @@ const renderLeads = (leads) => {
     const replyBadge = lead.has_replied != null
       ? (lead.has_replied
           ? `<span style="background:#d1fae5;color:#065f46;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;">Replied</span>`
-          : `<span style="background:#f3f4f6;color:#9ca3af;border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;">No reply</span>`)
+          : `<span style="background:var(--bg-hover);color:var(--text-muted);border-radius:20px;padding:2px 7px;font-size:10px;font-weight:600;">No reply</span>`)
       : ''
     const apptBadge = lead.next_appointment ? (() => {
       const apptDate = new Date(lead.next_appointment)
@@ -842,7 +842,7 @@ const renderLeads = (leads) => {
       <div class="lead-card ${lead.notes ? 'has-notes' : ''}" data-lead-id="${lead.id}" ${lead.do_not_contact ? 'style="opacity:0.55;"' : ''}>
         <div class="lead-card-body" style="display:grid;grid-template-columns:290px 2fr 0.85fr 215px 170px;width:100%;min-width:0;gap:0;">
 
-          <div class="col-contact" style="padding:12px 16px;border-right:1px solid rgba(255,255,255,0.05);min-width:0;overflow:hidden;">
+          <div class="col-contact" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;">
             <div class="col-contact-top">
               <input type="checkbox" class="lead-cb lead-select-cb" data-id="${lead.id}" onchange="toggleLead(this)" ${selectedLeads.has(lead.id) ? 'checked' : ''}>
               <div class="lead-avatar" style="background:rgba(0,201,167,0.15);color:#00d4b4">${initials}</div>
@@ -878,30 +878,30 @@ const renderLeads = (leads) => {
             </div>
           </div>
 
-          <div class="col-notes" style="padding:12px 16px;border-right:1px solid rgba(255,255,255,0.05);min-width:0;overflow:hidden;display:flex;flex-direction:column;">
+          <div class="col-notes" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;display:flex;flex-direction:column;">
             <div class="notes-label">Notes</div>
-            <textarea class="notes-textarea" style="width:100%;min-height:130px;flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:9px 11px;font-size:13px;color:rgba(255,255,255,0.7);font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Add notes about this lead…" data-lead-id="${lead.id}" onblur="saveNotes('${lead.id}', this.value)">${lead.notes || ''}</textarea>
+            <textarea class="notes-textarea" style="width:100%;min-height:130px;flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:7px;padding:9px 11px;font-size:13px;color:var(--input-text);font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;" placeholder="Add notes about this lead…" data-lead-id="${lead.id}" onblur="saveNotes('${lead.id}', this.value)">${lead.notes || ''}</textarea>
             <div class="notes-footer">
               <span class="notes-timestamp">${lead.notes_updated_at ? 'Last edited ' + timeAgo(lead.notes_updated_at) : 'No notes yet'}</span>
               <button class="notes-save-btn" onclick="saveNotes('${lead.id}', this.closest('.col-notes').querySelector('.notes-textarea').value)">Save</button>
             </div>
           </div>
 
-          <div class="col-quotes" style="padding:12px 16px;border-right:1px solid rgba(255,255,255,0.05);min-width:0;overflow:hidden;display:flex;flex-direction:column;">
+          <div class="col-quotes" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;display:flex;flex-direction:column;">
             <div class="notes-label">Quoted Plans</div>
-            <textarea class="notes-textarea quotes-textarea" style="width:100%;min-height:130px;flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:9px 11px;font-size:13px;color:rgba(255,255,255,0.7);font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo" data-lead-id="${lead.id}" onblur="saveQuotes('${lead.id}', this.value)">${lead.quotes || ''}</textarea>
+            <textarea class="notes-textarea quotes-textarea" style="width:100%;min-height:130px;flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:7px;padding:9px 11px;font-size:13px;color:var(--input-text);font-family:inherit;outline:none;resize:vertical;box-sizing:border-box;" placeholder="e.g. PPO $245/mo&#10;Dental add-on $32/mo" data-lead-id="${lead.id}" onblur="saveQuotes('${lead.id}', this.value)">${lead.quotes || ''}</textarea>
             <div class="notes-footer">
               <span class="notes-timestamp">${lead.quotes_updated_at ? 'Updated ' + timeAgo(lead.quotes_updated_at) : 'No quotes yet'}</span>
               <button class="notes-save-btn" onclick="saveQuotes('${lead.id}', this.closest('.col-quotes').querySelector('.quotes-textarea').value)">Save</button>
             </div>
           </div>
 
-          <div class="col-actions" style="padding:12px 20px;border-right:1px solid rgba(255,255,255,0.05);min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;">
+          <div class="col-actions" style="padding:12px 20px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;">
             <button class="btn-call" style="width:100%;padding:11px 10px;font-size:13.5px;font-weight:600;color:#0b0f12;background:linear-gradient(135deg,#00c9a7,#0ea5e9);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 10px rgba(0,201,167,0.3);" onclick="event.stopPropagation();openSMSModal('${lead.id}','${safeName}')">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#0b0f12" stroke-width="1.5"><path d="M14 3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3z"/><path d="M5 6h6M5 9h4"/></svg>
               Send Text
             </button>
-            <button class="btn-disposition" style="width:100%;padding:10px 10px;font-size:13.5px;font-weight:500;color:rgba(255,255,255,0.6);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:pointer;" onclick="event.stopPropagation();openDispositionModal('${lead.id}','${safeName}')">Disposition</button>
+            <button class="btn-disposition" style="width:100%;padding:10px 10px;font-size:13.5px;font-weight:500;color:var(--text-secondary);background:var(--bg-hover);border:1px solid var(--input-border);border-radius:8px;cursor:pointer;" onclick="event.stopPropagation();openDispositionModal('${lead.id}','${safeName}')">Disposition</button>
             <div class="action-tags">
               ${leadDispTags.map(t => `<span class="action-tag" style="background:${t.color}18;border-color:${t.color}30;color:${t.color}">${t.name}</span>`).join('')}
               ${campProgress ? `<span class="action-tag teal">${hasActiveCampaign ? (lead.campaign_day != null ? `⚡ Day ${lead.campaign_day}` : '⚡ Active') : '✓ Done'}</span>` : ''}
@@ -929,7 +929,7 @@ const renderLeads = (leads) => {
               <span class="meta-bucket-name">${bucket ? bucket.name : '—'}</span>
             </div>
             <div style="margin-top:6px;">
-              <button class="lead-3dot-btn" onclick="event.stopPropagation();openLeadActionsMenu('${lead.id}','${safeName}',this)" title="More actions" style="color:rgba(255,255,255,0.3);font-size:14px;">⋯ More</button>
+              <button class="lead-3dot-btn" onclick="event.stopPropagation();openLeadActionsMenu('${lead.id}','${safeName}',this)" title="More actions" style="color:var(--text-muted);font-size:14px;">⋯ More</button>
             </div>
           </div>
 
@@ -1042,7 +1042,7 @@ const loadLeads = async () => {
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid #f9fafb;">
+        <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
           <div class="skeleton" style="height:28px;width:60px;border-radius:8px;"></div>
           <div class="skeleton" style="height:28px;width:60px;border-radius:8px;"></div>
           <div class="skeleton" style="height:28px;width:80px;border-radius:8px;"></div>
@@ -1068,7 +1068,7 @@ const loadLeads = async () => {
   } catch (err) {
     console.error(err)
     toast.error('Failed to load leads', 'Please refresh the page and try again')
-    if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:#9ca3af;font-size:14px;">Could not load leads.</div>'
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-muted);font-size:14px;">Could not load leads.</div>'
   } finally {
     isLoadingLeads = false
     leadsLoaded = true
@@ -1082,7 +1082,7 @@ const loadMoreLeads = async () => {
   if (!spinner) {
     spinner = document.createElement('div')
     spinner.id = 'scroll-spinner'
-    spinner.style.cssText = 'text-align:center;padding:20px;color:#9ca3af;font-size:13px;'
+    spinner.style.cssText = 'text-align:center;padding:20px;color:var(--text-muted);font-size:13px;'
     spinner.textContent = 'Loading...'
     document.getElementById('leads-grid')?.after(spinner)
   }
@@ -1205,7 +1205,7 @@ const toggleBulkDropdown = (ddId, type) => {
   const n = selectedLeads.size
   if (type === 'disp') {
     if (!allDispositionTags.length) {
-      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:#9ca3af;">No disposition tags yet. Create them in Settings.</div>'
+      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--text-muted);">No disposition tags yet. Create them in Settings.</div>'
     } else {
       dd.innerHTML = `<div class="bulk-dd-label">Apply to ${n} lead${n !== 1 ? 's' : ''}:</div><div class="bulk-dd-pills">` +
         allDispositionTags.map(t => `<button class="bulk-dd-pill" style="background:${t.color};" onclick="confirmBulkDisposition('${t.id}','${t.name.replace(/'/g, "\\'")}')">${t.name}</button>`).join('') +
@@ -1213,7 +1213,7 @@ const toggleBulkDropdown = (ddId, type) => {
     }
   } else if (type === 'campaign') {
     if (!allCampaigns.length) {
-      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:#9ca3af;">No campaigns yet. Create one first.</div>'
+      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--text-muted);">No campaigns yet. Create one first.</div>'
     } else {
       dd.innerHTML = `<div class="bulk-dd-label">Enroll ${n} lead${n !== 1 ? 's' : ''} in:</div>` +
         allCampaigns.map(c => `<button class="bulk-dd-item" onclick="confirmBulkCampaign('${c.id}','${c.name.replace(/'/g, "\\'")}')" >⚡ ${c.name}</button>`).join('')
@@ -1225,7 +1225,7 @@ const toggleBulkDropdown = (ddId, type) => {
       bucketPills + '</div>'
   } else if (type === 'remove-disp') {
     if (!allDispositionTags.length) {
-      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:#9ca3af;">No disposition tags yet.</div>'
+      dd.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--text-muted);">No disposition tags yet.</div>'
     } else {
       dd.innerHTML = `<div class="bulk-dd-label">Remove from ${n} lead${n !== 1 ? 's' : ''}:</div><div class="bulk-dd-pills">` +
         allDispositionTags.map(t => `<button class="bulk-dd-pill" style="background:${t.color};" onclick="confirmBulkRemoveDisposition('${t.id}','${t.name.replace(/'/g, "\\'")}')">${t.name}</button>`).join('') +
@@ -1504,12 +1504,12 @@ const toggleSMSTemplatePicker = () => {
   if (!picker) return
   if (picker.style.display !== 'none') { picker.style.display = 'none'; return }
   if (!allTemplates.length) {
-    picker.innerHTML = `<div style="padding:14px 16px;font-size:13px;color:#9ca3af;">No templates yet. Create one in Settings → Templates.</div>`
+    picker.innerHTML = `<div style="padding:14px 16px;font-size:13px;color:var(--text-muted);">No templates yet. Create one in Settings → Templates.</div>`
   } else {
     picker.innerHTML = allTemplates.map(t => `
-      <div onclick="selectSMSTemplate('${t.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f9fafb;transition:background 0.1s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-        <div style="font-size:13px;font-weight:600;color:#1a1a2e;margin-bottom:2px;">${t.name}</div>
-        <div style="font-size:12px;color:#9ca3af;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(t.body || '').substring(0, 70)}</div>
+      <div onclick="selectSMSTemplate('${t.id}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border-subtle);transition:background 0.1s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background=''">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:2px;">${t.name}</div>
+        <div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(t.body || '').substring(0, 70)}</div>
       </div>`).join('')
   }
   picker.style.display = 'block'
@@ -1563,7 +1563,7 @@ const openDispositionModal = (leadId, name) => {
   )
   const grid = document.getElementById('disp-picker-grid')
   if (!allDispositionTags.length) {
-    grid.innerHTML = `<div style="color:#9ca3af;font-size:13px;">No disposition tags yet. Create some in Settings → Disposition Tags.</div>`
+    grid.innerHTML = `<div style="color:var(--text-muted);font-size:13px;">No disposition tags yet. Create some in Settings → Disposition Tags.</div>`
   } else {
     grid.innerHTML = allDispositionTags.map(tag => `
       <label class="disp-check-row" style="border-left:4px solid ${tag.color};">
@@ -1763,7 +1763,7 @@ const renderMappingUI = () => {
   for (const field of IMPORT_FIELDS) {
     const sel = autoMap[field.key] || ''
     const colIdx = sel ? importHeaders.indexOf(sel) : -1
-    html += `<tr><td style="font-weight:${field.required ? 600 : 500};color:${field.required ? '#1a1a2e' : '#374151'};">${field.label}${field.required ? ' <span style="color:#ef4444;font-weight:700;">*</span>' : ''}</td>`
+    html += `<tr><td style="font-weight:${field.required ? 600 : 500};color:${field.required ? 'var(--text-primary)' : 'var(--text-secondary)'};">${field.label}${field.required ? ' <span style="color:var(--color-error);font-weight:700;">*</span>' : ''}</td>`
     html += `<td><select class="map-select" data-field="${field.key}" onchange="updateMappingPreview('${field.key}', this.value)"><option value="">— Skip —</option>`
     for (const h of importHeaders) {
       html += `<option value="${h.replace(/"/g, '&quot;')}"${h === sel ? ' selected' : ''}>${h}</option>`
@@ -1805,8 +1805,8 @@ const setStepActive = (n) => {
   ;[1, 2, 3].forEach(i => {
     const el = document.getElementById(`step-ind-${i}`)
     if (!el) return
-    if (i === n) { el.style.cssText = `flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:#EEF2FF;color:#4338ca;${i < 3 ? 'border-right:1px solid #e5e7eb;' : ''}` }
-    else { el.style.cssText = `flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:#9ca3af;${i < 3 ? 'border-right:1px solid #e5e7eb;' : ''}` }
+    if (i === n) { el.style.cssText = `flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:600;background:var(--accent-subtle);color:var(--accent);${i < 3 ? 'border-right:1px solid var(--border);' : ''}` }
+    else { el.style.cssText = `flex:1;text-align:center;padding:8px 12px;font-size:12px;font-weight:500;color:var(--text-muted);${i < 3 ? 'border-right:1px solid var(--border);' : ''}` }
   })
 }
 
@@ -1856,11 +1856,11 @@ const advanceToRiskPreview = async () => {
     const displayed = data.rows.slice(0, 200)
     const tableHtml = `
       <table style="width:100%;border-collapse:collapse;">
-        <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;">Name</th>
-          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;">Phone</th>
-          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;">Risk</th>
-          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:#6b7280;">Reason</th>
+        <thead><tr style="background:var(--bg-hover);border-bottom:1px solid var(--border);">
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);">Name</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);">Phone</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);">Risk</th>
+          <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);">Reason</th>
         </tr></thead>
         <tbody>${displayed.map(r => {
           const c = riskColors[r.risk]
@@ -1869,11 +1869,11 @@ const advanceToRiskPreview = async () => {
             <td style="padding:7px 12px;">${name}</td>
             <td style="padding:7px 12px;font-family:monospace;font-size:12px;">${r.phone || '—'}</td>
             <td style="padding:7px 12px;"><span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:${c.bg};color:${c.text};">${c.label}</span></td>
-            <td style="padding:7px 12px;font-size:12px;color:#6b7280;">${r.reason}</td>
+            <td style="padding:7px 12px;font-size:12px;color:var(--text-muted);">${r.reason}</td>
           </tr>`
         }).join('')}</tbody>
       </table>
-      ${data.rows.length > 200 ? `<div style="padding:8px 12px;font-size:12px;color:#9ca3af;text-align:center;">Showing 200 of ${data.rows.length} rows</div>` : ''}
+      ${data.rows.length > 200 ? `<div style="padding:8px 12px;font-size:12px;color:var(--text-muted);text-align:center;">Showing 200 of ${data.rows.length} rows</div>` : ''}
     `
     document.getElementById('risk-table-container').innerHTML = tableHtml
     document.getElementById('risk-status-bar').className = 'status-bar'
@@ -1934,10 +1934,10 @@ const openUploadModal = () => {
     const buildOptions = (buckets, prefix = '') => buckets.map(b => `<option value="${b.id}">${prefix}${b.name}</option>`).join('')
     let opts = '<option value="">No bucket</option>'
     for (const folder of folders) {
-      opts += `<option disabled style="font-weight:700;color:#6b7280;">📂 ${folder.name}</option>`
+      opts += `<option disabled style="font-weight:700;color:var(--text-muted);">📂 ${folder.name}</option>`
       const subs = subFolders.filter(s => s.parent_id === folder.id)
       for (const sub of subs) {
-        opts += `<option disabled style="font-weight:600;color:#6b7280;padding-left:12px;">  └ ${sub.name}</option>`
+        opts += `<option disabled style="font-weight:600;color:var(--text-muted);padding-left:12px;">  └ ${sub.name}</option>`
         const children = allBuckets.filter(b => !b.is_folder && b.parent_id === sub.id)
         opts += buildOptions(children, '      · ')
       }
@@ -2445,7 +2445,7 @@ const showCampaignDropdown = () => {
   const matches = query ? tags.filter(c => c.toLowerCase().includes(query)) : tags
   if (!matches.length) { dropdown.style.display = 'none'; return }
   dropdown.innerHTML = matches.map(c =>
-    `<div onclick="selectCampaignFilter('${c.replace(/'/g,"\\'")}','${c.replace(/'/g,"\\'")}') " style="padding:8px 12px;cursor:pointer;font-size:13px;color:#374151;" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">${c}</div>`
+    `<div onclick="selectCampaignFilter('${c.replace(/'/g,"\\'")}','${c.replace(/'/g,"\\'")}') " style="padding:8px 12px;cursor:pointer;font-size:13px;color:var(--text-secondary);" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background=''">${c}</div>`
   ).join('')
   dropdown.style.display = 'block'
 }
@@ -2653,7 +2653,7 @@ const loadDetailSMS = async (leadId) => {
   const list = document.getElementById('detail-sms-list')
   if (!list) return
 
-  list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">Loading...</div>'
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">Loading...</div>'
 
   try {
     const res = await fetch('/messages?lead_id=' + leadId + '&limit=100')
@@ -2661,7 +2661,7 @@ const loadDetailSMS = async (leadId) => {
     const messages = data.messages || []
 
     if (messages.length === 0) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:#9ca3af;font-size:13px;">No messages yet</div>'
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No messages yet</div>'
       return
     }
 
@@ -2672,7 +2672,7 @@ const loadDetailSMS = async (leadId) => {
         hour: 'numeric', minute: '2-digit', hour12: true
       })
       return '<div style="display:flex;justify-content:' + (isOut ? 'flex-end' : 'flex-start') + ';margin-bottom:8px;padding:0 4px;">' +
-        '<div style="max-width:80%;background:' + (isOut ? '#6366f1' : 'var(--gray-100,#f3f4f6)') + ';color:' + (isOut ? 'white' : 'var(--color-text-primary,#374151)') + ';padding:8px 12px;border-radius:' + (isOut ? '12px 12px 2px 12px' : '12px 12px 12px 2px') + ';font-size:13px;line-height:1.5;">' +
+        '<div style="max-width:80%;background:' + (isOut ? '#6366f1' : 'var(--bg-elevated)') + ';color:' + (isOut ? 'white' : 'var(--text-primary)') + ';padding:8px 12px;border-radius:' + (isOut ? '12px 12px 2px 12px' : '12px 12px 12px 2px') + ';font-size:13px;line-height:1.5;">' +
         m.body +
         '<div style="font-size:10px;opacity:0.65;margin-top:3px;text-align:right;">' + time + (m.is_ai ? ' · AI' : '') + '</div>' +
         '</div></div>'
@@ -2696,7 +2696,7 @@ const loadDetailTasks = async (leadId) => {
 const renderDetailTasks = (tasks, leadId) => {
   const container = document.getElementById('detail-tasks-list')
   if (!tasks.length) {
-    container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No tasks yet — click "+ Add Task" to create one</div>`
+    container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No tasks yet — click "+ Add Task" to create one</div>`
     return
   }
   const now = new Date()
@@ -2775,7 +2775,7 @@ const loadDetailDispositionHistory = async (leadId) => {
     const data = await res.json()
     const container = document.getElementById('detail-disp-list')
     if (!data.history?.length) {
-      container.innerHTML = `<div style="text-align:center;padding:32px;color:#d1d5db;font-size:13px;">No disposition history yet</div>`
+      container.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:13px;">No disposition history yet</div>`
       return
     }
     container.innerHTML = data.history.map(h => `
@@ -2823,7 +2823,7 @@ const renderChecklist = (checks, done) => {
   document.getElementById('checklist-steps').innerHTML = steps.map(s => `
     <div class="checklist-step ${checks[s.key] ? 'done' : ''}" onclick="${checks[s.key] ? '' : `(${s.action.toString()})()`}">
       <div class="step-check">${checks[s.key] ? '✓' : ''}</div>
-      <div class="step-label"><strong>${s.label}</strong><br><span style="font-size:12px;color:#9ca3af;">${s.sub}</span></div>
+      <div class="step-label"><strong>${s.label}</strong><br><span style="font-size:12px;color:var(--text-muted);">${s.sub}</span></div>
       ${!checks[s.key] ? `<span class="step-action">${s.actionText}</span>` : ''}
     </div>`).join('')
   document.getElementById('onboarding-checklist').style.display = 'block'
@@ -2888,9 +2888,9 @@ const openLeadActionsMenu = (leadId, leadName, btn) => {
         <span class="ami-icon">🏷️</span> Apply Disposition
       </button>
       <button class="ami-item" onclick="event.stopPropagation();toggleAmiSub('ami-bucket-sub')">
-        <span class="ami-icon">📁</span> Move to Bucket <span style="margin-left:auto;font-size:11px;color:#9ca3af;flex-shrink:0;">▼</span>
+        <span class="ami-icon">📁</span> Move to Bucket <span style="margin-left:auto;font-size:11px;color:var(--text-muted);flex-shrink:0;">▼</span>
       </button>
-      <div id="ami-bucket-sub" style="display:none;background:#131a1f;border-top:1px solid rgba(255,255,255,0.06);padding:4px 0;">
+      <div id="ami-bucket-sub" style="display:none;background:var(--bg-card);border-top:1px solid var(--border);padding:4px 0;">
         <div class="ami-sub-item" onclick="closeLeadActionsMenu();moveToBucket('${leadId}',null)">— No bucket</div>
         ${allBuckets.map(bk => `<div class="ami-sub-item" onclick="closeLeadActionsMenu();moveToBucket('${leadId}','${bk.id}')"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${bk.color};margin-right:8px;flex-shrink:0;"></span>${bk.name}</div>`).join('')}
       </div>
