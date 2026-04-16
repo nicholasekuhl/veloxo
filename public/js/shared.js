@@ -476,7 +476,7 @@ const renderSidebar = () => {
     <a href="/settings.html" class="nav-item${a('/settings.html')}">${SVG_SETTINGS}<span>Settings</span></a>
     <a href="/admin.html" id="admin-nav-link" class="nav-item${a('/admin.html')}" style="display:none;">${SVG_ADMIN}<span>Admin</span></a>
   </nav>
-  <div class="sidebar-credits" id="sidebar-credits" onclick="window.location.href='/billing.html'" style="cursor:pointer" title="View Billing">
+  <div class="sidebar-credits" id="sidebar-credits" onclick="window.location.href='/settings.html?panel=billing'" title="View Billing">
     <div class="credits-row">
       <span class="credits-icon">💬</span>
       <span class="credits-label">SMS</span>

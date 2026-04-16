@@ -47,6 +47,36 @@
     /* Nickname tip */
     .nickname-tip { font-size: 12px; color: #00d4b4; font-weight: 500; margin-top: 6px; padding: 8px 12px; background: rgba(0,201,167,0.06); border-radius: 7px; border-left: 3px solid rgba(0,201,167,0.4); }
 
+    /* ── BILLING PANEL ── */
+    .billing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+    .credit-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px; }
+    .credit-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.35); margin-bottom: 8px; }
+    .credit-card-value { font-size: 32px; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .credit-card-desc { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+    .credit-progress { height: 4px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-top: 12px; overflow: hidden; }
+    .credit-progress-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00c9a7, #0ea5e9); transition: width 0.3s; }
+    .credit-progress-label { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 4px; }
+    .plan-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .plan-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; }
+    .plan-status { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .plan-status .active-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34d399; margin-right: 4px; }
+    .packages-section { margin-bottom: 28px; }
+    .packages-section h3 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 10px; }
+    .packages-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .pkg-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; text-align: center; }
+    .pkg-card:hover { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
+    .pkg-card.selected { border-color: rgba(0,201,167,0.5); background: rgba(0,201,167,0.06); }
+    .pkg-card .best-badge { position: absolute; top: -8px; right: 10px; background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .pkg-credits { font-size: 22px; font-weight: 700; color: #fff; }
+    .pkg-price { font-size: 14px; font-weight: 600; color: #00d4b4; margin-top: 4px; }
+    .pkg-rate { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.3); padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .history-table td { font-size: 13px; color: rgba(255,255,255,0.6); padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .history-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .credit-positive { color: #34d399; }
+    .credit-negative { color: #f87171; }
+
     /* ── SETTINGS LAYOUT ── */
     .settings-layout, .settings-container { display: grid !important; grid-template-columns: 200px 1fr !important; min-height: calc(100vh - 60px) !important; gap: 0 !important; }
     .settings-subnav, .settings-sidebar, .settings-nav { background: #0e1419 !important; border-right: 1px solid rgba(255,255,255,0.06) !important; padding: 12px 8px !important; }
@@ -786,7 +816,7 @@
   <div class="settings-layout">
     <div class="settings-nav">
       <div class="settings-nav-item active" onclick="showSettingsPanel('account', this)">Account</div>
-      <a href="/billing.html" class="settings-nav-item" style="text-decoration:none;">Billing &amp; Credits</a>
+      <div class="settings-nav-item" onclick="showSettingsPanel('billing', this)">Billing &amp; Credits</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('phone-numbers', this)">Phone Numbers</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('team', this)">Team &amp; Invites</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('integrations', this)">Integrations</div>
@@ -795,6 +825,7 @@
       <div class="settings-nav-mobile">
         <select id="settings-nav-select" onchange="showSettingsPanelMobile(this.value)">
           <option value="account">Account</option>
+          <option value="billing">Billing &amp; Credits</option>
           <option value="phone-numbers">Phone Numbers</option>
           <option value="team">Team &amp; Invites</option>
           <option value="integrations">Integrations</option>
@@ -1033,6 +1064,128 @@
         </div>
       </div>
 
+      <!-- BILLING PANEL -->
+      <div class="settings-panel" id="panel-billing">
+        <!-- Current Plan -->
+        <div class="plan-card" id="plan-card">
+          <div><div class="plan-badge" id="plan-name">—</div></div>
+          <div style="flex:1;"><div class="plan-status"><span class="active-dot" id="plan-dot"></span><span id="plan-status-text">Loading...</span></div></div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.3);">Contact support to change your plan</div>
+        </div>
+
+        <!-- Credit Balances -->
+        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:12px;">Credit Balances</div>
+        <div class="billing-grid">
+          <div class="credit-card">
+            <div class="credit-card-label">SMS Credits</div>
+            <div class="credit-card-value" id="billing-sms-credits">—</div>
+            <div class="credit-card-desc">Used for all outbound text messages</div>
+            <div class="credit-progress" id="sms-progress-wrap" style="display:none;"><div class="credit-progress-bar" id="sms-progress-bar" style="width:0%"></div></div>
+            <div class="credit-progress-label" id="sms-progress-label" style="display:none;"></div>
+          </div>
+          <div class="credit-card">
+            <div class="credit-card-label">AI Credits</div>
+            <div class="credit-card-value" id="billing-ai-credits">—</div>
+            <div class="credit-card-desc">Used when AI autopilot responds to leads</div>
+            <div class="credit-progress" id="ai-progress-wrap" style="display:none;"><div class="credit-progress-bar" id="ai-progress-bar" style="width:0%"></div></div>
+            <div class="credit-progress-label" id="ai-progress-label" style="display:none;"></div>
+          </div>
+          <div class="credit-card">
+            <div class="credit-card-label">DNC Credits</div>
+            <div class="credit-card-value" id="billing-dnc-credits">—</div>
+            <div class="credit-card-desc">Used when leads are scrubbed against the DNC registry</div>
+            <div class="credit-progress" id="dnc-progress-wrap" style="display:none;"><div class="credit-progress-bar" id="dnc-progress-bar" style="width:0%"></div></div>
+            <div class="credit-progress-label" id="dnc-progress-label" style="display:none;"></div>
+          </div>
+        </div>
+
+        <!-- Purchase Credits -->
+        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;">Purchase Credits</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:16px;">Credits never expire. Larger packages = better value.</div>
+
+        <div class="packages-section">
+          <h3>SMS Credits</h3>
+          <div class="packages-row" id="sms-packages">
+            <div class="pkg-card" onclick="selectPkg(this, 'sms', 500)">
+              <div class="pkg-credits">500</div>
+              <div class="pkg-price">$6</div>
+              <div class="pkg-rate">$0.012 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'sms', 2000)">
+              <div class="best-badge">Best Value</div>
+              <div class="pkg-credits">2,000</div>
+              <div class="pkg-price">$20</div>
+              <div class="pkg-rate">$0.010 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'sms', 10000)">
+              <div class="pkg-credits">10,000</div>
+              <div class="pkg-price">$80</div>
+              <div class="pkg-rate">$0.008 / credit</div>
+            </div>
+          </div>
+          <button class="btn-primary" style="width:auto;" onclick="purchaseCredits('sms')">Purchase SMS Credits</button>
+        </div>
+
+        <div class="packages-section">
+          <h3>AI Credits</h3>
+          <div class="packages-row" id="ai-packages">
+            <div class="pkg-card" onclick="selectPkg(this, 'ai', 200)">
+              <div class="pkg-credits">200</div>
+              <div class="pkg-price">$3</div>
+              <div class="pkg-rate">$0.015 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'ai', 1000)">
+              <div class="best-badge">Best Value</div>
+              <div class="pkg-credits">1,000</div>
+              <div class="pkg-price">$12</div>
+              <div class="pkg-rate">$0.012 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'ai', 5000)">
+              <div class="pkg-credits">5,000</div>
+              <div class="pkg-price">$50</div>
+              <div class="pkg-rate">$0.010 / credit</div>
+            </div>
+          </div>
+          <button class="btn-primary" style="width:auto;" onclick="purchaseCredits('ai')">Purchase AI Credits</button>
+        </div>
+
+        <div class="packages-section">
+          <h3>DNC Credits</h3>
+          <div class="packages-row" id="dnc-packages">
+            <div class="pkg-card" onclick="selectPkg(this, 'dnc', 200)">
+              <div class="pkg-credits">200</div>
+              <div class="pkg-price">$2</div>
+              <div class="pkg-rate">$0.010 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'dnc', 1000)">
+              <div class="best-badge">Best Value</div>
+              <div class="pkg-credits">1,000</div>
+              <div class="pkg-price">$8</div>
+              <div class="pkg-rate">$0.008 / credit</div>
+            </div>
+            <div class="pkg-card" onclick="selectPkg(this, 'dnc', 5000)">
+              <div class="pkg-credits">5,000</div>
+              <div class="pkg-price">$30</div>
+              <div class="pkg-rate">$0.006 / credit</div>
+            </div>
+          </div>
+          <button class="btn-primary" style="width:auto;" onclick="purchaseCredits('dnc')">Purchase DNC Credits</button>
+        </div>
+
+        <!-- Transaction History -->
+        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:12px;">Credit History</div>
+        <div style="background:#131a1f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+          <table class="history-table">
+            <thead>
+              <tr><th>Date</th><th>Type</th><th>Credits</th><th>Balance After</th></tr>
+            </thead>
+            <tbody id="history-tbody">
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- INTEGRATIONS PANEL -->
       <div class="settings-panel" id="panel-integrations">
         <!-- Inbound Webhook -->
@@ -1213,6 +1366,22 @@
   </div>
 </div>
 
+<!-- PURCHASE COMING SOON MODAL -->
+<div class="modal-overlay" id="purchase-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2>Coming Soon</h2>
+      <button class="modal-close" onclick="document.getElementById('purchase-modal').classList.remove('open')">&times;</button>
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px;">
+      Credit purchasing will be available soon. To add credits now, contact support.
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="document.getElementById('purchase-modal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="/js/shared.js?v=2"></script>
 <script>
   let allDispositionTags = []
@@ -1265,6 +1434,7 @@
     if (panel === 'team') loadInvites()
     if (panel === 'phone-numbers') loadPhoneNumbers()
     if (panel === 'account') loadAccountEarnings()
+    if (panel === 'billing') { loadBillingData(); loadTransactionHistory() }
     if (panel === 'integrations') loadIntegrationsPanel()
   }
 
@@ -2453,6 +2623,91 @@
     await fetch(`/templates/${id}`, { method: 'DELETE' })
     loadTemplates()
     toast.info('Template deleted', 'Template removed')
+  }
+
+  // ─── BILLING ──────────────────────────────────────────────────────────────────
+
+  const selectedPkgs = { sms: null, ai: null, dnc: null }
+
+  const selectPkg = (el, type, amount) => {
+    const row = el.closest('.packages-row')
+    row.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('selected'))
+    el.classList.add('selected')
+    selectedPkgs[type] = amount
+  }
+
+  const purchaseCredits = (type) => {
+    document.getElementById('purchase-modal').classList.add('open')
+  }
+
+  const formatNum = (n) => {
+    if (n === undefined || n === null) return '—'
+    const num = parseFloat(n)
+    if (isNaN(num)) return '—'
+    return Math.floor(num).toLocaleString()
+  }
+
+  const loadBillingData = async () => {
+    try {
+      const res = await fetch('/auth/me')
+      if (!res.ok) return
+      const data = await res.json()
+      const p = data.user
+
+      // Plan
+      const planName = p.plan || 'Trial'
+      document.getElementById('plan-name').textContent = planName.charAt(0).toUpperCase() + planName.slice(1)
+      const isActive = p.plan_active !== false
+      document.getElementById('plan-status-text').textContent = isActive ? 'Active' : 'Inactive'
+      document.getElementById('plan-dot').style.background = isActive ? '#34d399' : '#f87171'
+
+      // Credit balances
+      document.getElementById('billing-sms-credits').textContent = formatNum(p.sms_credits)
+      document.getElementById('billing-ai-credits').textContent = formatNum(p.ai_credits)
+      document.getElementById('billing-dnc-credits').textContent = formatNum(p.dnc_credits)
+
+      // Progress bars
+      const showProgress = (type, credits, limit) => {
+        const lim = parseFloat(limit)
+        if (!lim || lim <= 0) return
+        const used = lim - parseFloat(credits || 0)
+        const pct = Math.max(0, Math.min(100, (used / lim) * 100))
+        const wrap = document.getElementById(`${type}-progress-wrap`)
+        const bar = document.getElementById(`${type}-progress-bar`)
+        const label = document.getElementById(`${type}-progress-label`)
+        if (wrap) { wrap.style.display = 'block'; bar.style.width = pct + '%' }
+        if (label) { label.style.display = 'block'; label.textContent = `${Math.floor(used)} / ${Math.floor(lim)} used this month` }
+      }
+      showProgress('sms', p.sms_credits, p.monthly_sms_limit)
+      showProgress('ai', p.ai_credits, p.monthly_ai_limit)
+      showProgress('dnc', p.dnc_credits, p.monthly_dnc_limit)
+    } catch (err) { console.error('Billing data load error:', err) }
+  }
+
+  const loadTransactionHistory = async () => {
+    try {
+      const res = await fetch('/api/credits/transactions')
+      const data = await res.json()
+      const tbody = document.getElementById('history-tbody')
+      const txns = data.transactions || []
+      if (!txns.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">No transactions yet.</td></tr>'
+        return
+      }
+      tbody.innerHTML = txns.map(t => {
+        const date = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        const amt = parseFloat(t.amount)
+        const isPositive = amt > 0
+        return `<tr>
+          <td>${date}</td>
+          <td>${t.type || t.description || '—'}</td>
+          <td class="${isPositive ? 'credit-positive' : 'credit-negative'}">${isPositive ? '+' : ''}${amt}</td>
+          <td>${t.balance_after !== null ? parseFloat(t.balance_after).toLocaleString() : '—'}</td>
+        </tr>`
+      }).join('')
+    } catch (err) {
+      document.getElementById('history-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">Could not load history.</td></tr>'
+    }
   }
 
   // ─── ONBOARDING CHECKLIST ─────────────────────────────────────────────────────
