@@ -190,6 +190,17 @@ const executeActions = async (lead, actions, dispositionTagId, profile) => {
           break
         }
 
+        case 'pipeline_stage': {
+          const stage = action.action_value?.stage
+          if (stage) {
+            await supabase.from('leads').update({
+              pipeline_stage: stage,
+              updated_at: new Date().toISOString()
+            }).eq('id', lead.id)
+          }
+          break
+        }
+
         case 'mark_as_sold': {
           await supabase.from('leads').update({
             is_sold: true,

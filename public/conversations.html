@@ -928,6 +928,34 @@
 
   const callLead = (phone) => window.open(`tel:${phone}`)
 
+  const flashSaved = (elId) => {
+    const el = document.getElementById(elId)
+    if (!el) return
+    el.style.display = 'block'
+    clearTimeout(el._timer)
+    el._timer = setTimeout(() => { el.style.display = 'none' }, 1500)
+  }
+
+  const updateConvLeadStatus = async (value) => {
+    const conv = allConversations.find(c => c.id === activeConvId)
+    if (!conv?.lead_id) return
+    try {
+      await fetch(`/leads/${conv.lead_id}/lead-info`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: value }) })
+      if (conv.leads) conv.leads.status = value
+      flashSaved('conv-status-saved')
+    } catch (err) { console.error('Status update failed', err) }
+  }
+
+  const updateConvPipelineStage = async (value) => {
+    const conv = allConversations.find(c => c.id === activeConvId)
+    if (!conv?.lead_id) return
+    try {
+      await fetch(`/leads/${conv.lead_id}/pipeline-stage`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pipeline_stage: value || null }) })
+      if (conv.leads) conv.leads.pipeline_stage = value || null
+      flashSaved('conv-status-saved')
+    } catch (err) { console.error('Pipeline stage update failed', err) }
+  }
+
   const contactRow = (label, val) => `<div class="conv3-contact-row"><span class="conv3-contact-label">${label}</span><span class="conv3-contact-val">${val}</span></div>`
 
   const renderRightPanel = (conv, lead, _campaigns) => {
@@ -967,6 +995,34 @@
         ${lead?.timezone ? contactRow('Timezone', lead.timezone.replace('America/', '').replace(/_/g, ' ')) : ''}
         ${lead?.created_at ? contactRow('Added', new Date(lead.created_at).toLocaleDateString()) : ''}
         ${lead?.bucket_id ? (() => { const bk = allBuckets.find(b => b.id === lead.bucket_id); return bk ? contactRow('Bucket', bk.name) : '' })() : (lead?.bucket ? contactRow('Source', lead.bucket) : '')}
+      </div>
+      <div class="conv3-right-section">
+        <div class="conv3-section-title">Lead Status</div>
+        <div style="display:flex;gap:8px;margin-bottom:4px;">
+          <div style="flex:1;">
+            <label style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;display:block;">Status</label>
+            <select id="conv-lead-status" onchange="updateConvLeadStatus(this.value)" style="width:100%;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.7);font-family:inherit;outline:none;">
+              <option value="new"${lead?.status === 'new' ? ' selected' : ''}>⚪ New</option>
+              <option value="contacted"${lead?.status === 'contacted' ? ' selected' : ''}>🔵 Contacted</option>
+              <option value="replied"${lead?.status === 'replied' ? ' selected' : ''}>🟢 Replied</option>
+              <option value="booked"${lead?.status === 'booked' ? ' selected' : ''}>🟦 Booked</option>
+              <option value="sold"${lead?.status === 'sold' ? ' selected' : ''}>🟡 Sold</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;display:block;">Pipeline</label>
+            <select id="conv-pipeline-stage" onchange="updateConvPipelineStage(this.value)" style="width:100%;padding:5px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:6px;font-size:12px;color:rgba(255,255,255,0.7);font-family:inherit;outline:none;">
+              <option value=""${!lead?.pipeline_stage ? ' selected' : ''}>None</option>
+              <option value="new_lead"${lead?.pipeline_stage === 'new_lead' ? ' selected' : ''}>New Lead</option>
+              <option value="contacted"${lead?.pipeline_stage === 'contacted' ? ' selected' : ''}>Contacted</option>
+              <option value="quoted"${lead?.pipeline_stage === 'quoted' ? ' selected' : ''}>Quoted</option>
+              <option value="appointment_set"${lead?.pipeline_stage === 'appointment_set' ? ' selected' : ''}>Appointment Set</option>
+              <option value="closed_won"${lead?.pipeline_stage === 'closed_won' ? ' selected' : ''}>Closed Won</option>
+              <option value="closed_lost"${lead?.pipeline_stage === 'closed_lost' ? ' selected' : ''}>Closed Lost</option>
+            </select>
+          </div>
+        </div>
+        <div id="conv-status-saved" style="display:none;font-size:10px;color:#00d4b4;font-weight:500;margin-top:2px;">Saved</div>
       </div>
       <div class="conv3-right-section">
         <div class="conv3-section-title">Tags</div>

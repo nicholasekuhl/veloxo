@@ -233,6 +233,24 @@
                   </select>
                 </div>
               </div>
+              <!-- pipeline_stage -->
+              <div class="action-check-item" data-type="pipeline_stage">
+                <div class="action-check-header" onclick="toggleActionCheck(this)">
+                  <div class="action-checkbox"></div>
+                  <div class="action-check-label">Assign pipeline stage</div>
+                </div>
+                <div class="action-sub-input">
+                  <select class="form-input" id="sub-pipeline-stage">
+                    <option value="">Select stage...</option>
+                    <option value="new_lead">New Lead</option>
+                    <option value="contacted">Contacted</option>
+                    <option value="quoted">Quoted</option>
+                    <option value="appointment_set">Appointment Set</option>
+                    <option value="closed_won">Closed Won</option>
+                    <option value="closed_lost">Closed Lost</option>
+                  </select>
+                </div>
+              </div>
               <!-- add_note -->
               <div class="action-check-item" data-type="add_note">
                 <div class="action-check-header" onclick="toggleActionCheck(this)">
@@ -607,6 +625,9 @@ const editAction = (id) => {
       case 'update_status':
         document.getElementById('sub-status').value = val.status || ''
         break
+      case 'pipeline_stage':
+        document.getElementById('sub-pipeline-stage').value = val.stage || ''
+        break
       case 'add_note':
         document.getElementById('sub-note').value = val.note || ''
         break
@@ -632,6 +653,7 @@ const cancelActionEdit = () => {
   document.getElementById('sub-schedule-template').value = ''
   document.getElementById('sub-campaign').value = ''
   document.getElementById('sub-status').value = ''
+  document.getElementById('sub-pipeline-stage').value = ''
   document.getElementById('sub-note').value = ''
   document.getElementById('action-save-btn').textContent = 'Save Action'
   document.getElementById('action-cancel-btn').style.display = 'none'
@@ -666,6 +688,9 @@ const saveAction = async () => {
         break
       case 'update_status':
         value = { status: document.getElementById('sub-status').value }
+        break
+      case 'pipeline_stage':
+        value = { stage: document.getElementById('sub-pipeline-stage').value }
         break
       case 'add_note':
         value = { note: document.getElementById('sub-note').value.trim() }
