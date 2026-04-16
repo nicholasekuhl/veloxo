@@ -785,8 +785,7 @@
   </div>
   <div class="settings-layout">
     <div class="settings-nav">
-      <div class="settings-nav-item active" onclick="showSettingsPanel('dispositions', this)">Disposition Tags</div>
-      <div class="settings-nav-item" onclick="showSettingsPanel('templates', this)">Preset Templates</div>
+      <div class="settings-nav-item active" onclick="showSettingsPanel('templates', this)">Preset Templates</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('phone-numbers', this)">Phone Numbers</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('team', this)">Team &amp; Invites</div>
       <div class="settings-nav-item" onclick="showSettingsPanel('account', this)">Account</div>
@@ -796,7 +795,6 @@
     <div>
       <div class="settings-nav-mobile">
         <select id="settings-nav-select" onchange="showSettingsPanelMobile(this.value)">
-          <option value="dispositions">Disposition Tags</option>
           <option value="templates">Preset Templates</option>
           <option value="phone-numbers">Phone Numbers</option>
           <option value="team">Team &amp; Invites</option>
@@ -805,7 +803,7 @@
         </select>
       </div>
       <!-- DISPOSITION TAGS PANEL -->
-      <div class="settings-panel active" id="panel-dispositions">
+      <div class="settings-panel" id="panel-dispositions">
         <div class="settings-card">
           <h2>Disposition Tags</h2>
           <p>Create tags to categorize leads after conversations. Each tag can optionally trigger a drip sequence.</p>
@@ -817,7 +815,7 @@
         </div>
       </div>
       <!-- TEMPLATES PANEL -->
-      <div class="settings-panel" id="panel-templates">
+      <div class="settings-panel active" id="panel-templates">
         <div class="settings-card">
           <h2>Preset Templates</h2>
           <p>Save your best messages and fire them with one click from any conversation.</p>

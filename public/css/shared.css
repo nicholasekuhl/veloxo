@@ -26,7 +26,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: #0b0f12; c
 .nav-badge.alert { background: rgba(239,68,68,0.2); color: #f87171; }
 .nav-priority-badge { background: #f59e0b; color: #fff; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 1px 6px; margin-left: auto; min-width: 14px; text-align: center; line-height: 1.5; }
 
-.sidebar-credits { margin: 0 12px 8px; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; transition: background 0.15s; }
+.sidebar-credits { margin: 8px 12px; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; transition: background 0.15s; flex-shrink: 0; }
 .sidebar-credits:hover { background: rgba(255,255,255,0.07); }
 .credits-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
 .credits-icon { font-size: 11px; }
