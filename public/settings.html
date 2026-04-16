@@ -12,68 +12,68 @@
   <style>
     .settings-layout { display: grid; grid-template-columns: 192px 1fr; min-height: calc(100vh - 60px); }
     .settings-nav { background: #0e1419; border-right: 1px solid rgba(255,255,255,0.06); padding: 12px 8px; }
-    .settings-nav-item { display: block; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.45); cursor: pointer; margin-bottom: 2px; transition: background 0.12s, color 0.12s; }
-    .settings-nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.75); }
+    .settings-nav-item { display: block; padding: 7px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--sidebar-text-muted); cursor: pointer; margin-bottom: 2px; transition: background 0.12s, color 0.12s; }
+    .settings-nav-item:hover { background: var(--bg-hover); color: var(--sidebar-text); }
     .settings-nav-item.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
     .settings-nav-mobile { display: none; padding: 12px 16px; }
-    .settings-nav-mobile select { width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 13px; font-family: inherit; outline: none; }
+    .settings-nav-mobile select { width: 100%; padding: 7px 10px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; color: var(--input-text); font-size: 13px; font-family: inherit; outline: none; }
     .settings-panel { display: none; padding: 20px 24px; }
     .settings-panel.active { display: block; }
-    .settings-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
-    .settings-card h2 { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 6px; }
-    .settings-card > p { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 16px; line-height: 1.6; }
-    .settings-section-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+    .settings-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+    .settings-card h2 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    .settings-card > p { font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.6; }
+    .settings-section-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; }
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
     .form-group input:not([type=checkbox]):not([type=radio]),
     .form-group textarea,
-    .form-group select { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; transition: border-color 0.12s, background 0.12s; }
+    .form-group select { width: 100%; padding: 8px 11px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--input-text); font-family: inherit; outline: none; box-sizing: border-box; transition: border-color 0.12s, background 0.12s; }
     .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
-    .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
-    .form-group input[readonly] { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); cursor: not-allowed; }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--input-placeholder); }
+    .form-group input[readonly] { background: var(--bg-hover); color: var(--text-muted); cursor: not-allowed; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     /* Toggle switches */
     .toggle { position: relative; display: inline-block; width: 34px; height: 19px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider { position: absolute; inset: 0; background: rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; transition: background 0.2s; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--input-border); border-radius: 10px; cursor: pointer; transition: background 0.2s; }
     .toggle-slider::after { content: ''; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%; background: #fff; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
     .toggle input:checked + .toggle-slider { background: linear-gradient(90deg, #00c9a7, #0ea5e9); }
     .toggle input:checked + .toggle-slider::after { transform: translateX(15px); }
     /* Compliance preview */
-    .compliance-preview-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
-    .compliance-preview-label { font-size: 10.5px; font-weight: 600; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .compliance-preview-box { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px; }
+    .compliance-preview-label { font-size: 10.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     /* Help text */
-    .help-text { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 4px; line-height: 1.5; }
+    .help-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
     /* Nickname tip */
     .nickname-tip { font-size: 12px; color: #00d4b4; font-weight: 500; margin-top: 6px; padding: 8px 12px; background: rgba(0,201,167,0.06); border-radius: 7px; border-left: 3px solid rgba(0,201,167,0.4); }
 
     /* ── BILLING PANEL ── */
     .billing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
-    .credit-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px; }
-    .credit-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.35); margin-bottom: 8px; }
-    .credit-card-value { font-size: 32px; font-weight: 700; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
-    .credit-card-desc { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.5; }
-    .credit-progress { height: 4px; background: rgba(255,255,255,0.06); border-radius: 4px; margin-top: 12px; overflow: hidden; }
+    .credit-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+    .credit-card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 8px; }
+    .credit-card-value { font-size: 32px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.5px; margin-bottom: 6px; }
+    .credit-card-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .credit-progress { height: 4px; background: var(--border); border-radius: 4px; margin-top: 12px; overflow: hidden; }
     .credit-progress-bar { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #00c9a7, #0ea5e9); transition: width 0.3s; }
-    .credit-progress-label { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 4px; }
-    .plan-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+    .credit-progress-label { font-size: 10px; color: var(--text-disabled); margin-top: 4px; }
+    .plan-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
     .plan-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; }
-    .plan-status { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .plan-status { font-size: 12px; color: var(--text-muted); }
     .plan-status .active-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34d399; margin-right: 4px; }
     .packages-section { margin-bottom: 28px; }
-    .packages-section h3 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.75); margin-bottom: 10px; }
+    .packages-section h3 { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
     .packages-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-    .pkg-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; text-align: center; }
+    .pkg-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative; text-align: center; }
     .pkg-card:hover { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
     .pkg-card.selected { border-color: rgba(0,201,167,0.5); background: rgba(0,201,167,0.06); }
     .pkg-card .best-badge { position: absolute; top: -8px; right: 10px; background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
-    .pkg-credits { font-size: 22px; font-weight: 700; color: #fff; }
+    .pkg-credits { font-size: 22px; font-weight: 700; color: var(--text-primary); }
     .pkg-price { font-size: 14px; font-weight: 600; color: #00d4b4; margin-top: 4px; }
-    .pkg-rate { font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+    .pkg-rate { font-size: 10px; color: var(--text-disabled); margin-top: 2px; }
     .history-table { width: 100%; border-collapse: collapse; }
-    .history-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.3); padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .history-table td { font-size: 13px; color: rgba(255,255,255,0.6); padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .history-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .history-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .history-table td { font-size: 13px; color: var(--text-secondary); padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); }
+    .history-table tr:hover td { background: var(--bg-hover); }
     .credit-positive { color: #34d399; }
     .credit-negative { color: #f87171; }
 
@@ -83,42 +83,42 @@
     .settings-subnav a, .settings-nav a, .settings-nav-item { display: flex !important; align-items: center !important; gap: 8px !important; padding: 7px 10px !important; border-radius: 7px !important; font-size: 13px !important; font-weight: 500 !important; color: rgba(255,255,255,0.45) !important; text-decoration: none !important; margin-bottom: 2px !important; transition: background 0.12s, color 0.12s !important; }
     .settings-subnav a:hover, .settings-nav a:hover, .settings-nav-item:hover { background: rgba(255,255,255,0.05) !important; color: rgba(255,255,255,0.75) !important; }
     .settings-subnav a.active, .settings-nav a.active, .settings-nav-item.active { background: rgba(0,201,167,0.12) !important; color: #00d4b4 !important; }
-    .settings-content, .settings-panel { background: #0b0f12 !important; padding: 24px 28px !important; }
-    .settings-section { background: #131a1f !important; border: 1px solid rgba(255,255,255,0.07) !important; border-radius: 12px !important; padding: 24px !important; margin-bottom: 16px !important; }
-    .settings-section-title { font-size: 16px !important; font-weight: 600 !important; color: #fff !important; margin-bottom: 4px !important; }
-    .settings-section-sub { font-size: 13px !important; color: rgba(255,255,255,0.4) !important; margin-bottom: 20px !important; }
+    .settings-content, .settings-panel { background: var(--bg-base) !important; padding: 24px 28px !important; }
+    .settings-section { background: var(--bg-card) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; padding: 24px !important; margin-bottom: 16px !important; }
+    .settings-section-title { font-size: 16px !important; font-weight: 600 !important; color: var(--text-primary) !important; margin-bottom: 4px !important; }
+    .settings-section-sub { font-size: 13px !important; color: var(--text-muted) !important; margin-bottom: 20px !important; }
 
     /* ── DISPOSITION TAGS ── */
     .disposition-list, .tags-list { display: flex !important; flex-direction: column !important; gap: 8px !important; margin-top: 16px !important; }
-    .disposition-item, .tag-item { display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 12px 16px !important; background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.07) !important; border-radius: 9px !important; transition: border-color 0.12s !important; }
-    .disposition-item:hover, .tag-item:hover { border-color: rgba(255,255,255,0.12) !important; }
+    .disposition-item, .tag-item { display: flex !important; align-items: center !important; justify-content: space-between !important; padding: 12px 16px !important; background: var(--bg-hover) !important; border: 1px solid var(--border) !important; border-radius: 9px !important; transition: border-color 0.12s !important; }
+    .disposition-item:hover, .tag-item:hover { border-color: var(--border-strong) !important; }
     .disposition-item-left { display: flex !important; align-items: center !important; gap: 10px !important; }
     .disposition-color-dot { width: 10px !important; height: 10px !important; border-radius: 50% !important; flex-shrink: 0 !important; }
-    .disposition-name { font-size: 14px !important; font-weight: 500 !important; color: #fff !important; }
-    .disposition-drip { font-size: 12px !important; color: rgba(255,255,255,0.3) !important; margin-top: 2px !important; }
+    .disposition-name { font-size: 14px !important; font-weight: 500 !important; color: var(--text-primary) !important; }
+    .disposition-drip { font-size: 12px !important; color: var(--text-muted) !important; margin-top: 2px !important; }
     .disposition-actions { display: flex !important; gap: 6px !important; }
 
     /* ── PRESET TEMPLATES ── */
     .template-list { display: flex !important; flex-direction: column !important; gap: 8px !important; margin-top: 16px !important; }
-    .template-item { display: flex !important; align-items: flex-start !important; justify-content: space-between !important; padding: 14px 16px !important; background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.07) !important; border-radius: 9px !important; gap: 16px !important; transition: border-color 0.12s !important; }
-    .template-item:hover { border-color: rgba(255,255,255,0.12) !important; }
-    .template-name { font-size: 14px !important; font-weight: 600 !important; color: #fff !important; margin-bottom: 4px !important; }
-    .template-preview { font-size: 12.5px !important; color: rgba(255,255,255,0.4) !important; line-height: 1.5 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 600px !important; }
+    .template-item { display: flex !important; align-items: flex-start !important; justify-content: space-between !important; padding: 14px 16px !important; background: var(--bg-hover) !important; border: 1px solid var(--border) !important; border-radius: 9px !important; gap: 16px !important; transition: border-color 0.12s !important; }
+    .template-item:hover { border-color: var(--border-strong) !important; }
+    .template-name { font-size: 14px !important; font-weight: 600 !important; color: var(--text-primary) !important; margin-bottom: 4px !important; }
+    .template-preview { font-size: 12.5px !important; color: var(--text-muted) !important; line-height: 1.5 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; max-width: 600px !important; }
     .template-actions { display: flex !important; gap: 6px !important; flex-shrink: 0 !important; }
-    .current-tags-label, .current-templates-label, [class*="section-label"], .settings-list-label { font-size: 10px !important; font-weight: 600 !important; letter-spacing: 0.09em !important; text-transform: uppercase !important; color: rgba(255,255,255,0.25) !important; margin-bottom: 8px !important; margin-top: 20px !important; display: block !important; }
+    .current-tags-label, .current-templates-label, [class*="section-label"], .settings-list-label { font-size: 10px !important; font-weight: 600 !important; letter-spacing: 0.09em !important; text-transform: uppercase !important; color: var(--text-disabled) !important; margin-bottom: 8px !important; margin-top: 20px !important; display: block !important; }
 
     /* ── EDIT / DELETE BUTTONS ── */
-    .btn-edit { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.6) !important; border-radius: 7px !important; padding: 5px 14px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; transition: all 0.12s !important; }
-    .btn-edit:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
+    .btn-edit { background: var(--border) !important; border: 1px solid var(--input-border) !important; color: var(--text-secondary) !important; border-radius: 7px !important; padding: 5px 14px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; transition: all 0.12s !important; }
+    .btn-edit:hover { background: var(--bg-active) !important; color: var(--text-primary) !important; }
     .btn-delete { background: rgba(239,68,68,0.08) !important; border: 1px solid rgba(239,68,68,0.18) !important; color: #f87171 !important; border-radius: 7px !important; padding: 5px 14px !important; font-size: 12px !important; font-weight: 500 !important; cursor: pointer !important; transition: all 0.12s !important; }
     .btn-delete:hover { background: rgba(239,68,68,0.15) !important; }
 
     /* ── PHONE NUMBERS ── */
     .phone-numbers-table, .numbers-table { width: 100% !important; border-collapse: collapse !important; }
-    .phone-numbers-table th, .numbers-table th { font-size: 10.5px !important; font-weight: 600 !important; letter-spacing: 0.07em !important; text-transform: uppercase !important; color: rgba(255,255,255,0.28) !important; padding: 8px 12px !important; text-align: left !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; background: transparent !important; }
-    .phone-numbers-table td, .numbers-table td { padding: 12px 12px !important; font-size: 13px !important; color: rgba(255,255,255,0.65) !important; border-bottom: 1px solid rgba(255,255,255,0.04) !important; background: transparent !important; vertical-align: middle !important; }
-    .phone-numbers-table tr:hover td, .numbers-table tr:hover td { background: rgba(255,255,255,0.03) !important; }
-    .phone-name-input, .number-name-input, input[class*="phone-name"], input[class*="number-name"] { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 6px !important; color: rgba(255,255,255,0.7) !important; padding: 5px 10px !important; font-size: 12.5px !important; outline: none !important; width: 120px !important; }
+    .phone-numbers-table th, .numbers-table th { font-size: 10.5px !important; font-weight: 600 !important; letter-spacing: 0.07em !important; text-transform: uppercase !important; color: var(--text-disabled) !important; padding: 8px 12px !important; text-align: left !important; border-bottom: 1px solid var(--border) !important; background: transparent !important; }
+    .phone-numbers-table td, .numbers-table td { padding: 12px 12px !important; font-size: 13px !important; color: var(--text-secondary) !important; border-bottom: 1px solid var(--border-subtle) !important; background: transparent !important; vertical-align: middle !important; }
+    .phone-numbers-table tr:hover td, .numbers-table tr:hover td { background: var(--bg-hover) !important; }
+    .phone-name-input, .number-name-input, input[class*="phone-name"], input[class*="number-name"] { background: var(--input-bg) !important; border: 1px solid var(--border) !important; border-radius: 6px !important; color: var(--input-text) !important; padding: 5px 10px !important; font-size: 12.5px !important; outline: none !important; width: 120px !important; }
     .phone-name-input:focus, .number-name-input:focus { border-color: rgba(0,201,167,0.35) !important; }
     .status-active, .badge-active { display: inline-flex !important; align-items: center !important; gap: 5px !important; font-size: 12px !important; font-weight: 500 !important; color: #34d399 !important; }
     .status-warning, .badge-warning, .status-replacing, .badge-replacing { color: #fbbf24 !important; font-size: 12px !important; font-weight: 500 !important; }
@@ -127,7 +127,7 @@
     .health-badge.good { background: rgba(52,211,153,0.12) !important; color: #34d399 !important; border: 1px solid rgba(52,211,153,0.2) !important; }
     .viol-rate-high { color: #f87171 !important; font-weight: 600 !important; }
     .delivery-pct { color: #fbbf24 !important; font-weight: 500 !important; }
-    .phone-search-input, input[placeholder*="state"], input[placeholder*="555"] { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 8px !important; color: rgba(255,255,255,0.7) !important; padding: 8px 12px !important; font-size: 13px !important; outline: none !important; width: 100% !important; }
+    .phone-search-input, input[placeholder*="state"], input[placeholder*="555"] { background: var(--input-bg) !important; border: 1px solid var(--border) !important; border-radius: 8px !important; color: var(--input-text) !important; padding: 8px 12px !important; font-size: 13px !important; outline: none !important; width: 100% !important; }
     .phone-search-input:focus, input[placeholder*="state"]:focus, input[placeholder*="555"]:focus { border-color: rgba(0,201,167,0.35) !important; background: rgba(0,201,167,0.04) !important; }
 
     /* ── Modal overlay ── */
@@ -149,8 +149,8 @@
 
     /* ── Modal container ── */
     .modal, [class*="modal-container"], [class*="modal-content"] {
-      background: #1a2228 !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      background: var(--bg-elevated) !important;
+      border: 1px solid var(--input-border) !important;
       border-radius: 14px !important;
       padding: 28px !important;
       width: 100% !important;
@@ -164,13 +164,13 @@
     .modal h2, .modal h3, [class*="modal-title"] {
       font-size: 16px !important;
       font-weight: 600 !important;
-      color: #fff !important;
+      color: var(--text-primary) !important;
       margin-bottom: 20px !important;
     }
 
     /* ── Close button ── */
     .modal-close, [class*="modal-close"] {
-      color: rgba(255,255,255,0.4) !important;
+      color: var(--text-muted) !important;
       background: none !important;
       border: none !important;
       cursor: pointer !important;
@@ -178,13 +178,13 @@
       padding: 4px !important;
       transition: color 0.12s !important;
     }
-    .modal-close:hover { color: #fff !important; }
+    .modal-close:hover { color: var(--text-primary) !important; }
 
     /* ── Form field labels ── */
     .modal label, [class*="modal"] label {
       font-size: 12px !important;
       font-weight: 500 !important;
-      color: rgba(255,255,255,0.45) !important;
+      color: var(--text-muted) !important;
       display: block !important;
       margin-bottom: 6px !important;
       margin-top: 14px !important;
@@ -203,10 +203,10 @@
     [class*="modal"] textarea {
       width: 100% !important;
       padding: 9px 12px !important;
-      background: rgba(255,255,255,0.05) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      background: var(--input-bg) !important;
+      border: 1px solid var(--input-border) !important;
       border-radius: 8px !important;
-      color: rgba(255,255,255,0.8) !important;
+      color: var(--text-primary) !important;
       font-size: 13px !important;
       outline: none !important;
       font-family: inherit !important;
@@ -221,7 +221,7 @@
     }
     .modal input::placeholder,
     .modal textarea::placeholder {
-      color: rgba(255,255,255,0.22) !important;
+      color: var(--text-disabled) !important;
     }
 
     /* ── Section headers inside modal ── */
@@ -230,21 +230,21 @@
     .modal h4, .modal strong {
       font-size: 13px !important;
       font-weight: 600 !important;
-      color: rgba(255,255,255,0.7) !important;
+      color: var(--text-secondary) !important;
       margin-bottom: 4px !important;
     }
     .modal [class*="section-sub"],
     .modal [class*="section-desc"],
     .modal p {
       font-size: 12px !important;
-      color: rgba(255,255,255,0.3) !important;
+      color: var(--text-muted) !important;
       margin-bottom: 10px !important;
     }
 
     /* ── Dividers between sections ── */
     .modal hr, .modal [class*="divider"] {
       border: none !important;
-      border-top: 1px solid rgba(255,255,255,0.06) !important;
+      border-top: 1px solid var(--border) !important;
       margin: 16px 0 !important;
     }
 
@@ -277,7 +277,7 @@
       border-radius: 8px !important;
       padding: 10px 14px !important;
       font-size: 12px !important;
-      color: rgba(255,255,255,0.5) !important;
+      color: var(--text-muted) !important;
       line-height: 1.6 !important;
       margin: 10px 0 !important;
     }
@@ -285,8 +285,8 @@
     /* ── Message block (Message 1, Send on day X at time) ── */
     .modal [class*="message-block"],
     .modal [class*="drip-message"] {
-      background: rgba(255,255,255,0.03) !important;
-      border: 1px solid rgba(255,255,255,0.07) !important;
+      background: var(--bg-hover) !important;
+      border: 1px solid var(--border) !important;
       border-radius: 9px !important;
       padding: 14px !important;
       margin-top: 10px !important;
@@ -299,7 +299,7 @@
       margin-bottom: 10px !important;
       font-size: 13px !important;
       font-weight: 500 !important;
-      color: rgba(255,255,255,0.6) !important;
+      color: var(--text-secondary) !important;
     }
 
     /* ── Remove button on message blocks ── */
@@ -322,7 +322,7 @@
       gap: 8px !important;
       margin-bottom: 8px !important;
       font-size: 13px !important;
-      color: rgba(255,255,255,0.5) !important;
+      color: var(--text-muted) !important;
     }
     .modal [class*="send-day"] input[type="number"] {
       width: 60px !important;
@@ -349,9 +349,9 @@
       border-radius: 6px !important;
       font-size: 11.5px !important;
       font-weight: 500 !important;
-      background: rgba(255,255,255,0.07) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
-      color: rgba(255,255,255,0.55) !important;
+      background: var(--bg-active) !important;
+      border: 1px solid var(--input-border) !important;
+      color: var(--text-secondary) !important;
       cursor: pointer !important;
       transition: all 0.12s !important;
     }
@@ -365,7 +365,7 @@
     /* ── Char counter ── */
     .modal [class*="char-count"] {
       font-size: 11px !important;
-      color: rgba(255,255,255,0.25) !important;
+      color: var(--text-disabled) !important;
       text-align: right !important;
       margin-top: 4px !important;
     }
@@ -380,7 +380,7 @@
       gap: 8px !important;
       margin-top: 20px !important;
       padding-top: 16px !important;
-      border-top: 1px solid rgba(255,255,255,0.06) !important;
+      border-top: 1px solid var(--border) !important;
     }
 
     /* ── Cancel button ── */
@@ -390,15 +390,15 @@
       border-radius: 8px !important;
       font-size: 13px !important;
       font-weight: 500 !important;
-      color: rgba(255,255,255,0.5) !important;
-      background: rgba(255,255,255,0.06) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: var(--text-muted) !important;
+      background: var(--border) !important;
+      border: 1px solid var(--input-border) !important;
       cursor: pointer !important;
       transition: all 0.12s !important;
     }
     .modal [class*="cancel"]:hover {
-      background: rgba(255,255,255,0.1) !important;
-      color: #fff !important;
+      background: var(--bg-active) !important;
+      color: var(--text-primary) !important;
     }
 
     /* ── Save / primary button ── */
@@ -428,14 +428,14 @@
       align-items: center !important;
       justify-content: space-between !important;
       padding: 12px 16px !important;
-      background: rgba(255,255,255,0.03) !important;
-      border: 1px solid rgba(255,255,255,0.07) !important;
+      background: var(--bg-hover) !important;
+      border: 1px solid var(--border) !important;
       border-radius: 9px !important;
       margin-bottom: 6px !important;
       transition: border-color 0.12s !important;
     }
     .disposition-item:hover, .tag-item:hover {
-      border-color: rgba(255,255,255,0.12) !important;
+      border-color: var(--border-strong) !important;
     }
 
     [class*="tags-list"] > div,
@@ -444,8 +444,8 @@
       align-items: center !important;
       justify-content: space-between !important;
       padding: 11px 14px !important;
-      background: rgba(255,255,255,0.03) !important;
-      border: 1px solid rgba(255,255,255,0.07) !important;
+      background: var(--bg-hover) !important;
+      border: 1px solid var(--border) !important;
       border-radius: 9px !important;
       margin-bottom: 6px !important;
     }
@@ -472,14 +472,14 @@
     [class*="tag-title"], [class*="template-title"] {
       font-size: 14px !important;
       font-weight: 500 !important;
-      color: #fff !important;
+      color: var(--text-primary) !important;
     }
 
     /* ── Drip/preview subtext ── */
     .tag-drip, .tag-sub, .template-preview,
     [class*="tag-sub"], [class*="drip-label"] {
       font-size: 12px !important;
-      color: rgba(255,255,255,0.3) !important;
+      color: var(--text-muted) !important;
       margin-top: 2px !important;
       white-space: nowrap !important;
       overflow: hidden !important;
@@ -502,15 +502,15 @@
       border-radius: 7px !important;
       font-size: 12px !important;
       font-weight: 500 !important;
-      color: rgba(255,255,255,0.6) !important;
-      background: rgba(255,255,255,0.06) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      color: var(--text-secondary) !important;
+      background: var(--border) !important;
+      border: 1px solid var(--input-border) !important;
       cursor: pointer !important;
       transition: all 0.12s !important;
     }
     .btn-edit:hover, button[class*="edit"]:hover {
-      background: rgba(255,255,255,0.1) !important;
-      color: #fff !important;
+      background: var(--bg-active) !important;
+      color: var(--text-primary) !important;
     }
 
     /* ── Delete button ── */
@@ -536,7 +536,7 @@
       font-weight: 700 !important;
       letter-spacing: 0.1em !important;
       text-transform: uppercase !important;
-      color: rgba(255,255,255,0.22) !important;
+      color: var(--text-disabled) !important;
       margin-bottom: 10px !important;
       margin-top: 20px !important;
       display: block !important;
@@ -546,14 +546,14 @@
     [class*="template-name"], [class*="preset-name"] {
       font-size: 14px !important;
       font-weight: 600 !important;
-      color: #fff !important;
+      color: var(--text-primary) !important;
     }
 
     /* ── Template preview text ── */
     [class*="template-body"], [class*="template-text"],
     [class*="preset-body"], [class*="preset-preview"] {
       font-size: 12.5px !important;
-      color: rgba(255,255,255,0.35) !important;
+      color: var(--text-muted) !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
@@ -564,14 +564,14 @@
     /* ── Drag handle ── */
     .drag-handle {
       cursor: grab !important;
-      color: rgba(255,255,255,0.3) !important;
+      color: var(--text-muted) !important;
       padding: 0 8px 0 0 !important;
       display: flex !important;
       align-items: center !important;
       flex-shrink: 0 !important;
       transition: color 0.12s !important;
     }
-    .drag-handle:hover { color: rgba(255,255,255,0.7) !important; }
+    .drag-handle:hover { color: var(--text-secondary) !important; }
     .drag-handle:active { cursor: grabbing !important; }
     .sortable-ghost {
       opacity: 0.4 !important;
@@ -579,8 +579,8 @@
       border-color: rgba(0,201,167,0.3) !important;
     }
     .sortable-chosen {
-      background: rgba(255,255,255,0.06) !important;
-      border-color: rgba(255,255,255,0.15) !important;
+      background: var(--border) !important;
+      border-color: var(--border-strong) !important;
       box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
     }
 
@@ -606,7 +606,7 @@
       font-weight: 600 !important;
       letter-spacing: 0.07em !important;
       text-transform: uppercase !important;
-      color: rgba(255,255,255,0.25) !important;
+      color: var(--text-disabled) !important;
       margin-right: 6px !important;
     }
 
@@ -624,9 +624,9 @@
       border-radius: 6px !important;
       font-size: 12px !important;
       font-weight: 500 !important;
-      background: rgba(255,255,255,0.07) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
-      color: rgba(255,255,255,0.55) !important;
+      background: var(--bg-active) !important;
+      border: 1px solid var(--input-border) !important;
+      color: var(--text-secondary) !important;
       cursor: pointer !important;
       margin: 2px !important;
       transition: all 0.12s !important;
@@ -651,16 +651,16 @@
       gap: 4px !important;
       margin-top: 8px !important;
       padding: 8px 0 !important;
-      border-top: 1px solid rgba(255,255,255,0.05) !important;
+      border-top: 1px solid var(--border-subtle) !important;
     }
 
     /* ── Select action dropdown ── */
     .modal select, [id*="tag-modal"] select,
     [id*="disposition-modal"] select {
-      background: rgba(255,255,255,0.05) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
+      background: var(--input-bg) !important;
+      border: 1px solid var(--input-border) !important;
       border-radius: 8px !important;
-      color: rgba(255,255,255,0.7) !important;
+      color: var(--input-text) !important;
       padding: 8px 12px !important;
       font-size: 13px !important;
       outline: none !important;
@@ -701,14 +701,14 @@
       gap: 4px !important;
       margin-top: 8px !important;
       padding: 8px 0 4px !important;
-      border-top: 1px solid rgba(255,255,255,0.05) !important;
+      border-top: 1px solid var(--border-subtle) !important;
     }
     .kw-chips-label {
       font-size: 10px !important;
       font-weight: 600 !important;
       letter-spacing: 0.07em !important;
       text-transform: uppercase !important;
-      color: rgba(255,255,255,0.25) !important;
+      color: var(--text-disabled) !important;
       margin-right: 4px !important;
       white-space: nowrap !important;
     }
@@ -719,9 +719,9 @@
       border-radius: 6px !important;
       font-size: 12px !important;
       font-weight: 500 !important;
-      background: rgba(255,255,255,0.07) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
-      color: rgba(255,255,255,0.55) !important;
+      background: var(--bg-active) !important;
+      border: 1px solid var(--input-border) !important;
+      color: var(--text-secondary) !important;
       cursor: pointer !important;
       transition: all 0.12s !important;
       white-space: nowrap !important;
@@ -741,9 +741,9 @@
       border-radius: 6px !important;
       font-size: 12px !important;
       font-weight: 500 !important;
-      background: rgba(255,255,255,0.07) !important;
-      border: 1px solid rgba(255,255,255,0.1) !important;
-      color: rgba(255,255,255,0.55) !important;
+      background: var(--bg-active) !important;
+      border: 1px solid var(--input-border) !important;
+      color: var(--text-secondary) !important;
       cursor: pointer !important;
       margin: 2px !important;
       transition: all 0.12s !important;
@@ -783,7 +783,7 @@
     .color-picker-divider {
       width: 1px !important;
       height: 28px !important;
-      background: rgba(255,255,255,0.1) !important;
+      background: var(--input-border) !important;
       margin: 0 2px !important;
     }
     .color-custom-wrap {
@@ -795,14 +795,14 @@
       width: 36px !important;
       height: 28px !important;
       border-radius: 6px !important;
-      border: 1px solid rgba(255,255,255,0.15) !important;
+      border: 1px solid var(--border-strong) !important;
       cursor: pointer !important;
       padding: 0 !important;
       background: none !important;
     }
     .color-custom-label {
       font-size: 12px !important;
-      color: rgba(255,255,255,0.35) !important;
+      color: var(--text-muted) !important;
     }
   </style>
 </head>
@@ -839,7 +839,7 @@
           <button class="btn-primary" onclick="openCreateDispositionModal()">+ New Disposition Tag</button>
           <div class="settings-section-title" style="margin-top:24px;">Current Tags</div>
           <div id="disposition-tags-list">
-            <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No disposition tags yet</div>
+            <div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No disposition tags yet</div>
           </div>
         </div>
       </div>
@@ -851,7 +851,7 @@
           <button class="btn-primary" onclick="openCreateTemplateModal()">+ New Template</button>
           <div class="settings-section-title" style="margin-top:24px;">Current Templates</div>
           <div id="templates-list">
-            <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No templates yet</div>
+            <div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No templates yet</div>
           </div>
         </div>
       </div>
@@ -875,9 +875,9 @@
             <div class="form-group" style="flex:1;min-width:160px;margin-bottom:0;position:relative;">
               <label>State</label>
               <input type="text" id="pn-search-state-input" placeholder="Type state name..." autocomplete="off" oninput="filterStateDropdown()" onfocus="filterStateDropdown()" style="width:100%;">
-              <div id="pn-state-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#131a1f;border:1px solid rgba(255,255,255,0.1);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
+              <div id="pn-state-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);max-height:200px;overflow-y:auto;z-index:100;margin-top:2px;"></div>
             </div>
-            <div style="font-size:13px;color:rgba(255,255,255,0.35);padding-bottom:8px;">or</div>
+            <div style="font-size:13px;color:var(--text-muted);padding-bottom:8px;">or</div>
             <div class="form-group" style="flex:1;min-width:120px;margin-bottom:0;">
               <label>Area Code</label>
               <input type="text" id="pn-search-areacode" placeholder="555" maxlength="3" style="width:100%;">
@@ -889,7 +889,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;margin-top:28px;margin-bottom:12px;">
             <div class="settings-section-title" style="margin:0;">My Numbers</div>
             <div style="display:flex;align-items:center;gap:10px;">
-              <span id="pn-last-updated" style="font-size:11px;color:rgba(255,255,255,0.35);"></span>
+              <span id="pn-last-updated" style="font-size:11px;color:var(--text-muted);"></span>
               <button class="btn-ghost" id="pn-refresh-btn" onclick="refreshHealthData()" style="display:flex;align-items:center;gap:6px;">
                 <svg id="pn-refresh-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
                 Refresh Health
@@ -897,7 +897,7 @@
             </div>
           </div>
           <div id="phone-numbers-list">
-            <div style="color:rgba(255,255,255,0.35);font-size:13px;padding:20px 0;">No phone numbers yet</div>
+            <div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No phone numbers yet</div>
           </div>
         </div>
       </div>
@@ -909,7 +909,7 @@
           <button class="btn-primary" onclick="openInviteModal()" style="width:auto;">+ Invite Agent</button>
           <div class="settings-section-title" style="margin-top:24px;">Pending Invites</div>
           <div id="invites-list">
-            <div style="color:#d1d5db;font-size:13px;padding:20px 0;">No pending invites</div>
+            <div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No pending invites</div>
           </div>
         </div>
       </div>
@@ -939,7 +939,7 @@
             </div>
           </div>
           <div class="form-group" id="field-agent-nickname">
-            <label>AI Nickname <span style="font-weight:400;color:rgba(255,255,255,0.3);">(optional but recommended)</span></label>
+            <label>AI Nickname <span style="font-weight:400;color:var(--text-muted);">(optional but recommended)</span></label>
             <input type="text" id="profile-agent-nickname" placeholder="e.g. Alex">
             <div class="nickname-tip">
               Add a nickname — the AI will use this in conversations. Leave blank to use first name from Agent Name.
@@ -976,17 +976,17 @@
               <input type="checkbox" id="compliance-enabled" onchange="updateCompliancePreview()">
               <span class="toggle-slider"></span>
             </label>
-            <span style="font-size:13px;color:rgba(255,255,255,0.65);">Enable compliance footer</span>
+            <span style="font-size:13px;color:var(--text-secondary);">Enable compliance footer</span>
           </div>
           <div id="compliance-fields">
             <div class="form-group">
-              <label>Footer Text <span style="font-weight:400;color:rgba(255,255,255,0.35);">(leave blank to use default)</span></label>
+              <label>Footer Text <span style="font-weight:400;color:var(--text-muted);">(leave blank to use default)</span></label>
               <textarea id="compliance-footer" rows="2" placeholder="Reply STOP to opt out. [Agency Name]" oninput="updateCompliancePreview()"></textarea>
-              <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;">Use <strong>[Agency Name]</strong> as a placeholder — it will be replaced with your agency name.</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Use <strong>[Agency Name]</strong> as a placeholder — it will be replaced with your agency name.</div>
             </div>
             <div class="compliance-preview-box">
               <div class="compliance-preview-label">Preview</div>
-              <div id="compliance-preview" style="font-size:13px;color:rgba(255,255,255,0.6);white-space:pre-line;"></div>
+              <div id="compliance-preview" style="font-size:13px;color:var(--text-secondary);white-space:pre-line;"></div>
             </div>
           </div>
           <div id="compliance-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
@@ -998,7 +998,7 @@
           <div class="form-group">
             <label>Your personal cell for SMS alerts</label>
             <input type="text" id="profile-personal-phone" placeholder="+1 (555) 000-0000">
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:4px;">We'll forward lead replies to this number as a text so you never miss a message. This is your personal phone, not a Veloxo number.</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">We'll forward lead replies to this number as a text so you never miss a message. This is your personal phone, not a Veloxo number.</div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
             <label class="toggle" style="margin-top:2px;">
@@ -1006,8 +1006,8 @@
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <div style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);">SMS reply notifications</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Sends you a text for every lead reply. Uses SMS credits.</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">SMS reply notifications</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Sends you a text for every lead reply. Uses SMS credits.</div>
             </div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;">
@@ -1016,8 +1016,8 @@
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <div style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);">Show notification bell in the app</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Red badge on the bell icon when leads reply.</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">Show notification bell in the app</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Red badge on the bell icon when leads reply.</div>
             </div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:20px;">
@@ -1026,8 +1026,8 @@
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <div style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);">Text me when an appointment is booked</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Sends a summary to your personal cell when AI books an appointment with a lead.</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">Text me when an appointment is booked</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Sends a summary to your personal cell when AI books an appointment with a lead.</div>
             </div>
           </div>
           <div id="notif-settings-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
@@ -1037,11 +1037,11 @@
           <h2>AI After-Hours Response</h2>
           <p>When a lead texts after permitted marketing hours, should the AI respond right away or wait until the next allowed window?</p>
           <div class="form-group" style="margin-bottom:20px;">
-            <select id="ai-afterhours-response" style="padding:9px 13px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);width:100%;max-width:320px;">
+            <select id="ai-afterhours-response" style="padding:9px 13px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:var(--input-bg);color:var(--input-text);width:100%;max-width:320px;">
               <option value="queue">Queue until morning (default)</option>
               <option value="immediate">Respond immediately</option>
             </select>
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:6px;">Queue sends the AI reply at the start of the next permitted window. Immediate responds right away regardless of time.</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:6px;">Queue sends the AI reply at the start of the next permitted window. Immediate responds right away regardless of time.</div>
           </div>
           <div id="afterhours-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
           <button class="btn-primary" onclick="saveAfterHoursSettings()">Save After-Hours Settings</button>
@@ -1055,8 +1055,8 @@
               <span class="toggle-slider"></span>
             </label>
             <div>
-              <div style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.7);">AI Autopilot for Priority Leads</div>
-              <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">When ON, new Priority leads will automatically have AI autopilot enabled. When OFF, you must manually enable autopilot for each Priority lead.</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">AI Autopilot for Priority Leads</div>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">When ON, new Priority leads will automatically have AI autopilot enabled. When OFF, you must manually enable autopilot for each Priority lead.</div>
             </div>
           </div>
           <div id="priority-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
@@ -1070,11 +1070,11 @@
         <div class="plan-card" id="plan-card">
           <div><div class="plan-badge" id="plan-name">—</div></div>
           <div style="flex:1;"><div class="plan-status"><span class="active-dot" id="plan-dot"></span><span id="plan-status-text">Loading...</span></div></div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.3);">Contact support to change your plan</div>
+          <div style="font-size:12px;color:var(--text-muted);">Contact support to change your plan</div>
         </div>
 
         <!-- Credit Balances -->
-        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:12px;">Credit Balances</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">Credit Balances</div>
         <div class="billing-grid">
           <div class="credit-card">
             <div class="credit-card-label">SMS Credits</div>
@@ -1100,8 +1100,8 @@
         </div>
 
         <!-- Purchase Credits -->
-        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;">Purchase Credits</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:16px;">Credits never expire. Larger packages = better value.</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">Purchase Credits</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Credits never expire. Larger packages = better value.</div>
 
         <div class="packages-section">
           <h3>SMS Credits</h3>
@@ -1173,14 +1173,14 @@
         </div>
 
         <!-- Transaction History -->
-        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:12px;">Credit History</div>
-        <div style="background:#131a1f;border:1px solid rgba(255,255,255,0.07);border-radius:12px;overflow:hidden;">
+        <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;">Credit History</div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
           <table class="history-table">
             <thead>
               <tr><th>Date</th><th>Type</th><th>Credits</th><th>Balance After</th></tr>
             </thead>
             <tbody id="history-tbody">
-              <tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">Loading...</td></tr>
+              <tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-disabled);font-size:13px;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1195,20 +1195,20 @@
 
           <div class="settings-section-title" style="margin-top:20px;">Your Webhook URL</div>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-            <input type="text" id="webhook-url" readonly style="flex:1;padding:9px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.5);font-family:monospace;cursor:text;" value="Loading...">
+            <input type="text" id="webhook-url" readonly style="flex:1;padding:9px 12px;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-muted);font-family:monospace;cursor:text;" value="Loading...">
             <button class="btn-edit" id="webhook-copy-btn" onclick="copyWebhookUrl()">Copy</button>
           </div>
           <div class="help-text" style="margin-bottom:20px;">Send a POST request to this URL with your lead data. Each lead will appear in your Priority queue.</div>
 
           <div class="settings-section-title">Webhook Secret</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;">
+          <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px;padding:10px 14px;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;">
             Secret key: Contact your Veloxo administrator to receive your webhook secret key.
           </div>
 
           <div class="settings-section-title" style="cursor:pointer;display:flex;align-items:center;gap:6px;" onclick="toggleSetupInstructions()">
             <span id="setup-arrow" style="font-size:10px;transition:transform 0.15s;">&#9654;</span> How to set this up
           </div>
-          <div id="setup-instructions" style="display:none;margin-top:10px;margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;">
+          <div id="setup-instructions" style="display:none;margin-top:10px;margin-bottom:20px;padding:14px 16px;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--text-muted);line-height:1.8;">
             1. Copy your webhook URL above<br>
             2. In your automation tool, create an HTTP POST module pointed at this URL<br>
             3. Include your secret key in the request body as <code>secret</code><br>
@@ -1263,29 +1263,29 @@
     </div>
 
     <div class="form-group">
-      <label>Webhook URL <span style="font-weight:400;color:rgba(255,255,255,0.3);">(optional)</span></label>
+      <label>Webhook URL <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
       <input type="text" id="disp-tag-webhook-url" placeholder="https://hook.make.com/your-webhook-url">
-      <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:3px;">When this tag is applied, Veloxo sends lead data to this URL via POST.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">When this tag is applied, Veloxo sends lead data to this URL via POST.</div>
     </div>
 
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin:20px 0;"></div>
+    <div style="border-top:1px solid var(--border);margin:20px 0;"></div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div>
-        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.8);">Automated Actions</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Actions execute in order when this tag is applied to a lead</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Automated Actions</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Actions execute in order when this tag is applied to a lead</div>
       </div>
       <button class="btn-ghost" onclick="addActionRow()">+ Add Action</button>
     </div>
 
     <div id="action-rows"></div>
 
-    <div style="border-top:1px solid rgba(255,255,255,0.07);margin:20px 0;"></div>
+    <div style="border-top:1px solid var(--border);margin:20px 0;"></div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
       <div>
-        <div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.8);">Drip Sequence</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px;">Messages fire X days after this tag is applied</div>
+        <div style="font-size:14px;font-weight:600;color:var(--text-primary);">Drip Sequence</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Messages fire X days after this tag is applied</div>
       </div>
       <button class="btn-ghost" onclick="addDispMessageStep()">+ Add Message</button>
     </div>
@@ -1328,7 +1328,7 @@
       <h2>Purchase Number</h2>
       <button class="modal-close" onclick="closeBuyNumberModal()">×</button>
     </div>
-    <p id="buy-number-display" style="font-size:18px;font-weight:700;color:#1e293b;margin:0 0 16px;"></p>
+    <p id="buy-number-display" style="font-size:18px;font-weight:700;color:var(--text-primary);margin:0 0 16px;"></p>
     <div class="form-group">
       <label>Friendly Name</label>
       <input type="text" id="buy-number-name" placeholder="e.g. Florida Line">
@@ -1373,7 +1373,7 @@
       <h2>Coming Soon</h2>
       <button class="modal-close" onclick="document.getElementById('purchase-modal').classList.remove('open')">&times;</button>
     </div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;margin-bottom:16px;">
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">
       Credit purchasing will be available soon. To add credits now, contact support.
     </div>
     <div class="modal-footer">
@@ -1565,7 +1565,7 @@
   const renderDispositionTags = () => {
     const container = document.getElementById('disposition-tags-list')
     if (!allDispositionTags.length) {
-      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No disposition tags yet</div>`
+      container.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No disposition tags yet</div>`
       return
     }
     container.innerHTML = allDispositionTags.map(tag => `
@@ -1687,7 +1687,7 @@
           <div class="day-input">
             <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${msg.day_number}">
             <label>at</label><input type="time" class="dstep-time" value="${msg.send_time || '10:00'}">
-            <span style="font-size:11px;color:rgba(255,255,255,0.35);">after disposition applied</span>
+            <span style="font-size:11px;color:var(--text-muted);">after disposition applied</span>
           </div>
           <textarea class="dstep-body" rows="3" oninput="updateCharCount(this)">${msg.message_body}</textarea>
           <div class="char-count">${msg.message_body.length} / 160</div>
@@ -1710,7 +1710,7 @@
       <div class="day-input">
         <label>Send on day</label><input type="number" class="dstep-day" min="1" value="${dispMessageStepCount}">
         <label>at</label><input type="time" class="dstep-time" value="10:00">
-        <span style="font-size:11px;color:rgba(255,255,255,0.35);">after disposition applied</span>
+        <span style="font-size:11px;color:var(--text-muted);">after disposition applied</span>
       </div>
       <textarea class="dstep-body" placeholder="Hi [First Name], just checking in..." rows="3" oninput="updateCharCount(this)"></textarea>
       <div class="char-count">0 / 160</div>
@@ -1977,8 +1977,8 @@
     if (!allPhoneNumbers.length) {
       container.innerHTML = `<div style="text-align:center;padding:48px 20px;">
         <div style="font-size:36px;margin-bottom:12px;">📱</div>
-        <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,0.75);margin-bottom:4px;">No phone numbers yet</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:16px;">Search for and purchase a number to start sending texts.</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">No phone numbers yet</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Search for and purchase a number to start sending texts.</div>
         <button class="btn-primary" style="width:auto;padding:8px 20px;" onclick="document.getElementById('pn-search-areacode').focus()">Search Numbers</button>
       </div>`
       return
@@ -1986,16 +1986,16 @@
     container.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Phone</th>
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">State</th>
-            <th style="text-align:center;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Status</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Sent Today</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Viol. Rate</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Opt-Outs</th>
-            <th style="text-align:right;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Delivery</th>
-            <th style="text-align:center;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Health</th>
-            <th style="text-align:left;padding:8px 10px;font-weight:600;color:rgba(255,255,255,0.35);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Since</th>
+          <tr style="border-bottom:1px solid var(--border);">
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Phone</th>
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">State</th>
+            <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Status</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Sent Today</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Viol. Rate</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Opt-Outs</th>
+            <th style="text-align:right;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Delivery</th>
+            <th style="text-align:center;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Health</th>
+            <th style="text-align:left;padding:8px 10px;font-weight:600;color:var(--text-muted);font-size:11px;text-transform:uppercase;letter-spacing:0.05em;">Since</th>
             <th style="padding:8px 10px;"></th>
           </tr>
         </thead>
@@ -2021,7 +2021,7 @@
             } else if (pnStatus === 'flagged') {
               statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:#ef4444;background:rgba(220,38,38,0.12);padding:3px 9px;border-radius:20px;white-space:nowrap;">Replace</span>`
             } else if (pnStatus === 'retired') {
-              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);background:rgba(255,255,255,0.06);padding:3px 9px;border-radius:20px;white-space:nowrap;">Retired</span>`
+              statusBadge = `<span style="display:inline-block;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--border);padding:3px 9px;border-radius:20px;white-space:nowrap;">Retired</span>`
             }
 
             const sentToday = pn.sent_today != null ? pn.sent_today : '—'
@@ -2032,29 +2032,29 @@
             const US_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DC','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY']
             const stateOptions = `<option value="">Unassigned</option>` + US_STATES.map(s => `<option value="${s}"${pn.state === s ? ' selected' : ''}>${s}</option>`).join('')
 
-            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            return `<tr style="border-bottom:1px solid var(--border-subtle);">
               <td style="padding:12px 10px;">
-                <div style="font-weight:600;color:rgba(255,255,255,0.75);">${pn.friendly_name || pn.phone_number}</div>
-                <div style="font-size:11px;color:rgba(255,255,255,0.35);">${pn.phone_number}${pn.is_default ? ' · <span style="color:#00d4b4;">Default</span>' : ''}</div>
+                <div style="font-weight:600;color:var(--text-secondary);">${pn.friendly_name || pn.phone_number}</div>
+                <div style="font-size:11px;color:var(--text-muted);">${pn.phone_number}${pn.is_default ? ' · <span style="color:#00d4b4;">Default</span>' : ''}</div>
               </td>
               <td style="padding:12px 10px;">
-                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid rgba(255,255,255,0.09);border-radius:7px;font-size:12px;background:#131a1f;color:rgba(255,255,255,0.75);cursor:pointer;">
+                <select onchange="saveNumberState('${pn.id}', this.value)" style="padding:4px 6px;border:1px solid var(--input-border);border-radius:7px;font-size:12px;background:var(--bg-card);color:var(--text-secondary);cursor:pointer;">
                   ${stateOptions}
                 </select>
               </td>
               <td style="padding:12px 10px;text-align:center;">${statusBadge}</td>
-              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.35);">${sentToday} / ${dailyLimit}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted);">${sentToday} / ${dailyLimit}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${violRateColor};font-weight:${pn.violation_rate >= 10 ? 600 : 400};">${violRate}</td>
-              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:rgba(255,255,255,0.35);">${optOuts}</td>
+              <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text-muted);">${optOuts}</td>
               <td style="padding:12px 10px;text-align:right;font-variant-numeric:tabular-nums;color:${delivColor};font-weight:${h.delivery_rate < 90 ? 600 : 400};">${delivery}</td>
               <td style="padding:12px 10px;text-align:center;">${healthBadge(healthStatus)}</td>
-              <td style="padding:12px 10px;color:rgba(255,255,255,0.35);">${purchased}</td>
+              <td style="padding:12px 10px;color:var(--text-muted);">${purchased}</td>
               <td style="padding:12px 10px;text-align:right;">
                 <div style="position:relative;display:inline-block;">
                   <button class="btn-ghost" onclick="togglePnMenu('${pn.id}')" style="padding:4px 8px;">⋯</button>
-                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#131a1f;border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
-                    ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
-                    <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:rgba(255,255,255,0.75);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
+                  <div id="pn-menu-${pn.id}" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);min-width:160px;z-index:50;overflow:hidden;">
+                    ${!pn.is_default ? `<button onclick="closePnMenus();setDefaultNumber('${pn.id}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--text-secondary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Set as Default</button>` : ''}
+                    <button onclick="closePnMenus();refreshSingleNumber('${pn.phone_number}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:var(--text-secondary);background:none;border:none;cursor:pointer;" onmouseover="this.style.background='var(--color-surface-subtle)'" onmouseout="this.style.background='none'">Refresh Health</button>
                     <div style="height:1px;background:var(--color-border-light);margin:4px 0;"></div>
                     <button onclick="closePnMenus();releasePhoneNumber('${pn.id}', '${pn.phone_number}', '${pnStatus}')" style="display:block;width:100%;text-align:left;padding:10px 14px;font-size:13px;color:#dc2626;background:none;border:none;cursor:pointer;" onmouseover="this.style.background='rgba(220,38,38,0.12)'" onmouseout="this.style.background='none'">Release Number</button>
                   </div>
@@ -2142,7 +2142,7 @@
     if (!state && !areaCode) return toast.error('Required', 'Choose a state or enter an area code')
     const resultsEl = document.getElementById('pn-search-results')
     const btn = document.getElementById('pn-search-btn')
-    resultsEl.innerHTML = `<div style="color:rgba(255,255,255,0.35);font-size:13px;">Searching...</div>`
+    resultsEl.innerHTML = `<div style="color:var(--text-muted);font-size:13px;">Searching...</div>`
     btn.disabled = true
     try {
       if (areaCode) { selectedStateAbbr = ''; document.getElementById('pn-search-state-input').value = '' }
@@ -2151,14 +2151,14 @@
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Search failed')
       if (!data.numbers || !data.numbers.length) {
-        resultsEl.innerHTML = `<div style="color:rgba(255,255,255,0.35);font-size:13px;">No numbers found. Try a different state or area code.</div>`
+        resultsEl.innerHTML = `<div style="color:var(--text-muted);font-size:13px;">No numbers found. Try a different state or area code.</div>`
         return
       }
       resultsEl.innerHTML = data.numbers.map(n => `
         <div class="disp-tag-row" style="padding:10px 0;">
           <div style="flex:1;">
             <div style="font-size:14px;font-weight:600;">${n.phone_number}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);">${[n.locality, n.region].filter(Boolean).join(', ')}</div>
+            <div style="font-size:12px;color:var(--text-muted);">${[n.locality, n.region].filter(Boolean).join(', ')}</div>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openBuyNumberModal('${n.phone_number}', '${n.region}')">Buy</button>
         </div>`).join('')
@@ -2271,7 +2271,7 @@
       : US_STATES
     if (!matches.length) { dropdown.style.display = 'none'; return }
     dropdown.innerHTML = matches.map(s =>
-      `<div onclick="selectState('${s.a}','${s.n}')" style="padding:8px 12px;cursor:pointer;font-size:13px;color:rgba(255,255,255,0.8);" onmouseenter="this.style.background='#f3f4f6'" onmouseleave="this.style.background=''">${s.n} <span style="color:rgba(255,255,255,0.35);">${s.a}</span></div>`
+      `<div onclick="selectState('${s.a}','${s.n}')" style="padding:8px 12px;cursor:pointer;font-size:13px;color:var(--text-primary);" onmouseenter="this.style.background='var(--bg-hover)'" onmouseleave="this.style.background=''">${s.n} <span style="color:var(--text-muted);">${s.a}</span></div>`
     ).join('')
     dropdown.style.display = 'block'
   }
@@ -2301,7 +2301,7 @@
       if (!container) return
       const pending = (data.invites || []).filter(i => !i.used && new Date(i.expires_at) > new Date())
       if (!pending.length) {
-        container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No pending invites</div>`
+        container.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No pending invites</div>`
         return
       }
       const appUrl = window.location.origin
@@ -2311,7 +2311,7 @@
         return `<div class="disp-tag-row">
           <div style="flex:1;">
             <div style="font-size:14px;font-weight:600;">${inv.email}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);">Expires ${expires}</div>
+            <div style="font-size:12px;color:var(--text-muted);">Expires ${expires}</div>
           </div>
           <button class="btn-ghost" onclick="copyInviteLink('${link}')">Copy Link</button>
           <button class="btn-ghost" onclick="resendInvite('${inv.id}', '${inv.email}')">Resend</button>
@@ -2351,8 +2351,8 @@
           <div style="text-align:center;padding:12px 0;">
             <div style="font-size:28px;margin-bottom:8px;">✅</div>
             <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Invite sent to ${email}</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:12px;">Share this link if email delivery isn't configured:</div>
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:12px;word-break:break-all;color:rgba(255,255,255,0.8);">${link}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Share this link if email delivery isn't configured:</div>
+            <div style="background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;word-break:break-all;color:var(--text-primary);">${link}</div>
             <button class="btn-ghost" style="margin-top:10px;width:auto;padding:8px 16px;" onclick="navigator.clipboard.writeText('${link}').then(()=>this.textContent='Copied!')">Copy Link</button>
           </div>`
         document.getElementById('invite-submit-btn').style.display = 'none'
@@ -2530,7 +2530,7 @@
     const container = document.getElementById('templates-list')
     if (!container) return
     if (!allTemplates.length) {
-      container.innerHTML = `<div style="color:#d1d5db;font-size:13px;padding:20px 0;">No templates yet</div>`
+      container.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">No templates yet</div>`
       return
     }
     container.innerHTML = allTemplates.map(t => `
@@ -2547,7 +2547,7 @@
         </div>
         <div style="flex:1;">
           <div style="font-size:14px;font-weight:600;margin-bottom:2px;">${t.name}</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.35);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">${t.body}</div>
+          <div style="font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px;">${t.body}</div>
         </div>
         <div class="disp-tag-actions">
           <button class="btn-ghost" onclick="editTemplate('${t.id}')">Edit</button>
@@ -2691,7 +2691,7 @@
       const tbody = document.getElementById('history-tbody')
       const txns = data.transactions || []
       if (!txns.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">No transactions yet.</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-disabled);font-size:13px;">No transactions yet.</td></tr>'
         return
       }
       tbody.innerHTML = txns.map(t => {
@@ -2706,7 +2706,7 @@
         </tr>`
       }).join('')
     } catch (err) {
-      document.getElementById('history-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:rgba(255,255,255,0.25);font-size:13px;">Could not load history.</td></tr>'
+      document.getElementById('history-tbody').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text-disabled);font-size:13px;">Could not load history.</td></tr>'
     }
   }
 

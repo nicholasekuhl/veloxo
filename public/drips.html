@@ -9,39 +9,39 @@
   <script src="/toast.js?v=2"></script>
   <style>
     .page-header { padding: 28px 28px 0; max-width: 1200px; margin: 0 auto; }
-    .page-header h1 { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .page-header p { font-size: 13px; color: rgba(255,255,255,0.45); margin: 0; line-height: 1.5; }
+    .page-header h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+    .page-header p { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
     .page-body { padding: 20px 28px 40px; max-width: 1200px; margin: 0 auto; }
 
-    .drip-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
-    .drip-card h2 { font-size: 15px; font-weight: 600; color: #fff; margin: 0 0 4px; }
-    .drip-card > .card-desc { font-size: 12px; color: rgba(255,255,255,0.35); margin-bottom: 18px; }
+    .drip-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .drip-card h2 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 0 0 4px; }
+    .drip-card > .card-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 18px; }
 
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.45); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-    .form-input { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; }
+    .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-input { width: 100%; padding: 8px 11px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; color: var(--input-text); font-family: inherit; outline: none; box-sizing: border-box; }
     .form-input:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
-    .form-input::placeholder { color: rgba(255,255,255,0.2); }
+    .form-input::placeholder { color: var(--input-placeholder); }
     select.form-input { cursor: pointer; }
     textarea.form-input { resize: vertical; min-height: 80px; }
-    .help-text { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
-    .char-count { font-size: 11px; color: rgba(255,255,255,0.3); text-align: right; margin-top: 2px; }
+    .help-text { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .char-count { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 2px; }
 
     .form-row { display: flex; gap: 12px; align-items: flex-end; }
     .form-row .form-group { flex: 1; }
     .form-row .form-group.narrow { flex: 0 0 100px; }
 
     .var-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-    .var-chip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 5px; padding: 3px 9px; font-size: 11px; color: rgba(255,255,255,0.45); cursor: pointer; font-family: inherit; transition: all 0.12s; }
+    .var-chip { background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 5px; padding: 3px 9px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.12s; }
     .var-chip:hover { background: rgba(0,201,167,0.1); border-color: rgba(0,201,167,0.2); color: #00d4b4; }
 
     .btn-save { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: white; border: none; padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
     .btn-save:hover { filter: brightness(1.1); }
-    .btn-cancel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: none; }
-    .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-cancel { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-secondary); border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; display: none; }
+    .btn-cancel:hover { background: var(--bg-active); color: var(--text-primary); }
     .form-actions { display: flex; gap: 8px; margin-top: 16px; }
 
-    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 10px; }
+    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
 
     /* Filter row */
     .filter-row { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
@@ -49,18 +49,18 @@
 
     /* Drip table */
     .drip-table { width: 100%; border-collapse: collapse; }
-    .drip-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.28); padding: 10px 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .drip-table td { padding: 12px; font-size: 13px; color: rgba(255,255,255,0.6); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
-    .drip-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .drip-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    .drip-table td { padding: 12px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+    .drip-table tr:hover td { background: var(--bg-hover); }
     .drip-tag-cell { display: flex; align-items: center; gap: 7px; }
     .drip-tag-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-    .drip-msg-preview { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: rgba(255,255,255,0.5); }
+    .drip-msg-preview { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-secondary); }
     .drip-btns { display: flex; gap: 4px; }
-    .drip-btn { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; padding: 5px 6px; border-radius: 5px; transition: all 0.12s; display: flex; align-items: center; }
-    .drip-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    .drip-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px 6px; border-radius: 5px; transition: all 0.12s; display: flex; align-items: center; }
+    .drip-btn:hover { background: var(--bg-active); color: var(--text-primary); }
     .drip-btn.danger:hover { background: rgba(239,68,68,0.12); color: #f87171; }
 
-    .empty-state { text-align: center; padding: 40px 16px; color: rgba(255,255,255,0.3); font-size: 13px; }
+    .empty-state { text-align: center; padding: 40px 16px; color: var(--text-muted); font-size: 13px; }
 
     @media (max-width: 768px) {
       .page-header, .page-body { padding-left: 16px; padding-right: 16px; }
@@ -116,7 +116,7 @@
           <label>Send After</label>
           <div style="display:flex;align-items:center;gap:6px;">
             <input type="number" class="form-input" id="drip-day" value="1" min="0" style="text-align:center;">
-            <span style="font-size:12px;color:rgba(255,255,255,0.4);white-space:nowrap;">days</span>
+            <span style="font-size:12px;color:var(--text-muted);white-space:nowrap;">days</span>
           </div>
           <div class="help-text">0 = send immediately</div>
         </div>
@@ -252,7 +252,7 @@ const renderDrips = () => {
           const dayLabel = d.day_number === 0 ? 'Immediate' : `Day ${d.day_number}`
           return `
           <tr>
-            <td style="font-weight:600;color:rgba(255,255,255,0.7);white-space:nowrap;">${dayLabel}</td>
+            <td style="font-weight:600;color:var(--input-text);white-space:nowrap;">${dayLabel}</td>
             <td style="white-space:nowrap;">${timeDisplay}</td>
             <td>
               <div class="drip-tag-cell">

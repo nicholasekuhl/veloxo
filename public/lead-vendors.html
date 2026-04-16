@@ -9,8 +9,8 @@
   <script src="/toast.js?v=2"></script>
   <style>
     .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 28px 28px 0; max-width: 1200px; margin: 0 auto; }
-    .page-header-text h1 { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 4px; }
-    .page-header-text p { font-size: 13px; color: rgba(255,255,255,0.45); margin: 0; line-height: 1.5; }
+    .page-header-text h1 { font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+    .page-header-text p { font-size: 13px; color: var(--text-muted); margin: 0; line-height: 1.5; }
     .page-body { padding: 20px 28px 40px; max-width: 1200px; margin: 0 auto; }
 
     .btn-add { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; }
@@ -18,88 +18,88 @@
 
     /* Vendor table */
     .vendor-table { width: 100%; border-collapse: collapse; }
-    .vendor-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.28); padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .vendor-table td { padding: 14px; font-size: 13px; color: rgba(255,255,255,0.65); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
-    .vendor-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .vendor-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-disabled); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    .vendor-table td { padding: 14px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+    .vendor-table tr:hover td { background: var(--bg-hover); }
     .vendor-name-cell { display: flex; align-items: center; gap: 10px; }
     .vendor-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .vendor-name { font-weight: 600; color: #fff; }
-    .vendor-email { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .vendor-name { font-weight: 600; color: var(--text-primary); }
+    .vendor-email { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
     .vendor-status { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 10px; border-radius: 6px; }
     .vendor-status.active { background: rgba(0,201,167,0.12); color: #00d4b4; }
-    .vendor-status.inactive { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+    .vendor-status.inactive { background: var(--bg-hover); color: var(--text-muted); }
     .vendor-actions { display: flex; gap: 4px; }
-    .vendor-action-btn { background: none; border: none; color: rgba(255,255,255,0.35); cursor: pointer; padding: 5px 7px; border-radius: 6px; transition: all 0.12s; display: flex; align-items: center; justify-content: center; }
-    .vendor-action-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+    .vendor-action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px 7px; border-radius: 6px; transition: all 0.12s; display: flex; align-items: center; justify-content: center; }
+    .vendor-action-btn:hover { background: var(--bg-active); color: var(--text-primary); }
     .vendor-action-btn.danger:hover { background: rgba(239,68,68,0.12); color: #f87171; }
 
-    .vendor-card { background: #131a1f; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; }
+    .vendor-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 
     /* Empty state */
     .empty-state { text-align: center; padding: 64px 24px; }
-    .empty-state-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; }
-    .empty-state-title { font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 6px; }
-    .empty-state-desc { font-size: 13px; color: rgba(255,255,255,0.35); margin-bottom: 20px; line-height: 1.5; }
+    .empty-state-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.5; color: var(--text-muted); }
+    .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-state-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
 
     /* Modal */
-    .modal-overlay { display: none; position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1000; background: var(--overlay-bg); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #1a2228; border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 28px; width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
+    .modal { background: var(--bg-elevated); border: 1px solid var(--input-border); border-radius: 14px; padding: 28px; width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto; box-shadow: 0 16px 48px var(--modal-shadow); }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-    .modal-header h2 { font-size: 16px; font-weight: 600; color: #fff; margin: 0; }
-    .modal-close { color: rgba(255,255,255,0.4); background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; }
-    .modal-close:hover { color: #fff; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .modal-header h2 { font-size: 16px; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .modal-close { color: var(--text-muted); background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; }
+    .modal-close:hover { color: var(--text-primary); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); }
     .form-group { margin-bottom: 14px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 5px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 11px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; color: var(--input-text); font-family: inherit; outline: none; box-sizing: border-box; }
     .form-group input:focus, .form-group select:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
-    .form-group input::placeholder { color: rgba(255,255,255,0.2); }
-    .help-text { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+    .form-group input::placeholder { color: var(--input-placeholder); }
+    .help-text { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
-    .section-divider { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 20px 0; }
-    .section-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 14px; }
+    .section-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .section-title { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; }
 
     /* API credential fields */
     .cred-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-    .cred-input { flex: 1; padding: 9px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; font-size: 13px; color: rgba(255,255,255,0.5); font-family: monospace; cursor: text; }
-    .cred-btn { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
-    .cred-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .cred-input { flex: 1; padding: 9px 12px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; color: var(--text-muted); font-family: monospace; cursor: text; }
+    .cred-btn { background: var(--bg-hover); border: 1px solid var(--input-border); color: var(--text-secondary); border-radius: 7px; padding: 7px 14px; font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.12s; white-space: nowrap; }
+    .cred-btn:hover { background: var(--bg-active); color: var(--text-primary); }
     .cred-btn.danger { color: rgba(239,68,68,0.7); border-color: rgba(239,68,68,0.2); }
     .cred-btn.danger:hover { background: rgba(239,68,68,0.12); color: #f87171; }
 
     /* Field mapping table */
     .mapping-table { width: 100%; border-collapse: collapse; }
-    .mapping-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.28); padding: 8px 0; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .mapping-table th { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-disabled); padding: 8px 0; text-align: left; border-bottom: 1px solid var(--border); }
     .mapping-table td { padding: 6px 0; vertical-align: middle; }
-    .mapping-table td:first-child { font-size: 13px; color: rgba(255,255,255,0.55); width: 40%; padding-right: 12px; }
+    .mapping-table td:first-child { font-size: 13px; color: var(--text-secondary); width: 40%; padding-right: 12px; }
     .mapping-table td:last-child { width: 60%; }
-    .mapping-table input { width: 100%; padding: 7px 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 7px; font-size: 13px; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; box-sizing: border-box; }
+    .mapping-table input { width: 100%; padding: 7px 10px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 7px; font-size: 13px; color: var(--input-text); font-family: inherit; outline: none; box-sizing: border-box; }
     .mapping-table input:focus { border-color: rgba(0,201,167,0.35); }
-    .mapping-table input::placeholder { color: rgba(255,255,255,0.18); }
+    .mapping-table input::placeholder { color: var(--input-placeholder); }
 
     /* Color picker */
     .color-picker-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; }
     .color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; flex-shrink: 0; transition: transform 0.12s; border: none; outline: 2px solid transparent; outline-offset: 2px; }
     .color-swatch:hover { transform: scale(1.15); }
-    .color-swatch.selected { outline-color: #fff; transform: scale(1.1); }
-    .color-picker-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.1); margin: 0 2px; }
+    .color-swatch.selected { outline-color: var(--text-primary); transform: scale(1.1); }
+    .color-picker-divider { width: 1px; height: 28px; background: var(--input-border); margin: 0 2px; }
     .color-custom-wrap { display: flex; align-items: center; gap: 6px; }
-    .color-custom-input { width: 36px; height: 28px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; padding: 0; background: none; }
-    .color-custom-label { font-size: 12px; color: rgba(255,255,255,0.35); }
+    .color-custom-input { width: 36px; height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); cursor: pointer; padding: 0; background: none; }
+    .color-custom-label { font-size: 12px; color: var(--text-muted); }
 
     /* Toggle switch */
     .toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; }
-    .toggle-label { font-size: 13px; color: rgba(255,255,255,0.65); }
-    .toggle-desc { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 2px; }
-    .toggle-switch { position: relative; width: 38px; height: 22px; background: rgba(255,255,255,0.1); border-radius: 11px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
+    .toggle-label { font-size: 13px; color: var(--text-secondary); }
+    .toggle-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .toggle-switch { position: relative; width: 38px; height: 22px; background: var(--input-border); border-radius: 11px; cursor: pointer; transition: background 0.15s; flex-shrink: 0; }
     .toggle-switch.on { background: #00c9a7; }
     .toggle-switch .toggle-knob { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.15s; }
     .toggle-switch.on .toggle-knob { transform: translateX(16px); }
 
     .btn-save { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: white; border: none; padding: 9px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-    .btn-cancel { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
-    .btn-cancel:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-cancel { background: var(--bg-hover); border: 1px solid var(--input-border); color: var(--text-secondary); border-radius: 8px; padding: 9px 20px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+    .btn-cancel:hover { background: var(--bg-active); color: var(--text-primary); }
 
     @media (max-width: 768px) {
       .page-header { flex-direction: column; gap: 12px; padding: 20px 16px 0; }
@@ -125,7 +125,7 @@
   <div class="page-body">
     <div class="vendor-card">
       <div id="vendor-list">
-        <div style="padding:20px;font-size:13px;color:rgba(255,255,255,0.35);">Loading...</div>
+        <div style="padding:20px;font-size:13px;color:var(--text-muted);">Loading...</div>
       </div>
     </div>
   </div>
@@ -146,12 +146,12 @@
       <input type="text" id="vendor-name" placeholder="e.g. Lead Provider A">
     </div>
     <div class="form-group">
-      <label>Contact Email <span style="font-weight:400;color:rgba(255,255,255,0.25);">(optional)</span></label>
+      <label>Contact Email <span style="font-weight:400;color:var(--text-disabled);">(optional)</span></label>
       <input type="email" id="vendor-email" placeholder="vendor@example.com">
       <div class="help-text">Used to send integration setup instructions</div>
     </div>
     <div class="form-group">
-      <label>Default Cost Per Lead <span style="font-weight:400;color:rgba(255,255,255,0.25);">(optional)</span></label>
+      <label>Default Cost Per Lead <span style="font-weight:400;color:var(--text-disabled);">(optional)</span></label>
       <input type="number" id="vendor-cost" placeholder="0.00" step="0.01" min="0">
     </div>
     <div class="form-group">
@@ -185,7 +185,7 @@
     <!-- SECTION 3: Field Mapping -->
     <hr class="section-divider">
     <div class="section-title">Field Mapping</div>
-    <p style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:12px;">Map your vendor's field names to Veloxo fields. Leave blank to use default names.</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Map your vendor's field names to Veloxo fields. Leave blank to use default names.</p>
     <table class="mapping-table">
       <thead>
         <tr><th>Veloxo Field</th><th>Vendor Field Name</th></tr>
@@ -218,7 +218,7 @@
       </div>
     </div>
     <div class="form-group" style="margin-top:10px;">
-      <label>Apply Disposition Tag on Receipt <span style="font-weight:400;color:rgba(255,255,255,0.25);">(optional)</span></label>
+      <label>Apply Disposition Tag on Receipt <span style="font-weight:400;color:var(--text-disabled);">(optional)</span></label>
       <select id="vendor-disposition-tag">
         <option value="">Select disposition tag (optional)</option>
       </select>
@@ -239,7 +239,7 @@
       <h2>Send Setup Email</h2>
       <button class="modal-close" onclick="closeSetupEmailModal()">&times;</button>
     </div>
-    <p style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:16px;" id="setup-email-text"></p>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;" id="setup-email-text"></p>
     <div class="form-group" id="setup-email-input-group" style="display:none;">
       <label>Contact Email</label>
       <input type="email" id="setup-email-address" placeholder="vendor@example.com">
@@ -285,7 +285,7 @@ const loadVendors = async () => {
     renderVendors()
   } catch (err) {
     console.error('Failed to load vendors:', err)
-    document.getElementById('vendor-list').innerHTML = '<div style="padding:20px;font-size:13px;color:rgba(255,255,255,0.35);">Failed to load vendors</div>'
+    document.getElementById('vendor-list').innerHTML = '<div style="padding:20px;font-size:13px;color:var(--text-muted);">Failed to load vendors</div>'
   }
 }
 
@@ -306,7 +306,7 @@ const renderVendors = () => {
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state-icon">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
         <div class="empty-state-title">No lead vendors yet</div>
         <div class="empty-state-desc">Add your first lead vendor to start receiving leads automatically.</div>

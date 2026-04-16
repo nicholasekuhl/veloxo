@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <style>
     /* ── Base ── */
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0b0f12; color: rgba(255,255,255,0.7); }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-base); color: var(--text-secondary); }
     .lead-profile-wrap { padding: 20px 24px 48px; }
 
     /* ── Buttons ── */
@@ -20,29 +20,29 @@
     .btn-primary { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; font-weight: 600; box-shadow: 0 2px 14px rgba(0,201,167,0.3); }
     .btn-primary:hover { box-shadow: 0 4px 20px rgba(0,201,167,0.45); transform: translateY(-1px); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-secondary { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
-    .btn-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; }
-    .btn-ghost { background: none; color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.1); }
-    .btn-ghost:hover { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); }
+    .btn-secondary { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-secondary); }
+    .btn-secondary:hover { background: var(--bg-active); color: var(--text-primary); }
+    .btn-ghost { background: none; color: var(--text-muted); border: 1px solid var(--input-border); }
+    .btn-ghost:hover { border-color: var(--border-strong); color: var(--text-primary); }
     .btn-danger { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
     .btn-danger:hover { background: rgba(239,68,68,0.18); }
-    .btn-call { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
-    .btn-call:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn-call { background: var(--bg-active); border: 1px solid var(--input-border); color: var(--text-secondary); }
+    .btn-call:hover { background: var(--border-strong); color: var(--text-primary); }
     .btn-sms { background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.2); color: #38bdf8; }
     .btn-sms:hover { background: rgba(14,165,233,0.18); }
     .btn-disposition { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); color: #c4b5fd; }
     .btn-disposition:hover { background: rgba(139,92,246,0.18); }
-    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.4); cursor: pointer; background: none; border: none; padding: 6px 12px; border-radius: 8px; font-family: inherit; transition: background 0.15s, color 0.15s; }
-    .back-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); }
+    .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer; background: none; border: none; padding: 6px 12px; border-radius: 8px; font-family: inherit; transition: background 0.15s, color 0.15s; }
+    .back-btn:hover { background: var(--input-bg); color: var(--text-primary); }
 
     /* ── Lead header card ── */
-    .lead-header { background: #131a1f; border-radius: 12px; padding: 20px 22px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.08); }
+    .lead-header { background: var(--bg-card); border-radius: 12px; padding: 20px 22px; margin-bottom: 16px; border: 1px solid var(--border); }
     .lead-header-top { display: flex; align-items: flex-start; gap: 20px; }
     .lead-avatar { width: 64px; height: 64px; border-radius: 12px; background: linear-gradient(135deg, rgba(0,201,167,0.25), rgba(14,165,233,0.25)); color: #00d4b4; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; }
-    .lead-name { font-size: 22px; font-weight: 600; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; letter-spacing: -0.3px; }
-    .lead-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 10px; }
+    .lead-name { font-size: 22px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; letter-spacing: -0.3px; }
+    .lead-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
     .lead-meta span { display: flex; align-items: center; gap: 4px; }
-    .copy-btn { background: none; border: none; cursor: pointer; padding: 2px 3px; color: rgba(255,255,255,0.2); border-radius: 4px; line-height: 1; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0; transition: color 0.15s; }
+    .copy-btn { background: none; border: none; cursor: pointer; padding: 2px 3px; color: var(--text-disabled); border-radius: 4px; line-height: 1; display: inline-flex; align-items: center; vertical-align: middle; flex-shrink: 0; transition: color 0.15s; }
     .copy-btn:hover { color: #00d4b4; }
     .copy-btn.copied { color: #34d399; }
     .lead-tags { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -53,33 +53,33 @@
     .tag-booked { background: rgba(0,212,180,0.12); color: #00d4b4; }
     .tag-sold { background: rgba(52,211,153,0.12); color: #34d399; }
     .tag-opted_out { background: rgba(239,68,68,0.12); color: #f87171; }
-    .tag-cold { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.4); }
+    .tag-cold { background: var(--bg-active); color: var(--text-muted); }
     .tag-campaign { background: rgba(139,92,246,0.12); color: #c4b5fd; }
     .disposition-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #fff; }
     .lead-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; flex-shrink: 0; }
 
     /* ── Follow-up bar ── */
-    .followup-bar { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .followup-bar { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .followup-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(251,191,36,0.1); color: #fbbf24; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid rgba(251,191,36,0.2); }
     .followup-badge:hover { background: rgba(251,191,36,0.18); }
 
     /* ── Notes + Quoted Plans row ── */
-    .lead-notes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 24px; background: #131a1f; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .lead-notes-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.25); margin-bottom: 6px; }
-    .lead-notes-textarea { width: 100%; min-height: 110px; resize: vertical; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: rgba(255,255,255,0.7); font-family: inherit; outline: none; transition: border-color 0.12s, background 0.12s; display: block; box-sizing: border-box; }
-    .lead-notes-textarea::placeholder { color: rgba(255,255,255,0.2); font-size: 12px; }
+    .lead-notes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 24px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+    .lead-notes-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .lead-notes-textarea { width: 100%; min-height: 110px; resize: vertical; background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; color: var(--input-text); font-family: inherit; outline: none; transition: border-color 0.12s, background 0.12s; display: block; box-sizing: border-box; }
+    .lead-notes-textarea::placeholder { color: var(--input-placeholder); font-size: 12px; }
     .lead-notes-textarea:focus { border-color: rgba(0,201,167,0.35); background: rgba(0,201,167,0.04); }
     .lead-quotes-textarea:focus { border-color: rgba(251,191,36,0.35) !important; background: rgba(251,191,36,0.03) !important; }
     .lead-notes-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-    .lead-notes-ts { font-size: 10.5px; color: rgba(255,255,255,0.2); }
+    .lead-notes-ts { font-size: 10.5px; color: var(--text-disabled); }
     #save-notes-btn, #save-quotes-btn { font-size: 11px; font-weight: 500; color: rgba(0,201,167,0.6); background: none; border: none; cursor: pointer; transition: color 0.12s; font-family: inherit; padding: 0; }
     #save-notes-btn:hover, #save-quotes-btn:hover { color: #00d4b4; }
 
     /* ── Info grid ── */
-    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06); }
-    .info-item { background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(255,255,255,0.05); }
-    .info-item .lbl { font-size: 10px; color: rgba(255,255,255,0.28); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
-    .info-item .val { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); }
+    .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .info-item { background: var(--bg-hover); border-radius: 8px; padding: 10px 14px; border: 1px solid var(--border-subtle); }
+    .info-item .lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+    .info-item .val { font-size: 13px; font-weight: 500; color: var(--input-text); }
 
     /* ── Disposition picker ── */
     .disp-picker-grid { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -90,16 +90,16 @@
     .main-layout { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
 
     /* ── Tabs card ── */
-    .tabs-card { background: #131a1f; border-radius: 12px; border: 1px solid rgba(255,255,255,0.07); overflow: hidden; }
-    .tabs-nav { display: flex; border-bottom: 1px solid rgba(255,255,255,0.07); overflow-x: auto; }
-    .tab-btn { padding: 13px 18px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.35); border-bottom: 2px solid transparent; transition: color 0.15s; white-space: nowrap; font-family: inherit; margin-bottom: -1px; }
+    .tabs-card { background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    .tabs-nav { display: flex; border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .tab-btn { padding: 13px 18px; border: none; background: none; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text-muted); border-bottom: 2px solid transparent; transition: color 0.15s; white-space: nowrap; font-family: inherit; margin-bottom: -1px; }
     .tab-btn.active { color: #00d4b4; border-bottom-color: #00d4b4; }
-    .tab-btn:hover:not(.active) { color: rgba(255,255,255,0.65); }
+    .tab-btn:hover:not(.active) { color: var(--text-secondary); }
     .tab-panel { display: none; padding: 18px 20px; }
     .tab-panel.active { display: block; }
 
     /* ── Activity log ── */
-    .activity-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .activity-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bg-hover); }
     .activity-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
     .activity-icon.sms { background: rgba(14,165,233,0.12); }
     .activity-icon.disposition { background: rgba(139,92,246,0.12); }
@@ -107,8 +107,8 @@
     .activity-icon.task { background: rgba(52,211,153,0.12); }
     .activity-icon.call { background: rgba(0,201,167,0.12); }
     .activity-info { flex: 1; }
-    .activity-text { font-size: 13px; color: rgba(255,255,255,0.65); line-height: 1.5; }
-    .activity-time { font-size: 11px; color: rgba(255,255,255,0.28); margin-top: 3px; }
+    .activity-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+    .activity-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
 
     /* ── SMS panel ── */
     .sms-history { max-height: 400px; overflow-y: auto; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px; }
@@ -116,84 +116,84 @@
     .msg.inbound { align-self: flex-start; }
     .msg.outbound { align-self: flex-end; }
     .msg-bubble { padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
-    .msg.inbound .msg-bubble { background: #1e2830; color: rgba(255,255,255,0.8); border-bottom-left-radius: 4px; }
+    .msg.inbound .msg-bubble { background: var(--bg-elevated); color: var(--text-primary); border-bottom-left-radius: 4px; }
     .msg.outbound .msg-bubble { background: linear-gradient(135deg, #00c9a7, #0ea5e9); color: #0b0f12; border-bottom-right-radius: 4px; }
     .msg.outbound.ai .msg-bubble { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: #fff; }
-    .msg-time { font-size: 11px; color: rgba(255,255,255,0.28); margin-top: 3px; }
+    .msg-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
     .msg.outbound .msg-time { text-align: right; }
-    .msg-label { font-size: 10px; color: rgba(255,255,255,0.28); }
+    .msg-label { font-size: 10px; color: var(--text-muted); }
     .msg.outbound .msg-label { text-align: right; }
-    .sms-send-area { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 16px; }
+    .sms-send-area { border-top: 1px solid var(--border); padding-top: 16px; }
     .template-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .sms-input-row { display: flex; gap: 8px; }
-    .sms-textarea { flex: 1; padding: 9px 13px; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; font-size: 13px; font-family: inherit; resize: none; height: 42px; outline: none; transition: all 0.2s; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7); }
+    .sms-textarea { flex: 1; padding: 9px 13px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; font-family: inherit; resize: none; height: 42px; outline: none; transition: all 0.2s; background: var(--bg-hover); color: var(--input-text); }
     .sms-textarea:focus { border-color: rgba(0,201,167,0.35); height: 84px; }
-    .sms-textarea::placeholder { color: rgba(255,255,255,0.2); }
-    .char-count { font-size: 11px; color: rgba(255,255,255,0.25); text-align: right; margin-top: 3px; }
+    .sms-textarea::placeholder { color: var(--input-placeholder); }
+    .char-count { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 3px; }
     .char-count.warning { color: #fbbf24; }
     .char-count.danger { color: #f87171; }
 
     /* ── Tasks ── */
-    .task-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .task-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bg-hover); }
     .task-check { width: 18px; height: 18px; cursor: pointer; accent-color: #00c9a7; flex-shrink: 0; }
     .task-info { flex: 1; }
-    .task-title { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); }
-    .task-title.done { text-decoration: line-through; color: rgba(255,255,255,0.3); }
-    .task-due { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .task-title { font-size: 13px; font-weight: 500; color: var(--input-text); }
+    .task-title.done { text-decoration: line-through; color: var(--text-muted); }
+    .task-due { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
     .task-due.overdue { color: #f87171; }
     .task-due.today { color: #fbbf24; }
-    .add-task-form { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 14px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.07); display: none; }
+    .add-task-form { background: var(--bg-hover); border-radius: 10px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border); display: none; }
     .form-row { display: flex; gap: 12px; }
     .form-row .form-group { flex: 1; }
     .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 11px; border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.75); box-sizing: border-box; }
-    .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.2); }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 11px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s; background: var(--input-bg); color: var(--input-text); box-sizing: border-box; }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: var(--input-placeholder); }
     .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: rgba(0,201,167,0.4); background: rgba(0,201,167,0.03); }
 
     /* ── Disposition history ── */
-    .disp-history-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .disp-history-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bg-hover); }
     .disp-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
     .disp-info { flex: 1; }
-    .disp-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); }
-    .disp-time { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+    .disp-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .disp-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
     /* ── Call log ── */
-    .call-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .call-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--bg-hover); }
     .call-direction { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
     .call-direction.out { background: rgba(0,201,167,0.12); }
     .call-direction.in { background: rgba(14,165,233,0.12); }
     .call-info { flex: 1; }
-    .call-result { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75); }
-    .call-time { font-size: 12px; color: rgba(255,255,255,0.3); margin-top: 2px; }
+    .call-result { font-size: 13px; font-weight: 500; color: var(--input-text); }
+    .call-time { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
     /* ── AI Insights ── */
     .insights-card { background: rgba(139,92,246,0.08); border-radius: 12px; padding: 18px; border: 1px solid rgba(139,92,246,0.2); margin-bottom: 16px; }
     .insights-label { font-size: 11px; font-weight: 600; color: #c4b5fd; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-    .insights-text { font-size: 13px; color: rgba(255,255,255,0.7); line-height: 1.7; }
-    .insights-loading { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.3); font-size: 13px; }
+    .insights-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+    .insights-loading { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 13px; }
 
     /* ── Right panel ── */
     .right-panel { display: flex; flex-direction: column; gap: 14px; }
-    .panel-card { background: #131a1f; border-radius: 12px; padding: 18px; border: 1px solid rgba(255,255,255,0.07); }
-    .panel-card h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.3); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
-    .autopilot-wrap { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; background: rgba(255,255,255,0.03); border-radius: 9px; }
-    .autopilot-label { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.7); }
-    .autopilot-sublabel { font-size: 11px; color: rgba(255,255,255,0.28); margin-top: 1px; }
+    .panel-card { background: var(--bg-card); border-radius: 12px; padding: 18px; border: 1px solid var(--border); }
+    .panel-card h3 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .autopilot-wrap { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; background: var(--bg-hover); border-radius: 9px; }
+    .autopilot-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+    .autopilot-sublabel { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
     .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
     .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.1); border-radius: 22px; transition: background 0.2s; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--input-border); border-radius: 22px; transition: background 0.2s; }
     .toggle-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 4px; bottom: 4px; background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
     input:checked + .toggle-slider { background: linear-gradient(90deg, #00c9a7, #0ea5e9); }
     input:checked + .toggle-slider:before { transform: translateX(18px); }
-    .status-select { width: 100%; padding: 8px 11px; border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; font-size: 13px; outline: none; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.7); margin-top: 10px; font-family: inherit; }
-    .quick-stat { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 13px; }
+    .status-select { width: 100%; padding: 8px 11px; border: 1px solid var(--input-border); border-radius: 8px; font-size: 13px; outline: none; background: var(--input-bg); color: var(--input-text); margin-top: 10px; font-family: inherit; }
+    .quick-stat { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--bg-hover); font-size: 13px; }
     .quick-stat:last-child { border-bottom: none; }
-    .quick-stat .lbl { color: rgba(255,255,255,0.35); }
-    .quick-stat .val { font-weight: 500; color: rgba(255,255,255,0.7); }
+    .quick-stat .lbl { color: var(--text-muted); }
+    .quick-stat .val { font-weight: 500; color: var(--text-secondary); }
 
     /* ── Empty state ── */
-    .empty-state { text-align: center; padding: 32px; color: rgba(255,255,255,0.25); font-size: 13px; }
+    .empty-state { text-align: center; padding: 32px; color: var(--text-muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -313,7 +313,7 @@
             ${lead.is_sold ? `
               <div style="font-size:13px;color:#059669;margin-top:4px;display:flex;align-items:center;gap:10px;">
                 <span>${lead.sold_at ? 'Sold ' + new Date(lead.sold_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Marked as sold'}${lead.sold_plan_type ? ' · ' + lead.sold_plan_type : ''}${lead.sold_premium ? ' · $' + parseFloat(lead.sold_premium).toFixed(0) + '/mo' : ''}</span>
-                <button onclick="removeSoldStatus()" style="font-size:12px;color:#9ca3af;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">Remove sold status</button>
+                <button onclick="removeSoldStatus()" style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">Remove sold status</button>
               </div>` : ''}
             <div class="lead-meta">
               <span>📞 ${lead.phone} <button class="copy-btn" onclick="copyToClipboard('${lead.phone}', this)" title="Copy phone">${COPY_SVG}</button></span>
@@ -337,12 +337,12 @@
           </div>
         </div>
 
-        <div id="disp-picker" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid #f3f4f6;">
-          <div style="font-size:12px;font-weight:500;color:#6b7280;margin-bottom:8px;">Apply Disposition Tag:</div>
+        <div id="disp-picker" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:8px;">Apply Disposition Tag:</div>
           <div class="disp-picker-grid">
             ${allDispositionTags.map(t => `<button class="disp-pick-btn" style="background:${t.color}" onclick="applyDisposition('${t.id}')">${t.name}</button>`).join('')}
           </div>
-          ${allDispositionTags.length === 0 ? '<div style="font-size:13px;color:#9ca3af;">No disposition tags yet. Create them in Settings.</div>' : ''}
+          ${allDispositionTags.length === 0 ? '<div style="font-size:13px;color:var(--text-muted);">No disposition tags yet. Create them in Settings.</div>' : ''}
         </div>
 
         <div class="followup-bar">
@@ -351,7 +351,7 @@
               <div class="followup-badge" onclick="switchTab('tasks')">
                 📅 Next Follow Up: ${formatDateTime(lead.next_followup_at)}${lead.next_followup_note ? ' — ' + lead.next_followup_note : ''}
               </div>
-            ` : `<span style="font-size:13px;color:#d1d5db;">No follow-up scheduled</span>`}
+            ` : `<span style="font-size:13px;color:var(--text-muted);">No follow-up scheduled</span>`}
           </div>
         </div>
         <div class="lead-notes-row">
@@ -537,7 +537,7 @@
 
           <div class="panel-card">
             <h3>⚡ Active Campaign</h3>
-            <div id="active-campaigns-list"><div style="font-size:13px;color:#d1d5db;">Loading...</div></div>
+            <div id="active-campaigns-list"><div style="font-size:13px;color:var(--text-muted);">Loading...</div></div>
           </div>
 
         </div>
@@ -572,12 +572,12 @@
         const dt = new Date(a.scheduled_at)
         const dateStr = dt.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' })
         const timeStr = dt.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' })
-        return `<div style="padding:12px 0;border-bottom:1px solid #f9fafb;">
+        return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
             <div style="font-size:14px;font-weight:600;">${dateStr} at ${timeStr}</div>
             <span class="status-badge status-${a.status}">${a.status}</span>
           </div>
-          ${a.notes ? `<div style="font-size:13px;color:#6b7280;">${a.notes}</div>` : ''}
+          ${a.notes ? `<div style="font-size:13px;color:var(--text-secondary);">${a.notes}</div>` : ''}
         </div>`
       }).join('')
     } catch (err) { console.error(err) }
@@ -752,7 +752,7 @@
     const container = document.getElementById('tasks-list')
     if (container && !tasks.length) {
       container.innerHTML = Array(3).fill(0).map(() => `
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f3f4f6;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);">
           <div class="skeleton" style="width:18px;height:18px;border-radius:4px;flex-shrink:0;"></div>
           <div style="flex:1;">
             <div class="skeleton" style="height:13px;width:60%;margin-bottom:5px;border-radius:4px;"></div>
@@ -1084,7 +1084,7 @@
       const activeTags = lead.campaign_tags || []
       const active = campaigns.filter(c => activeTags.includes(c.name))
       if (!active.length) {
-        container.innerHTML = '<div style="font-size:13px;color:#9ca3af;">No active campaign</div>'
+        container.innerHTML = '<div style="font-size:13px;color:var(--text-muted);">No active campaign</div>'
         return
       }
       const day = lead.campaign_day != null ? lead.campaign_day : null
@@ -1094,7 +1094,7 @@
         const isPaused = c.status === 'paused'
         return `
           <div style="display:flex;flex-direction:column;gap:3px;">
-            <div style="font-size:13px;font-weight:600;color:#1d4ed8;">⚡ ${c.name}${dayInfo}</div>
+            <div style="font-size:13px;font-weight:600;color:var(--color-info);">⚡ ${c.name}${dayInfo}</div>
             <div style="font-size:11px;color:${isPaused ? '#d97706' : '#059669'};font-weight:500;">${isPaused ? 'Paused' : 'Active'}</div>
           </div>
         `
@@ -1169,36 +1169,36 @@
 </script>
 
 <!-- MARK AS SOLD MODAL (lead profile) -->
-<div style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100000;align-items:center;justify-content:center;padding:20px;" id="lp-sold-modal" onclick="if(event.target===this)this.style.display='none'">
-  <div style="background:white;border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+<div style="display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:100000;align-items:center;justify-content:center;padding:20px;" id="lp-sold-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg-card);border-radius:16px;padding:28px;width:100%;max-width:440px;box-shadow:0 20px 60px var(--modal-shadow);">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-      <div style="font-size:17px;font-weight:700;" id="lp-sold-modal-title">Mark as Sold</div>
-      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+      <div style="font-size:17px;font-weight:700;color:var(--text-primary);" id="lp-sold-modal-title">Mark as Sold</div>
+      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);line-height:1;">×</button>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Product Sold</label>
-      <input type="text" id="lp-sold-plan-type" placeholder="e.g. UHC PPO $245/mo, Term Life $500k, 6kW Solar System..." style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Product Sold</label>
+      <input type="text" id="lp-sold-plan-type" placeholder="e.g. UHC PPO $245/mo, Term Life $500k, 6kW Solar System..." style="width:100%;padding:8px 12px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;outline:none;background:var(--input-bg);color:var(--input-text);">
     </div>
     <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Expected Commission</label>
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Expected Commission</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
-        <input type="number" id="lp-sold-commission" placeholder="0.00" step="0.01" min="0" style="width:100%;padding:8px 12px 8px 26px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;">$</span>
+        <input type="number" id="lp-sold-commission" placeholder="0.00" step="0.01" min="0" style="width:100%;padding:8px 12px 8px 26px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;outline:none;background:var(--input-bg);color:var(--input-text);">
       </div>
     </div>
     <div style="margin-bottom:12px;">
-      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Monthly Premium</label>
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Monthly Premium</label>
       <div style="position:relative;">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:14px;pointer-events:none;">$</span>
-        <input type="number" id="lp-sold-premium" placeholder="0.00" step="0.01" min="0" style="width:100%;padding:8px 12px 8px 26px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;outline:none;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;">$</span>
+        <input type="number" id="lp-sold-premium" placeholder="0.00" step="0.01" min="0" style="width:100%;padding:8px 12px 8px 26px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;outline:none;background:var(--input-bg);color:var(--input-text);">
       </div>
     </div>
     <div style="margin-bottom:20px;">
-      <label style="display:block;font-size:12px;font-weight:500;color:#6b7280;margin-bottom:4px;">Notes</label>
-      <textarea id="lp-sold-notes" placeholder="Any additional details about the sale" rows="3" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;resize:none;outline:none;"></textarea>
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Notes</label>
+      <textarea id="lp-sold-notes" placeholder="Any additional details about the sale" rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;font-family:inherit;resize:none;outline:none;background:var(--input-bg);color:var(--input-text);"></textarea>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
-      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#f3f4f6;color:#374151;border:none;">Cancel</button>
+      <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg-hover);color:var(--text-secondary);border:none;">Cancel</button>
       <button onclick="submitMarkSold()" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#10b981;color:white;border:none;">Mark as Sold</button>
     </div>
   </div>

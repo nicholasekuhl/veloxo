@@ -21,8 +21,8 @@
 
     /* Card */
     .card {
-      background: #131a1f;
-      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 40px 36px;
       width: 100%;
@@ -46,14 +46,14 @@
     }
     .login-logo-text {
       font-size: 20px; font-weight: 700;
-      letter-spacing: -0.5px; color: #fff;
+      letter-spacing: -0.5px; color: var(--text-primary);
     }
     .login-logo-velox { color: #00d4b4; }
 
     /* Welcome text */
     .sub {
       font-size: 14px;
-      color: rgba(255,255,255,0.4);
+      color: var(--text-muted);
       font-weight: 400;
       margin-bottom: 28px;
       margin-top: 0;
@@ -63,7 +63,7 @@
     label {
       font-size: 12px;
       font-weight: 500;
-      color: rgba(255,255,255,0.5);
+      color: var(--text-muted);
       display: block;
       margin-bottom: 6px;
     }
@@ -74,10 +74,10 @@
     input[type="text"] {
       width: 100%;
       padding: 10px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
       border-radius: 8px;
-      color: #fff;
+      color: var(--text-primary);
       font-size: 14px;
       outline: none;
       box-sizing: border-box;
@@ -90,7 +90,7 @@
       border-color: rgba(0,201,167,0.4);
       background: rgba(0,201,167,0.04);
     }
-    input::placeholder { color: rgba(255,255,255,0.22); }
+    input::placeholder { color: var(--input-placeholder); }
 
     /* Sign In / action buttons */
     .btn {
@@ -138,7 +138,7 @@
       text-align: center;
       margin-top: 20px;
       font-size: 13px;
-      color: rgba(255,255,255,0.35);
+      color: var(--text-muted);
     }
     .toggle-link a { color: #00d4b4; cursor: pointer; text-decoration: none; font-weight: 500; }
     .toggle-link a:hover { color: #00c9a7; }

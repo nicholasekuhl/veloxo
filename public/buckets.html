@@ -9,68 +9,68 @@
   <link rel="stylesheet" href="/css/shared.css?v=2">
   <style>
     .buckets-layout { display:flex; height:100vh; overflow:hidden; }
-    .buckets-sidebar { width:260px; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; background:#0e1419; overflow:hidden; }
-    .buckets-sidebar-header { padding:12px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; gap:8px; flex-shrink:0; }
+    .buckets-sidebar { width:260px; flex-shrink:0; border-right:1px solid var(--border); display:flex; flex-direction:column; background:var(--bg-sidebar); overflow:hidden; }
+    .buckets-sidebar-header { padding:12px; border-bottom:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
     .buckets-tree-scroll { flex:1; overflow-y:auto; padding:8px; }
-    .buckets-main { flex:1; overflow-y:auto; padding:24px; background:#0b0f12; }
-    .buckets-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; color:rgba(255,255,255,0.3); font-size:14px; gap:8px; }
+    .buckets-main { flex:1; overflow-y:auto; padding:24px; background:var(--bg-base); }
+    .buckets-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; height:300px; color:var(--text-muted); font-size:14px; gap:8px; }
 
     /* ── Folder rows ── */
-    .tree-folder { display:flex; align-items:center; gap:6px; padding:7px 10px; cursor:pointer; border-radius:7px; font-size:13px; font-weight:700; color:rgba(255,255,255,0.7); transition:background 0.12s; user-select:none; margin-bottom:1px; }
-    .tree-folder:hover { background:rgba(255,255,255,0.05); }
+    .tree-folder { display:flex; align-items:center; gap:6px; padding:7px 10px; cursor:pointer; border-radius:7px; font-size:13px; font-weight:700; color:var(--input-text); transition:background 0.12s; user-select:none; margin-bottom:1px; }
+    .tree-folder:hover { background:var(--input-bg); }
     .tree-folder.selected { background:rgba(0,201,167,0.12); color:#00d4b4; }
     .tree-folder.drag-over { outline:2px dashed rgba(0,201,167,0.5); background:rgba(0,201,167,0.06); }
     .tree-folder.dragging { opacity:0.45; }
     .tree-folder.depth-1 { padding-left:16px; font-weight:600; font-size:13px; }
     .tree-folder[draggable="true"] { cursor:grab; }
     .tree-folder[draggable="true"]:active { cursor:grabbing; }
-    .tree-chevron { font-size:10px; color:rgba(255,255,255,0.25); transition:transform 0.15s; flex-shrink:0; display:inline-block; width:10px; }
+    .tree-chevron { font-size:10px; color:var(--text-muted); transition:transform 0.15s; flex-shrink:0; display:inline-block; width:10px; }
     .tree-chevron.open { transform:rotate(90deg); }
-    .folder-badge { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.4); border-radius:20px; padding:1px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
+    .folder-badge { background:var(--bg-active); color:var(--text-muted); border-radius:20px; padding:1px 7px; font-size:11px; font-weight:600; flex-shrink:0; }
 
     /* ── Bucket rows ── */
-    .tree-bucket { display:flex; align-items:center; gap:7px; padding:6px 10px 6px 22px; cursor:pointer; border-radius:7px; font-size:13px; color:rgba(255,255,255,0.65); transition:background 0.12s; user-select:none; margin-bottom:1px; }
+    .tree-bucket { display:flex; align-items:center; gap:7px; padding:6px 10px 6px 22px; cursor:pointer; border-radius:7px; font-size:13px; color:var(--text-secondary); transition:background 0.12s; user-select:none; margin-bottom:1px; }
     .tree-bucket.toplevel { padding-left:10px; }
     .tree-bucket.depth-1 { padding-left:22px; }
     .tree-bucket.depth-2 { padding-left:32px; }
-    .tree-bucket:hover { background:rgba(255,255,255,0.04); }
+    .tree-bucket:hover { background:var(--bg-hover); }
     .tree-bucket:hover .drag-handle { opacity:1; }
     .tree-bucket.selected { background:rgba(0,201,167,0.12); color:#00d4b4; }
     .tree-bucket.dragging { opacity:0.45; }
-    .drag-handle { font-size:13px; color:rgba(255,255,255,0.2); opacity:0; cursor:grab; flex-shrink:0; width:14px; text-align:center; }
+    .drag-handle { font-size:13px; color:var(--text-disabled); opacity:0; cursor:grab; flex-shrink:0; width:14px; text-align:center; }
     .bucket-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
     .tree-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .tree-lead-count { font-size:11px; color:rgba(255,255,255,0.28); flex-shrink:0; white-space:nowrap; }
+    .tree-lead-count { font-size:11px; color:var(--text-muted); flex-shrink:0; white-space:nowrap; }
 
     /* ── Archive section ── */
-    .archive-section { border-top:1px solid rgba(255,255,255,0.06); flex-shrink:0; }
-    .archive-toggle { display:flex; align-items:center; gap:6px; padding:9px 12px; cursor:pointer; font-size:12px; font-weight:600; color:rgba(255,255,255,0.35); user-select:none; transition:background 0.12s; }
-    .archive-toggle:hover { background:rgba(255,255,255,0.04); }
+    .archive-section { border-top:1px solid var(--border); flex-shrink:0; }
+    .archive-toggle { display:flex; align-items:center; gap:6px; padding:9px 12px; cursor:pointer; font-size:12px; font-weight:600; color:var(--text-muted); user-select:none; transition:background 0.12s; }
+    .archive-toggle:hover { background:var(--bg-hover); }
     .archive-toggle-chevron { font-size:9px; margin-left:auto; transition:transform 0.15s; }
     .archive-toggle-chevron.open { transform:rotate(90deg); }
     .archive-list { padding:4px 8px 8px; max-height:220px; overflow-y:auto; }
-    .archive-item { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:7px; font-size:12px; color:rgba(255,255,255,0.35); }
+    .archive-item { display:flex; align-items:center; gap:7px; padding:5px 8px; border-radius:7px; font-size:12px; color:var(--text-muted); }
     .archive-item-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .archive-restore-btn { font-size:11px; color:#00d4b4; background:none; border:none; cursor:pointer; padding:1px 4px; border-radius:4px; white-space:nowrap; flex-shrink:0; }
     .archive-restore-btn:hover { background:rgba(0,201,167,0.12); }
 
     /* ── Context menu ── */
-    #bucket-ctx-menu { position:fixed; background:#1a2228; border:1px solid rgba(255,255,255,0.09); border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.5); z-index:1000; min-width:160px; overflow:hidden; display:none; }
-    .ctx-item { display:flex; align-items:center; gap:8px; padding:8px 14px; font-size:13px; color:rgba(255,255,255,0.65); cursor:pointer; transition:background 0.1s; }
-    .ctx-item:hover { background:rgba(255,255,255,0.05); }
+    #bucket-ctx-menu { position:fixed; background:var(--bg-elevated); border:1px solid var(--input-border); border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.5); z-index:1000; min-width:160px; overflow:hidden; display:none; }
+    .ctx-item { display:flex; align-items:center; gap:8px; padding:8px 14px; font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background 0.1s; }
+    .ctx-item:hover { background:var(--input-bg); }
     .ctx-item.danger { color:#f87171; }
     .ctx-item.danger:hover { background:rgba(239,68,68,0.08); }
-    .ctx-divider { height:1px; background:rgba(255,255,255,0.06); margin:2px 0; }
+    .ctx-divider { height:1px; background:var(--border); margin:2px 0; }
 
     /* ── Detail panel ── */
-    .detail-card { background:#131a1f; border:1px solid rgba(255,255,255,0.07); border-radius:11px; padding:24px; max-width:520px; }
-    .detail-title { font-size:17px; font-weight:700; margin-bottom:20px; color:#fff; }
+    .detail-card { background:var(--bg-card); border:1px solid var(--bg-active); border-radius:11px; padding:24px; max-width:520px; }
+    .detail-title { font-size:17px; font-weight:700; margin-bottom:20px; color:var(--text-primary); }
     .color-swatches { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
     .color-swatch { width:28px; height:28px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:border-color 0.15s, transform 0.1s; }
     .color-swatch:hover { transform:scale(1.1); }
-    .color-swatch.selected { border-color:rgba(255,255,255,0.8); }
-    .section-divider { height:1px; background:rgba(255,255,255,0.07); margin:16px 0; }
-    .bucket-child-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:13px; color:rgba(255,255,255,0.65); }
+    .color-swatch.selected { border-color:var(--text-primary); }
+    .section-divider { height:1px; background:var(--bg-active); margin:16px 0; }
+    .bucket-child-row { display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--border); font-size:13px; color:var(--text-secondary); }
     .bucket-child-row:last-child { border-bottom:none; }
   </style>
 </head>
@@ -120,7 +120,7 @@
       <h2 id="new-folder-modal-title">New Folder</h2>
       <button class="modal-close" onclick="closeNewFolderModal()">×</button>
     </div>
-    <p style="font-size:13px;color:rgba(255,255,255,0.35);margin:0 0 16px;" id="new-folder-modal-hint">Folders organize buckets into groups. Leads are stored in buckets, not folders.</p>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 16px;" id="new-folder-modal-hint">Folders organize buckets into groups. Leads are stored in buckets, not folders.</p>
     <div class="form-group">
       <label>Folder Name</label>
       <input type="text" id="new-folder-name" placeholder="e.g. March Imports, Bulk Leads..." onkeydown="if(event.key==='Enter')saveNewFolder()">
@@ -148,7 +148,7 @@
       <input type="text" id="new-bucket-name" placeholder="e.g. New Leads, My Bucket..." onkeydown="if(event.key==='Enter')saveNewBucket()">
     </div>
     <div class="form-group">
-      <label>Add to Folder <span style="color:rgba(255,255,255,0.35);font-weight:400;">(optional)</span></label>
+      <label>Add to Folder <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
       <select id="new-bucket-folder">
         <option value="">Top level (no folder)</option>
       </select>
@@ -246,7 +246,7 @@
       </div>`
     }
 
-    if (!html) html = `<div style="padding:16px;font-size:13px;color:rgba(255,255,255,0.35);text-align:center;">No buckets yet.<br>Create one to get started.</div>`
+    if (!html) html = `<div style="padding:16px;font-size:13px;color:var(--text-muted);text-align:center;">No buckets yet.<br>Create one to get started.</div>`
     container.innerHTML = html
     attachDragHandlers()
   }
@@ -315,7 +315,7 @@
     if (!list) return
 
     if (!archivedBuckets.length) {
-      list.innerHTML = `<div style="padding:8px 4px;font-size:12px;color:rgba(255,255,255,0.35);">No archived items</div>`
+      list.innerHTML = `<div style="padding:8px 4px;font-size:12px;color:var(--text-muted);">No archived items</div>`
       return
     }
 
@@ -559,7 +559,7 @@
           return `<div class="bucket-child-row" style="padding-left:${indent}px;">
             ${icon}
             <span style="flex:1;">${esc(b.name)}</span>
-            <span style="font-size:12px;color:rgba(255,255,255,0.35);">${b.is_folder ? '' : (b.lead_count ?? 0) + ' leads'}</span>
+            <span style="font-size:12px;color:var(--text-muted);">${b.is_folder ? '' : (b.lead_count ?? 0) + ' leads'}</span>
           </div>${renderChildRows(b.id, depth + 1)}`
         }).join('')
       }
@@ -570,7 +570,7 @@
           <label>Folder Name</label>
           <input type="text" id="detail-name" value="${esc(item.name)}" style="width:100%;">
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:${children.length ? '12px' : '0'};">
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:${children.length ? '12px' : '0'};">
           ${children.length} item${children.length !== 1 ? 's' : ''} in this folder
         </div>
         ${children.length ? `<div style="margin-bottom:16px;">${renderChildRows(id, 0)}</div>` : ''}
@@ -604,7 +604,7 @@
           <label>Move to Folder</label>
           <select id="detail-folder" ${item.is_system ? 'disabled' : ''}>${folderOpts}</select>
         </div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:4px;">${item.lead_count ?? 0} leads in this bucket</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">${item.lead_count ?? 0} leads in this bucket</div>
         <div class="section-divider"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="/leads.html?bucket_id=${id}" class="btn-primary">View Leads →</a>
