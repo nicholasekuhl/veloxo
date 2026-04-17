@@ -137,6 +137,14 @@ const loadProfile = async () => {
     }
     const personalPhone = document.getElementById('profile-personal-phone')
     if (personalPhone) personalPhone.value = p.personal_phone || ''
+    const bizAddr = document.getElementById('profile-business-address')
+    if (bizAddr) bizAddr.value = p.business_address || ''
+    const bizCity = document.getElementById('profile-business-city')
+    if (bizCity) bizCity.value = p.business_city || ''
+    const bizState = document.getElementById('profile-business-state')
+    if (bizState) bizState.value = p.business_state || ''
+    const bizZip = document.getElementById('profile-business-zip')
+    if (bizZip) bizZip.value = p.business_zip || ''
     const smsNotif = document.getElementById('sms-notif-enabled')
     if (smsNotif) smsNotif.checked = p.sms_notifications_enabled !== false
     const inappNotif = document.getElementById('inapp-notif-enabled')

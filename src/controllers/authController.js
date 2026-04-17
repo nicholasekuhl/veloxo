@@ -75,7 +75,8 @@ const updateProfile = async (req, res) => {
       personal_phone, sms_notifications_enabled,
       inapp_notifications_enabled, agent_nickname,
       notify_appointment_sms, first_name, last_name, state,
-      priority_autopilot, ai_afterhours_response
+      priority_autopilot, ai_afterhours_response,
+      business_address, business_city, business_state, business_zip
     } = req.body
 
     const updates = { updated_at: new Date().toISOString() }
@@ -95,6 +96,10 @@ const updateProfile = async (req, res) => {
     if (state !== undefined) updates.state = state
     if (priority_autopilot !== undefined) updates.priority_autopilot = priority_autopilot
     if (ai_afterhours_response !== undefined) updates.ai_afterhours_response = ai_afterhours_response
+    if (business_address !== undefined) updates.business_address = business_address
+    if (business_city !== undefined) updates.business_city = business_city
+    if (business_state !== undefined) updates.business_state = business_state
+    if (business_zip !== undefined) updates.business_zip = business_zip
     if (req.body.advisor_page_enabled !== undefined) updates.advisor_page_enabled = req.body.advisor_page_enabled
 
     // Auto-mark profile complete when all required fields are present

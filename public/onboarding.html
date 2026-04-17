@@ -107,6 +107,25 @@
           <option>WI</option><option>WY</option>
         </select>
       </div>
+      <div class="form-group" style="margin-top:20px;">
+        <label>Business Address</label>
+        <input type="text" id="business-address" placeholder="123 Main St, Suite 100">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>City</label>
+          <input type="text" id="business-city" placeholder="City">
+        </div>
+        <div class="form-group" style="max-width:80px;">
+          <label>State</label>
+          <input type="text" id="business-state" placeholder="FL" maxlength="2" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group" style="max-width:100px;">
+          <label>ZIP</label>
+          <input type="text" id="business-zip" placeholder="33401" maxlength="10">
+        </div>
+      </div>
+      <div class="label-hint" style="margin-bottom:16px;">Required for A2P/10DLC SMS registration.</div>
       <div class="btn-row">
         <button class="btn" id="step1-next" onclick="goStep2()">Continue</button>
       </div>
@@ -157,6 +176,10 @@
         if (profileData.agency_name) document.getElementById('agency-name').value = profileData.agency_name
         if (profileData.personal_phone) document.getElementById('personal-phone').value = profileData.personal_phone
         if (profileData.state) document.getElementById('agent-state').value = profileData.state
+        if (profileData.business_address) document.getElementById('business-address').value = profileData.business_address
+        if (profileData.business_city) document.getElementById('business-city').value = profileData.business_city
+        if (profileData.business_state) document.getElementById('business-state').value = profileData.business_state
+        if (profileData.business_zip) document.getElementById('business-zip').value = profileData.business_zip
         // Pre-fill step 2
         if (profileData.calendly_url) document.getElementById('calendly-url').value = profileData.calendly_url
       } catch {
@@ -203,16 +226,24 @@
       const agency_name = document.getElementById('agency-name').value.trim()
       const personal_phone = document.getElementById('personal-phone').value.trim()
       const state = document.getElementById('agent-state').value
+      const business_address = document.getElementById('business-address').value.trim()
+      const business_city = document.getElementById('business-city').value.trim()
+      const business_state = document.getElementById('business-state').value.trim().toUpperCase()
+      const business_zip = document.getElementById('business-zip').value.trim()
 
       if (!agent_name) { showError('Agent name is required.'); return }
       if (!agency_name) { showError('Agency name is required.'); return }
       if (!personal_phone) { showError('Your cell phone is required.'); return }
       if (!state) { showError('Please select your state.'); return }
+      if (!business_address) { showError('Business address is required.'); return }
+      if (!business_city) { showError('Business city is required.'); return }
+      if (!business_state) { showError('Business state is required.'); return }
+      if (!business_zip) { showError('Business ZIP code is required.'); return }
 
       const btn = document.getElementById('step1-next')
       btn.disabled = true; btn.textContent = 'Saving...'
       try {
-        await saveStep({ agent_name, agency_name, personal_phone, state })
+        await saveStep({ agent_name, agency_name, personal_phone, state, business_address, business_city, business_state, business_zip })
         showStep(2)
       } catch (err) {
         showError(err.message)
@@ -240,11 +271,13 @@
 
     const renderSummary = (profile) => {
       const p = { ...profileData, ...profile }
+      const addrLine = [p.business_address, p.business_city, p.business_state, p.business_zip].filter(Boolean).join(', ')
       const rows = [
         { label: 'Agent Name', value: p.agent_name },
         { label: 'Agency', value: p.agency_name },
         { label: 'Phone', value: p.personal_phone },
         { label: 'State', value: p.state },
+        { label: 'Business Address', value: addrLine },
         { label: 'Calendly', value: p.calendly_url },
       ]
       document.getElementById('summary').innerHTML = rows.map(r =>

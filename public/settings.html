@@ -978,6 +978,26 @@
             <input type="tel" id="profile-personal-phone" placeholder="+1 (555) 000-0000">
             <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Your personal contact number. Not used for sending messages.</div>
           </div>
+          <div style="margin-top:20px;margin-bottom:12px;font-size:14px;font-weight:600;color:var(--text-primary);">Business Address</div>
+          <div class="form-group">
+            <label>Street Address</label>
+            <input type="text" id="profile-business-address" placeholder="123 Main St, Suite 100">
+          </div>
+          <div style="display:flex;gap:12px;">
+            <div class="form-group" style="flex:2;">
+              <label>City</label>
+              <input type="text" id="profile-business-city" placeholder="City">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>State</label>
+              <input type="text" id="profile-business-state" placeholder="FL" maxlength="2" style="text-transform:uppercase;">
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label>ZIP</label>
+              <input type="text" id="profile-business-zip" placeholder="33401" maxlength="10">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:16px;">Required for A2P/10DLC SMS registration. Displayed on your compliance page.</div>
           <div id="profile-save-status" style="font-size:13px;margin-bottom:12px;display:none;"></div>
           <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
         </div>
@@ -2499,7 +2519,11 @@
         agency_name: document.getElementById('profile-agency-name').value.trim(),
         calendly_url: document.getElementById('profile-calendly-url').value.trim(),
         timezone: document.getElementById('profile-timezone').value,
-        personal_phone: document.getElementById('profile-personal-phone').value.trim()
+        personal_phone: document.getElementById('profile-personal-phone').value.trim(),
+        business_address: document.getElementById('profile-business-address').value.trim(),
+        business_city: document.getElementById('profile-business-city').value.trim(),
+        business_state: document.getElementById('profile-business-state').value.trim().toUpperCase(),
+        business_zip: document.getElementById('profile-business-zip').value.trim()
       }
       const res = await fetch('/auth/me', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()

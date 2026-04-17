@@ -28,6 +28,12 @@ const compliancePage = (profile) => {
   const email = esc(profile.email || '')
   const slug = esc(profile.agent_slug)
   const initials = esc(getInitials(profile.agent_name))
+  const bizAddr = esc(profile.business_address || '')
+  const bizCity = esc(profile.business_city || '')
+  const bizState = esc(profile.business_state || '')
+  const bizZip = esc(profile.business_zip || '')
+  const locationParts = [bizCity, bizState].filter(Boolean).join(', ')
+  const fullAddress = [bizAddr, bizCity, bizState, bizZip].filter(Boolean).join(', ')
 
   return `<!DOCTYPE html>
 <html>
@@ -38,6 +44,7 @@ const compliancePage = (profile) => {
     body { font-family: system-ui, -apple-system, sans-serif; max-width: 680px; margin: 0 auto; padding: 40px 24px; color: #1a1a2e; background: #fafafa; }
     .avatar { width: 64px; height: 64px; border-radius: 50%; background: #00c9a7; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: white; margin-bottom: 16px; }
     h1 { font-size: 24px; margin: 0 0 4px; }
+    .location { color: #888; font-size: 14px; margin-bottom: 4px; }
     .agency { color: #666; margin-bottom: 32px; }
     .section { margin-bottom: 28px; }
     .section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 12px; }
@@ -52,6 +59,7 @@ const compliancePage = (profile) => {
 <body>
   <div class="avatar">${initials}</div>
   <h1>${name}</h1>
+  ${locationParts ? `<p class="location">${locationParts}</p>` : ''}
   <p class="agency">${agency} &middot; Licensed Insurance Advisor</p>
 
   <div class="section">
@@ -60,19 +68,39 @@ const compliancePage = (profile) => {
   </div>
 
   <div class="section">
-    <h2>Your Rights</h2>
+    <h2>Types of Messages</h2>
+    <p>You may receive the following types of SMS messages from ${agency}:</p>
     <ul class="rights">
-      <li>Message frequency varies based on your inquiry</li>
-      <li>Message and data rates may apply</li>
-      <li>Reply <strong>STOP</strong> at any time to opt out permanently</li>
-      <li>Reply <strong>HELP</strong> for assistance</li>
-      <li>For questions contact: ${email}</li>
+      <li>Responses to your insurance inquiry or quote request</li>
+      <li>Insurance plan information and pricing details</li>
+      <li>Appointment confirmations and reminders</li>
+      <li>Follow-up messages related to your inquiry</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Message Details</h2>
+    <ul class="rights">
+      <li><strong>Message frequency:</strong> Varies based on your inquiry and engagement. Typically 1&ndash;10 messages per week during active conversations.</li>
+      <li><strong>Message and data rates</strong> from your wireless carrier may apply.</li>
+      <li><strong>Carriers supported:</strong> All major U.S. carriers are supported.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Your Rights &amp; Opt-Out</h2>
+    <ul class="rights">
+      <li>Reply <strong>STOP</strong> at any time to opt out of all text messages from ${agency}. You will receive a one-time confirmation and no further messages will be sent.</li>
+      <li>Reply <strong>HELP</strong> for assistance or contact information.</li>
+      <li>Your consent is <strong>not</strong> a condition of purchasing any insurance product.</li>
+      <li>For questions, contact: <a href="mailto:${email}" style="color:#00c9a7;">${email}</a></li>
+      ${fullAddress ? `<li>Business address: ${fullAddress}</li>` : ''}
     </ul>
   </div>
 
   <div class="section">
     <h2>Consent Language</h2>
-    <p>By requesting insurance information, you consented to receive automated SMS messages from ${agency}. Your consent is not a condition of any purchase.</p>
+    <p>By submitting your contact information through an insurance inquiry form, you provide express written consent to receive automated SMS messages from ${agency} at the phone number you provided. Your consent is not required as a condition of purchasing any goods or services. You may revoke your consent at any time by replying STOP.</p>
   </div>
 
   <div class="footer">
@@ -89,6 +117,7 @@ const privacyPage = (profile) => {
   const agency = esc(profile.agency_name || 'Agency')
   const email = esc(profile.email || '')
   const slug = esc(profile.agent_slug)
+  const fullAddress = [profile.business_address, profile.business_city, profile.business_state, profile.business_zip].filter(Boolean).map(s => esc(s)).join(', ')
 
   return `<!DOCTYPE html>
 <html>
@@ -131,7 +160,7 @@ const privacyPage = (profile) => {
   <p>We retain your information for as long as necessary to fulfill your insurance inquiry and comply with legal obligations. You may request deletion of your data at any time by contacting us.</p>
 
   <h2>Contact</h2>
-  <p>For questions about this privacy policy, contact ${name} at <a href="mailto:${email}" style="color:#00c9a7;">${email}</a>.</p>
+  <p>For questions about this privacy policy, contact ${name} at <a href="mailto:${email}" style="color:#00c9a7;">${email}</a>.${fullAddress ? `<br>${fullAddress}` : ''}</p>
 
   <a class="back" href="/${slug}">&larr; Back</a>
 </body>
@@ -143,6 +172,7 @@ const termsPage = (profile) => {
   const agency = esc(profile.agency_name || 'Agency')
   const email = esc(profile.email || '')
   const slug = esc(profile.agent_slug)
+  const fullAddress = [profile.business_address, profile.business_city, profile.business_state, profile.business_zip].filter(Boolean).map(s => esc(s)).join(', ')
 
   return `<!DOCTYPE html>
 <html>
@@ -181,7 +211,7 @@ const termsPage = (profile) => {
   <p>${agency} provides insurance information for educational and enrollment purposes only. All insurance products are underwritten by the respective insurance carrier. ${agency} is not liable for coverage decisions made by insurance carriers.</p>
 
   <h2>Contact</h2>
-  <p>For questions about these terms, contact ${name} at <a href="mailto:${email}" style="color:#00c9a7;">${email}</a>.</p>
+  <p>For questions about these terms, contact ${name} at <a href="mailto:${email}" style="color:#00c9a7;">${email}</a>.${fullAddress ? `<br>${fullAddress}` : ''}</p>
 
   <a class="back" href="/${slug}">&larr; Back</a>
 </body>
@@ -191,7 +221,7 @@ const termsPage = (profile) => {
 const lookupProfile = async (slug) => {
   const { data, error } = await supabase
     .from('user_profiles')
-    .select('agent_name, agency_name, email, agent_slug, advisor_page_enabled')
+    .select('agent_name, agency_name, email, agent_slug, advisor_page_enabled, business_address, business_city, business_state, business_zip')
     .eq('agent_slug', slug)
     .single()
   if (error || !data) return null
