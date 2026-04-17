@@ -428,7 +428,10 @@
       if (btn) { btn.title = 'Hide details'; btn.textContent = '›' }
       if (activeConvId) {
         const conv = allConversations.find(c => c.id === activeConvId)
-        if (conv) renderRightPanel(conv, conv.leads, [])
+        if (conv) {
+          renderRightPanel(conv, conv.leads, [])
+          loadConvHousehold(conv.leads?.id)
+        }
       }
     } else {
       panel.style.display = 'none'
@@ -920,6 +923,61 @@
     } catch (err) { toast.error('Error', 'Failed to unblock lead') }
   }
 
+  const toggleConvHouseholdForm = (leadId, convId) => {
+    const form = document.getElementById('conv-hh-form')
+    if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none'
+  }
+
+  const loadConvHousehold = async (leadId) => {
+    const el = document.getElementById('conv-hh-list')
+    if (!el) return
+    try {
+      const res = await fetch(`/leads/${leadId}/household`)
+      const data = await res.json()
+      const members = data.members || []
+      const conv = allConversations.find(c => c.id === activeConvId)
+      const lead = conv?.leads
+      let html = ''
+      if (lead?.date_of_birth) {
+        const age = Math.floor((Date.now() - new Date(lead.date_of_birth).getTime()) / 31557600000)
+        html += `<div>Primary ${lead.date_of_birth} (Age ${age})</div>`
+      } else {
+        html += '<div style="color:var(--text-muted);">No DOB on file</div>'
+      }
+      members.forEach(m => {
+        const age = Math.floor((Date.now() - new Date(m.date_of_birth).getTime()) / 31557600000)
+        const roleLabel = m.role === 'dependent' ? 'Dep.' : m.role.charAt(0).toUpperCase() + m.role.slice(1)
+        html += `<div style="display:flex;align-items:center;justify-content:space-between;">`
+        html += `<span>${roleLabel} ${m.date_of_birth} (Age ${age})</span>`
+        html += `<button onclick="removeConvHouseholdMember('${leadId}','${m.id}')" style="background:none;border:none;cursor:pointer;font-size:10px;color:var(--text-muted);padding:0 2px;" title="Remove">✕</button>`
+        html += `</div>`
+      })
+      el.innerHTML = html
+    } catch (err) { console.error('Failed to load household', err) }
+  }
+
+  const addConvHouseholdMember = async (leadId) => {
+    const dob = document.getElementById('conv-hh-dob')?.value
+    if (!dob) return toast.error('Error', 'Please enter a date of birth')
+    try {
+      const res = await fetch(`/leads/${leadId}/household`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ date_of_birth: dob }) })
+      if (!res.ok) throw new Error('Failed')
+      document.getElementById('conv-hh-form').style.display = 'none'
+      document.getElementById('conv-hh-dob').value = ''
+      loadConvHousehold(leadId)
+      toast.success('Added', 'Household member added')
+    } catch (err) { toast.error('Error', 'Failed to add member') }
+  }
+
+  const removeConvHouseholdMember = async (leadId, memberId) => {
+    try {
+      const res = await fetch(`/leads/${leadId}/household/${memberId}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed')
+      loadConvHousehold(leadId)
+      toast.success('Removed', 'Household member removed')
+    } catch (err) { toast.error('Error', 'Failed to remove member') }
+  }
+
   const saveConvNotes = async (leadId, value) => {
     try {
       await fetch(`/leads/${leadId}/notes`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: value }) })
@@ -1022,7 +1080,6 @@
         ${lead?.email ? contactRow('Email', lead.email) : ''}
         ${contactRow('State', lead?.state || '—')}
         ${contactRow('Zip Code', lead?.zip_code || '—')}
-        ${contactRow('DOB', lead?.date_of_birth || '—')}
         ${lead?.product ? contactRow('Product', lead.product) : ''}
         ${lead?.address ? contactRow('Address', lead.address) : ''}
         ${localTime ? contactRow('Local time', localTime) : ''}
@@ -1070,6 +1127,19 @@
         </div>
         <button class="conv3-quick-btn" style="width:100%;margin-top:6px;justify-content:center;font-weight:600;" onclick="sendQuote('${lead?.id}','${conv.id}')">Send Quote</button>
         <div id="conv-quote-status" style="display:none;font-size:10px;color:#00d4b4;font-weight:500;margin-top:2px;"></div>
+      </div>
+      <div class="conv3-right-section">
+        <div class="conv3-section-title" style="display:flex;justify-content:space-between;align-items:center;">Household <button onclick="toggleConvHouseholdForm('${lead?.id}','${conv.id}')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--color-primary);font-weight:600;padding:0;">+ Add</button></div>
+        <div id="conv-hh-list" style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
+          ${lead?.date_of_birth ? (() => { const age = Math.floor((Date.now() - new Date(lead.date_of_birth).getTime()) / 31557600000); return '<div>Primary ' + lead.date_of_birth + ' (Age ' + age + ')</div>' })() : '<div style="color:var(--text-muted);">No DOB on file</div>'}
+        </div>
+        <div id="conv-hh-form" style="display:none;margin-top:6px;">
+          <div style="display:flex;gap:6px;align-items:center;">
+            <input type="date" id="conv-hh-dob" style="flex:1;padding:4px 6px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:6px;font-size:11px;color:var(--input-text);font-family:inherit;">
+            <button onclick="addConvHouseholdMember('${lead?.id}')" style="padding:4px 10px;background:var(--color-primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">Add</button>
+            <button onclick="document.getElementById('conv-hh-form').style.display='none'" style="padding:4px 8px;background:var(--bg-active);color:var(--text-muted);border:none;border-radius:6px;font-size:11px;cursor:pointer;">✕</button>
+          </div>
+        </div>
       </div>
       <div class="conv3-right-section">
         <div class="conv3-section-title">Tags</div>
@@ -1269,7 +1339,10 @@
       renderMessages(conv, 'all')
       await renderScheduledInline(convId)
       renderTemplatePills(conv.lead_id)
-      if (rightPanelOpen) renderRightPanel(conv, lead, [])
+      if (rightPanelOpen) {
+        renderRightPanel(conv, lead, [])
+        loadConvHousehold(lead?.id)
+      }
       updateVarButtonStates(lead)
 
       // Populate disposition filter dropdown (once)

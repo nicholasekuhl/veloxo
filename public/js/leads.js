@@ -783,6 +783,76 @@ const lastContactHtml = (lead) => {
   return lead.status !== 'new' ? `<span style="font-size:11px;color:var(--text-muted);">Never contacted</span>` : ''
 }
 
+// ===== HOUSEHOLD HELPERS =====
+const calcLeadAge = (dob) => {
+  if (!dob) return '?'
+  return Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000)
+}
+
+const loadHouseholdMembers = async (leadId) => {
+  try {
+    const res = await fetch(`/leads/${leadId}/household`, { credentials: 'include' })
+    if (!res.ok) return
+    const data = await res.json()
+    const container = document.querySelector(`.hh-members-${leadId}`)
+    if (!container) return
+    container.innerHTML = (data.members || []).map(m => {
+      const dobFormatted = new Date(m.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const roleLabel = m.role === 'spouse' ? 'Spouse' : m.role === 'dependent' ? 'Dep.' : 'Adult'
+      return `<div class="meta-row"><span class="meta-key">${roleLabel}</span><span class="meta-val">${dobFormatted} (Age ${m.age}) <button onclick="event.stopPropagation();removeHouseholdMember('${leadId}','${m.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-disabled);font-size:11px;padding:0 2px;">&times;</button></span></div>`
+    }).join('')
+  } catch (err) { console.error('loadHouseholdMembers error:', err) }
+}
+
+const openHouseholdModal = (leadId) => {
+  let existing = document.getElementById('hh-modal')
+  if (existing) existing.remove()
+  const modal = document.createElement('div')
+  modal.id = 'hh-modal'
+  modal.innerHTML = `
+    <div style="position:fixed;inset:0;background:var(--overlay-bg);z-index:9998;" onclick="document.getElementById('hh-modal').remove()"></div>
+    <div style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border:1px solid var(--input-border);border-radius:12px;padding:20px;z-index:9999;min-width:280px;box-shadow:0 8px 32px var(--modal-shadow);">
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:12px;">Add Household Member</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:500;color:var(--text-muted);display:block;margin-bottom:4px;">Date of Birth</label>
+        <input type="date" id="hh-dob-input" style="width:100%;padding:8px 10px;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;font-size:13px;color:var(--input-text);font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="document.getElementById('hh-modal').remove()" style="flex:1;padding:8px;background:var(--bg-hover);border:1px solid var(--input-border);border-radius:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;font-family:inherit;">Cancel</button>
+        <button onclick="submitHouseholdMember('${leadId}')" style="flex:1;padding:8px;background:#00c9a7;border:none;border-radius:8px;font-size:13px;color:#0b0f12;font-weight:600;cursor:pointer;font-family:inherit;">Add</button>
+      </div>
+    </div>
+  `
+  document.body.appendChild(modal)
+}
+
+const submitHouseholdMember = async (leadId) => {
+  const dob = document.getElementById('hh-dob-input')?.value
+  if (!dob) return
+  try {
+    const res = await fetch(`/leads/${leadId}/household`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date_of_birth: dob })
+    })
+    const data = await res.json()
+    if (data.member) {
+      document.getElementById('hh-modal')?.remove()
+      loadHouseholdMembers(leadId)
+      toast.success('Member added', `${data.member.role} (Age ${data.member.age})`)
+    } else {
+      toast.error('Error', data.error || 'Could not add member')
+    }
+  } catch (err) { toast.error('Error', 'Could not add member') }
+}
+
+const removeHouseholdMember = async (leadId, memberId) => {
+  try {
+    await fetch(`/leads/${leadId}/household/${memberId}`, { method: 'DELETE', credentials: 'include' })
+    loadHouseholdMembers(leadId)
+  } catch (err) { console.error('removeHouseholdMember error:', err) }
+}
+
 // ===== RENDER LEADS =====
 const renderLeads = (leads) => {
   const grid = document.getElementById('leads-grid')
@@ -869,7 +939,7 @@ const renderLeads = (leads) => {
             </div>
             <div class="lead-meta-line">${lead.state || ''} · <span>${lead.zip_code || ''}</span></div>
             ${(lead.address || lead.lead_tier === 'priority') ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 1C4.07 1 2.5 2.57 2.5 4.5C2.5 7.25 6 11 6 11s3.5-3.75 3.5-6.5C9.5 2.57 7.93 1 6 1z"/><circle cx="6" cy="4.5" r="1.2"/></svg>${lead.address || '—'}</div>` : ''}
-            ${(lead.household || lead.lead_tier === 'priority') ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="4" cy="4" r="2"/><circle cx="8" cy="4" r="2"/><path d="M0 10c0-2 1.8-3 4-3s4 1 4 3"/><path d="M4 10c0-2 1.8-3 4-3s4 1 4 3"/></svg>Household: ${lead.household || '—'}</div>` : ''}
+            ${(lead.household_size || lead.lead_tier === 'priority') ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="4" cy="4" r="2"/><circle cx="8" cy="4" r="2"/><path d="M0 10c0-2 1.8-3 4-3s4 1 4 3"/><path d="M4 10c0-2 1.8-3 4-3s4 1 4 3"/></svg>Household: ${lead.household_size || '—'}</div>` : ''}
             ${localTime ? `<div class="lead-local-time"><svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6" cy="6" r="5"/><path d="M6 3v3l1.5 1.5"/></svg>${localTime} local</div>` : ''}
             <div class="lead-status-row">
               <span class="status-pill sp-${lead.status}"><span class="sp-dot"></span>${lead.status}</span>
@@ -916,19 +986,24 @@ const renderLeads = (leads) => {
           </div>
 
           <div class="col-meta" style="padding:12px 16px;min-width:0;overflow:hidden;">
-            <div class="meta-sms-line">Last contact: <strong>${lead.last_contacted_at ? new Date(lead.last_contacted_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : '—'}</strong></div>
-            <div class="divider"></div>
-            <div class="meta-row"><span class="meta-key">Added</span><span class="meta-val">${lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}) : '—'}</span></div>
-            <div class="meta-row"><span class="meta-key">Gender</span><span class="meta-val">${lead.gender === 'M' || lead.gender === 'Male' ? 'Male' : lead.gender === 'F' || lead.gender === 'Female' ? 'Female' : lead.gender || '—'}</span></div>
+            <div class="notes-label">Lead Info</div>
+            <div class="meta-row"><span class="meta-key">Last contact</span><span class="meta-val">${lead.last_contacted_at ? timeAgo(lead.last_contacted_at) : '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Added</span><span class="meta-val">${lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Appt</span><span class="meta-val">${lead.next_appointment ? new Date(lead.next_appointment).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</span></div>
             <div class="meta-row"><span class="meta-key">Lead Cost</span><span class="meta-val">${lead.lead_cost ? '$' + parseFloat(lead.lead_cost).toFixed(2) : '—'}</span></div>
-            <div class="meta-row"><span class="meta-key">Income</span><span class="meta-val">${lead.income || '—'}</span></div>
-            <div class="meta-row"><span class="meta-key">DOB</span><span class="meta-val">${lead.date_of_birth || '—'}</span></div>
-            <div class="divider"></div>
+            <div class="meta-row"><span class="meta-key">Campaign</span><span class="meta-val">${hasActiveCampaign && tags.length ? tags[0] : '—'}</span></div>
             <div class="meta-bucket-row">
               <span class="meta-bucket-dot" style="background:${bucket ? bucket.color : '#00c9a7'}"></span>
               <span class="meta-bucket-name">${bucket ? bucket.name : '—'}</span>
             </div>
-            <div style="margin-top:6px;">
+            <div class="divider"></div>
+            <div class="notes-label">Household</div>
+            <div id="hh-${lead.id}" class="household-section" style="min-height:20px;">
+              ${lead.date_of_birth ? `<div class="meta-row"><span class="meta-key">Primary</span><span class="meta-val">${lead.date_of_birth} (Age ${calcLeadAge(lead.date_of_birth)})</span></div>` : ''}
+              <div class="hh-members-${lead.id}"></div>
+              <button class="lead-3dot-btn" onclick="event.stopPropagation();openHouseholdModal('${lead.id}')" style="color:var(--text-muted);font-size:11px;margin-top:3px;">+ Add Member</button>
+            </div>
+            <div style="margin-top:4px;">
               <button class="lead-3dot-btn" onclick="event.stopPropagation();openLeadActionsMenu('${lead.id}','${safeName}',this)" title="More actions" style="color:var(--text-muted);font-size:14px;">⋯ More</button>
             </div>
           </div>
@@ -937,6 +1012,9 @@ const renderLeads = (leads) => {
       </div>
     `
   }).join('')
+
+  // Lazy-load household members for visible leads
+  leads.forEach(lead => loadHouseholdMembers(lead.id))
 }
 
 // ===== STATS =====

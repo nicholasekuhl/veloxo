@@ -1657,4 +1657,116 @@ const patchLead = async (req, res) => {
   }
 }
 
-module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage, patchLead }
+// ─── HOUSEHOLD MEMBERS ───────────────────────────────────────────────────────
+
+const calcAge = (dob) => Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000)
+
+const assignRole = (dob, existingAdultCount) => {
+  const age = calcAge(dob)
+  if (age <= 26) return 'dependent'
+  return existingAdultCount === 0 ? 'spouse' : 'adult'
+}
+
+const reassignRoles = async (leadId, userId) => {
+  const { data: members } = await supabase
+    .from('lead_household_members')
+    .select('id, date_of_birth')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: true })
+  if (!members || !members.length) return
+
+  let adultCount = 0
+  for (const m of members) {
+    const age = calcAge(m.date_of_birth)
+    let role
+    if (age <= 26) {
+      role = 'dependent'
+    } else {
+      role = adultCount === 0 ? 'spouse' : 'adult'
+      adultCount++
+    }
+    await supabase.from('lead_household_members').update({ role }).eq('id', m.id)
+  }
+}
+
+const getHouseholdMembers = async (req, res) => {
+  try {
+    const { data: members, error } = await supabase
+      .from('lead_household_members')
+      .select('id, date_of_birth, role, created_at')
+      .eq('lead_id', req.params.id)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    const enriched = (members || []).map(m => ({ ...m, age: calcAge(m.date_of_birth) }))
+    res.json({ members: enriched })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const addHouseholdMember = async (req, res) => {
+  try {
+    const { date_of_birth } = req.body
+    if (!date_of_birth) return res.status(400).json({ error: 'Date of birth is required' })
+
+    // Verify lead belongs to user
+    const { data: lead } = await supabase.from('leads').select('id').eq('id', req.params.id).eq('user_id', req.user.id).single()
+    if (!lead) return res.status(404).json({ error: 'Lead not found' })
+
+    // Count existing adults (27+) for role assignment
+    const { data: existing } = await supabase
+      .from('lead_household_members')
+      .select('id, date_of_birth')
+      .eq('lead_id', req.params.id)
+    const adultCount = (existing || []).filter(m => calcAge(m.date_of_birth) >= 27).length
+
+    const role = assignRole(date_of_birth, adultCount)
+
+    const { data: member, error } = await supabase
+      .from('lead_household_members')
+      .insert({ lead_id: req.params.id, user_id: req.user.id, date_of_birth, role })
+      .select()
+      .single()
+    if (error) throw error
+
+    // Update household count on lead
+    const newCount = (existing || []).length + 1 + 1 // existing members + new one + primary
+    await supabase.from('leads').update({ household_size: newCount, updated_at: new Date().toISOString() }).eq('id', req.params.id)
+
+    res.json({ member: { ...member, age: calcAge(date_of_birth) } })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+const deleteHouseholdMember = async (req, res) => {
+  try {
+    // Verify lead belongs to user
+    const { data: lead } = await supabase.from('leads').select('id').eq('id', req.params.id).eq('user_id', req.user.id).single()
+    if (!lead) return res.status(404).json({ error: 'Lead not found' })
+
+    const { error } = await supabase
+      .from('lead_household_members')
+      .delete()
+      .eq('id', req.params.memberId)
+      .eq('lead_id', req.params.id)
+    if (error) throw error
+
+    // Re-assign roles for remaining members
+    await reassignRoles(req.params.id, req.user.id)
+
+    // Update household count
+    const { data: remaining } = await supabase
+      .from('lead_household_members')
+      .select('id')
+      .eq('lead_id', req.params.id)
+    const newCount = (remaining || []).length + 1 // remaining + primary
+    await supabase.from('leads').update({ household_size: newCount, updated_at: new Date().toISOString() }).eq('id', req.params.id)
+
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+module.exports = { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getOrCreateOptOutBucket, getPipelineLeads, updatePipelineStage, patchLead, getHouseholdMembers, addHouseholdMember, deleteHouseholdMember, calcAge, assignRole }

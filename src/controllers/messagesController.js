@@ -6,6 +6,7 @@ const { isWithinQuietHours, getNextSendWindow } = require('../compliance')
 const { getOrCreateOptOutBucket } = require('./leadsController')
 const { detectPipelineStage, extractLeadDataFromHistory, generateNoteSummary, STAGE_ORDER } = require('../pipeline')
 const { deductAiCredit } = require('../services/credits')
+const { calcAge, assignRole } = require('./leadsController')
 
 // Per-conversation debounce — prevents duplicate AI responses when a lead sends
 // multiple messages in quick succession (e.g. "Tomorrow 1:30" then "Actually 4:30")
@@ -82,8 +83,8 @@ const autoExtractLeadData = async (lead, message) => {
       }
     }
 
-    // Household extraction
-    if (!lead.household) {
+    // Household size extraction (natural language)
+    if (!lead.household_size) {
       let householdSize = null
       let householdDesc = null
       if (/just me|only me|myself$|single|just myself/i.test(msg)) {
@@ -104,11 +105,98 @@ const autoExtractLeadData = async (lead, message) => {
         }
       }
       if (householdSize) {
-        updates.household = householdSize
+        updates.household_size = householdSize
         noteLines.push(`--- Household Info (Auto-extracted) ---`)
         noteLines.push(`Size: ${householdSize} people`)
         noteLines.push(`Members: ${householdDesc}`)
         noteLines.push(`---`)
+      }
+    }
+
+    // DOB extraction — detect dates and add to household members
+    const dobPatterns = [
+      /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
+      /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})\b/g,
+      /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+(\d{1,2})\s*,?\s*(\d{4})/gi
+    ]
+    const parsedDobs = []
+    for (const pattern of dobPatterns) {
+      let match
+      while ((match = pattern.exec(message)) !== null) {
+        let dateStr
+        if (/jan|feb|mar|apr/i.test(match[1])) {
+          dateStr = `${match[1]} ${match[2]}, ${match[3]}`
+        } else {
+          let year = match[3]
+          if (year.length === 2) year = parseInt(year) > 30 ? '19' + year : '20' + year
+          dateStr = `${match[1]}/${match[2]}/${year}`
+        }
+        const parsed = new Date(dateStr)
+        if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 1920 && parsed.getFullYear() <= new Date().getFullYear()) {
+          const isoDate = parsed.toISOString().split('T')[0]
+          if (!parsedDobs.includes(isoDate)) parsedDobs.push(isoDate)
+        }
+      }
+    }
+
+    // Also detect birth year only: "born 2015", "born in 2019"
+    const yearOnlyMatch = message.match(/\bborn\s+(?:in\s+)?(\d{4})\b/gi)
+    if (yearOnlyMatch) {
+      for (const ym of yearOnlyMatch) {
+        const yearStr = ym.match(/(\d{4})/)[1]
+        const yr = parseInt(yearStr)
+        if (yr > 1920 && yr <= new Date().getFullYear()) {
+          const isoDate = `${yr}-01-01`
+          if (!parsedDobs.includes(isoDate)) parsedDobs.push(isoDate)
+        }
+      }
+    }
+
+    if (parsedDobs.length > 0) {
+      try {
+        const householdNotes = []
+        let dobIndex = 0
+
+        // First DOB → primary lead if not already set
+        if (!lead.date_of_birth) {
+          updates.date_of_birth = parsedDobs[dobIndex]
+          dobIndex = 1
+        }
+
+        // Remaining DOBs → household members
+        if (parsedDobs.length > dobIndex) {
+          const { data: existing } = await supabase
+            .from('lead_household_members')
+            .select('id, date_of_birth')
+            .eq('lead_id', lead.id)
+          const existingDobs = (existing || []).map(m => m.date_of_birth)
+          const adultCount = (existing || []).filter(m => calcAge(m.date_of_birth) >= 27).length
+          let runningAdultCount = adultCount
+
+          for (let i = dobIndex; i < parsedDobs.length; i++) {
+            const dob = parsedDobs[i]
+            if (existingDobs.includes(dob)) continue
+            const role = assignRole(dob, runningAdultCount)
+            if (calcAge(dob) >= 27) runningAdultCount++
+            await supabase.from('lead_household_members').insert({
+              lead_id: lead.id, user_id: lead.user_id, date_of_birth: dob, role
+            })
+            const memberAge = calcAge(dob)
+            householdNotes.push(`${role.charAt(0).toUpperCase() + role.slice(1)} (Age ${memberAge})`)
+          }
+
+          if (householdNotes.length > 0) {
+            noteLines.push(`[Auto] Household updated: ${householdNotes.join(', ')}`)
+            // Update household count
+            const { count } = await supabase
+              .from('lead_household_members')
+              .select('id', { count: 'exact', head: true })
+              .eq('lead_id', lead.id)
+            updates.household_size = (count || 0) + 1
+          }
+        }
+      } catch (dobErr) {
+        console.error('[autoExtract] DOB household error:', dobErr.message)
       }
     }
 
@@ -1202,6 +1290,9 @@ When leads share personal information, acknowledge it naturally and remember it.
 
 HOUSEHOLD AWARENESS:
 If a lead mentions family members, ask about their ages naturally as part of qualification. A family of 4 has different options than a single person. When a lead mentions household members, ages of family members, or dependents, acknowledge this information and use it to tailor your response.
+
+HOUSEHOLD QUALIFICATION:
+When qualifying a lead, determine household size and dates of birth for ALL members who will be on the health insurance plan. Ask naturally: "and what are everyone's dates of birth" or "how old is everyone in your household". When leads provide multiple dates like "1/1/1990, 1/1/1992, 6/15/2019" recognize these as household member DOBs and acknowledge them: "got it, so that's you, your spouse, and a little one born in 2019". ACA coverage rules for context: adults 27+ are separate insured persons, dependents can be covered up to age 26, a family of 5 with ages 45/40/26/18/10 has 2 adults and 3 dependents under ACA. Always try to get full household DOBs before discussing pricing as this significantly affects the quote range.
 
 QUOTE HANDLING:
 If a lead resists a call and asks for a quote via text, respond with something like "ok let me pull something up real quick" and then wait. Do NOT make up numbers or estimate premiums. If QUOTE CONTEXT is provided in your instructions, use those exact numbers naturally.
