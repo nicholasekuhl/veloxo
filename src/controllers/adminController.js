@@ -252,7 +252,7 @@ const backfillStatuses = async (req, res) => {
 // ── Access Requests ──────────────────────────────────────────
 const createAccessRequest = async (req, res) => {
   try {
-    const { email } = req.body
+    const { name, email, notes } = req.body
     if (!email || !email.includes('@')) return res.status(400).json({ error: 'Valid email required' })
     const normalised = email.trim().toLowerCase()
     // Silently deduplicate
@@ -262,9 +262,12 @@ const createAccessRequest = async (req, res) => {
       .eq('email', normalised)
       .single()
     if (existing) return res.json({ success: true })
+    const payload = { email: normalised, status: 'pending' }
+    if (name && name.trim()) payload.name = name.trim()
+    if (notes && notes.trim()) payload.notes = notes.trim()
     const { error } = await supabase
       .from('access_requests')
-      .insert([{ email: normalised, status: 'pending' }])
+      .insert([payload])
     if (error) throw error
     res.json({ success: true })
   } catch (err) {

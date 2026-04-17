@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='18' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300c9a7'/%3E%3Cstop offset='100%25' stop-color='%230ea5e9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M10 10L16 18L10 26' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.6'/%3E%3Cpath d='M16 10L24 18L16 26' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M22 10L28 18L22 26' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.7'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ccircle cx='18' cy='18' r='18' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300c9a7'/%3E%3Cstop offset='100%25' stop-color='%230ea5e9'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M10 10L16 18L10 26' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.6'/%3E%3Cpath d='M16 10L24 18L16 26' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M22 10L28 18L22 26' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.7'/%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Access — Veloxo</title>
+  <meta name="description" content="Request early access to Veloxo — AI-powered SMS outreach for insurance agents.">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #08080f; color: #fff; line-height: 1.5;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+
+    .page-wrap {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      padding: 48px 20px;
+      position: relative; overflow: hidden;
+    }
+    .page-wrap::before {
+      content: '';
+      position: absolute; top: -180px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse, rgba(0,201,167,0.12) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 440px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 40px 36px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    .logo {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      margin-bottom: 28px;
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: linear-gradient(135deg, #00c9a7, #0ea5e9);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 16px rgba(0,201,167,0.4);
+      flex-shrink: 0;
+    }
+    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: #fff; }
+    .logo-velox { color: #00d4b4; }
+
+    .heading {
+      font-size: 26px; font-weight: 700; letter-spacing: -0.5px;
+      color: #fff; text-align: center; margin-bottom: 10px;
+    }
+    .sub {
+      font-size: 14px; color: rgba(255,255,255,0.55);
+      text-align: center; margin-bottom: 28px; line-height: 1.55;
+    }
+
+    .field { margin-bottom: 14px; }
+    .field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,0.6); margin-bottom: 6px;
+      letter-spacing: 0.02em;
+    }
+    .field label .req { color: #00d4b4; margin-left: 2px; }
+    .field input, .field textarea {
+      width: 100%;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9px;
+      font-size: 14px; color: #fff;
+      font-family: inherit; outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .field input::placeholder, .field textarea::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: rgba(0,201,167,0.5);
+      background: rgba(0,201,167,0.04);
+    }
+    .field textarea {
+      resize: vertical; min-height: 84px; line-height: 1.5;
+    }
+
+    .btn-submit {
+      width: 100%; margin-top: 8px;
+      padding: 13px 24px; border-radius: 9px;
+      background: linear-gradient(135deg, #00c9a7, #0ea5e9);
+      color: #08080f; font-size: 14px; font-weight: 700;
+      border: none; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,201,167,0.35);
+      transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s;
+      font-family: inherit;
+    }
+    .btn-submit:hover:not(:disabled) {
+      box-shadow: 0 6px 28px rgba(0,201,167,0.55);
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .msg {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 9px;
+      font-size: 13px; line-height: 1.5;
+      display: none;
+    }
+    .msg.success {
+      background: rgba(0,201,167,0.08);
+      border: 1px solid rgba(0,201,167,0.25);
+      color: #34d8b8;
+    }
+    .msg.error {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: #f87171;
+    }
+    .msg.open { display: block; }
+
+    .success-state {
+      text-align: center; padding: 12px 0;
+    }
+    .success-state .check {
+      width: 52px; height: 52px; margin: 0 auto 18px;
+      border-radius: 50%;
+      background: rgba(0,201,167,0.12);
+      border: 1px solid rgba(0,201,167,0.35);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .success-state h2 {
+      font-size: 20px; font-weight: 700; color: #fff;
+      margin-bottom: 10px; letter-spacing: -0.3px;
+    }
+    .success-state p {
+      font-size: 14px; color: rgba(255,255,255,0.55);
+      line-height: 1.6; margin-bottom: 4px;
+    }
+    .success-state .email-highlight {
+      color: #34d8b8; font-weight: 600;
+    }
+
+    .footer-link {
+      text-align: center; margin-top: 22px;
+      font-size: 12px; color: rgba(255,255,255,0.35);
+    }
+    .footer-link a {
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      padding-bottom: 1px; transition: color 0.15s, border-color 0.15s;
+    }
+    .footer-link a:hover {
+      color: #fff; border-color: rgba(255,255,255,0.4);
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 24px; border-radius: 14px; }
+      .heading { font-size: 22px; }
+      .page-wrap { padding: 24px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="card">
+
+    <a href="/" class="logo">
+      <div class="logo-mark">
+        <svg width="22" height="22" viewBox="0 0 36 36" fill="none">
+          <path d="M10 10L16 18L10 26" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+          <path d="M16 10L24 18L16 26" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M22 10L28 18L22 26" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+        </svg>
+      </div>
+      <span class="logo-text"><span class="logo-velox">Velox</span>o</span>
+    </a>
+
+    <div id="form-view">
+      <h1 class="heading">Request Early Access</h1>
+      <p class="sub">Veloxo is currently in private beta. Request access and we'll be in touch.</p>
+
+      <form id="request-form" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="name">Name <span class="req">*</span></label>
+          <input type="text" id="name" name="name" required placeholder="Your full name">
+        </div>
+
+        <div class="field">
+          <label for="email">Email <span class="req">*</span></label>
+          <input type="email" id="email" name="email" required placeholder="you@youragency.com">
+        </div>
+
+        <div class="field">
+          <label for="notes">Tell us about your business <span style="color:rgba(255,255,255,0.3);font-weight:400;">(optional)</span></label>
+          <textarea id="notes" name="notes" placeholder="What do you sell? How big is your team? What are you hoping Veloxo will do for you?"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submit-btn">Request Access</button>
+
+        <div class="msg error" id="err-msg"></div>
+      </form>
+
+      <p class="footer-link">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </p>
+    </div>
+
+    <div id="success-view" style="display:none;" class="success-state">
+      <div class="check">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d4b4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h2>Thanks!</h2>
+      <p>We'll review your request and reach out to <span class="email-highlight" id="success-email"></span> shortly.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('request-form')
+  const errMsg = document.getElementById('err-msg')
+  const submitBtn = document.getElementById('submit-btn')
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    errMsg.classList.remove('open')
+    errMsg.textContent = ''
+
+    const name = document.getElementById('name').value.trim()
+    const email = document.getElementById('email').value.trim()
+    const notes = document.getElementById('notes').value.trim()
+
+    if (!name) { errMsg.textContent = 'Please enter your name.'; errMsg.classList.add('open'); return }
+    if (!email || !email.includes('@')) { errMsg.textContent = 'Please enter a valid email address.'; errMsg.classList.add('open'); return }
+
+    submitBtn.disabled = true
+    submitBtn.textContent = 'Submitting...'
+
+    try {
+      const res = await fetch('/access-requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, notes })
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data.success) throw new Error(data.error || 'Request failed')
+
+      document.getElementById('success-email').textContent = email
+      document.getElementById('form-view').style.display = 'none'
+      document.getElementById('success-view').style.display = 'block'
+    } catch (err) {
+      errMsg.textContent = err.message || 'Something went wrong. Please try again.'
+      errMsg.classList.add('open')
+      submitBtn.disabled = false
+      submitBtn.textContent = 'Request Access'
+    }
+  })
+</script>
+
+</body>
+</html>
