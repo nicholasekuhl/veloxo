@@ -1706,6 +1706,7 @@ const getHouseholdMembers = async (req, res) => {
 }
 
 const addHouseholdMember = async (req, res) => {
+  console.log('[household] POST called, lead_id:', req.params.id)
   try {
     const { date_of_birth } = req.body
     if (!date_of_birth) return res.status(400).json({ error: 'Date of birth is required' })

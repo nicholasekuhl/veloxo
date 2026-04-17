@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const multer = require('multer')
-const { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getPipelineLeads, updatePipelineStage, patchLead } = require('../controllers/leadsController')
+const { parseHeaders, uploadLeads, riskCheck, getLeads, getLeadStats, getBuckets, exportLeads, getLeadById, updateAutopilot, updateNotes, updateQuotes, updateProduct, updateCommissionStatus, updateLeadBucket, createLead, resumeCampaigns, blockLead, unblockLead, markSold, unmarkSold, deleteLead, skipToday, pauseDrips, markCalled, bulkAction, optOut, undoOptOut, checkQuietHours, logComplianceOverride, getPipelineLeads, updatePipelineStage, patchLead, getHouseholdMembers, addHouseholdMember, deleteHouseholdMember } = require('../controllers/leadsController')
 const storage = multer.memoryStorage()
 const upload = multer({
   storage,
@@ -29,6 +29,9 @@ router.post('/', createLead)
 router.post('/parse-headers', upload.single('file'), parseHeaders)
 router.post('/risk-check', upload.single('file'), riskCheck)
 router.post('/upload', upload.single('file'), uploadLeads)
+router.get('/:id/household', getHouseholdMembers)
+router.post('/:id/household', addHouseholdMember)
+router.delete('/:id/household/:memberId', deleteHouseholdMember)
 router.patch('/:id/product', updateProduct)
 router.patch('/:id/autopilot', updateAutopilot)
 router.patch('/:id/notes', updateNotes)
