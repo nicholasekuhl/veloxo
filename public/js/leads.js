@@ -799,7 +799,7 @@ const loadHouseholdMembers = async (leadId) => {
     container.innerHTML = (data.members || []).map(m => {
       const dobFormatted = new Date(m.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       const roleLabel = m.role === 'spouse' ? 'Spouse' : m.role === 'dependent' ? 'Dep.' : 'Adult'
-      return `<div class="meta-row"><span class="meta-key">${roleLabel}</span><span class="meta-val">${dobFormatted} (Age ${m.age}) <button onclick="event.stopPropagation();removeHouseholdMember('${leadId}','${m.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-disabled);font-size:11px;padding:0 2px;">&times;</button></span></div>`
+      return `<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-secondary);line-height:1.8;"><span>${roleLabel} &middot; ${dobFormatted} (Age ${m.age})</span><button onclick="event.stopPropagation();removeHouseholdMember('${leadId}','${m.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-disabled);font-size:11px;padding:0 2px;flex-shrink:0;" title="Remove">&times;</button></div>`
     }).join('')
   } catch (err) { console.error('loadHouseholdMembers error:', err) }
 }
@@ -910,7 +910,7 @@ const renderLeads = (leads) => {
     const bucket = lead.bucket_id ? allBuckets.find(b => b.id === lead.bucket_id) : null
     return `
       <div class="lead-card ${lead.notes ? 'has-notes' : ''}" data-lead-id="${lead.id}" ${lead.do_not_contact ? 'style="opacity:0.55;"' : ''}>
-        <div class="lead-card-body" style="display:grid;grid-template-columns:290px 2fr 0.85fr 215px 170px;width:100%;min-width:0;gap:0;">
+        <div class="lead-card-body" style="display:grid;grid-template-columns:220px 320px 240px 180px 200px 180px;width:100%;min-width:0;gap:0;">
 
           <div class="col-contact" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;">
             <div class="col-contact-top">
@@ -966,7 +966,7 @@ const renderLeads = (leads) => {
             </div>
           </div>
 
-          <div class="col-actions" style="padding:12px 20px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;">
+          <div class="col-actions" style="padding:12px 14px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;display:flex;flex-direction:column;gap:8px;">
             <button class="btn-call" style="width:100%;padding:11px 10px;font-size:13.5px;font-weight:600;color:#0b0f12;background:linear-gradient(135deg,#00c9a7,#0ea5e9);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 2px 10px rgba(0,201,167,0.3);" onclick="event.stopPropagation();openSMSModal('${lead.id}','${safeName}')">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#0b0f12" stroke-width="1.5"><path d="M14 3a1 1 0 00-1-1H3a1 1 0 00-1 1v7a1 1 0 001 1h3l2 2 2-2h3a1 1 0 001-1V3z"/><path d="M5 6h6M5 9h4"/></svg>
               Send Text
@@ -985,25 +985,29 @@ const renderLeads = (leads) => {
             </div>
           </div>
 
-          <div class="col-meta" style="padding:12px 16px;min-width:0;overflow:hidden;">
+          <div class="col-household" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:0;overflow:hidden;">
+            <div class="notes-label">Household</div>
+            <div id="hh-${lead.id}" class="household-section" style="min-height:20px;">
+              ${lead.date_of_birth ? `<div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">Primary &middot; ${lead.date_of_birth} (Age ${calcLeadAge(lead.date_of_birth)})</div>` : ''}
+              <div class="hh-members-${lead.id}"></div>
+              ${!lead.date_of_birth ? `<div style="font-size:12px;color:var(--text-muted);">—</div>` : ''}
+              <button class="lead-3dot-btn" onclick="event.stopPropagation();openHouseholdModal('${lead.id}')" style="color:var(--text-muted);font-size:11px;margin-top:6px;">+ Add</button>
+            </div>
+          </div>
+
+          <div class="col-info" style="padding:12px 16px;min-width:0;overflow:hidden;">
             <div class="notes-label">Lead Info</div>
             <div class="meta-row"><span class="meta-key">Last contact</span><span class="meta-val">${lead.last_contacted_at ? timeAgo(lead.last_contacted_at) : '—'}</span></div>
             <div class="meta-row"><span class="meta-key">Added</span><span class="meta-val">${lead.created_at ? new Date(lead.created_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</span></div>
             <div class="meta-row"><span class="meta-key">Appt</span><span class="meta-val">${lead.next_appointment ? new Date(lead.next_appointment).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</span></div>
             <div class="meta-row"><span class="meta-key">Lead Cost</span><span class="meta-val">${lead.lead_cost ? '$' + parseFloat(lead.lead_cost).toFixed(2) : '—'}</span></div>
             <div class="meta-row"><span class="meta-key">Campaign</span><span class="meta-val">${hasActiveCampaign && tags.length ? tags[0] : '—'}</span></div>
+            <div class="meta-row"><span class="meta-key">Follow-up</span><span class="meta-val">${lead.scheduled_followup_at ? new Date(lead.scheduled_followup_at).toLocaleDateString('en-US', {month:'short',day:'numeric'}) : '—'}</span></div>
             <div class="meta-bucket-row">
               <span class="meta-bucket-dot" style="background:${bucket ? bucket.color : '#00c9a7'}"></span>
               <span class="meta-bucket-name">${bucket ? bucket.name : '—'}</span>
             </div>
-            <div class="divider"></div>
-            <div class="notes-label">Household</div>
-            <div id="hh-${lead.id}" class="household-section" style="min-height:20px;">
-              ${lead.date_of_birth ? `<div class="meta-row"><span class="meta-key">Primary</span><span class="meta-val">${lead.date_of_birth} (Age ${calcLeadAge(lead.date_of_birth)})</span></div>` : ''}
-              <div class="hh-members-${lead.id}"></div>
-              <button class="lead-3dot-btn" onclick="event.stopPropagation();openHouseholdModal('${lead.id}')" style="color:var(--text-muted);font-size:11px;margin-top:3px;">+ Add Member</button>
-            </div>
-            <div style="margin-top:4px;">
+            <div style="margin-top:6px;">
               <button class="lead-3dot-btn" onclick="event.stopPropagation();openLeadActionsMenu('${lead.id}','${safeName}',this)" title="More actions" style="color:var(--text-muted);font-size:14px;">⋯ More</button>
             </div>
           </div>
