@@ -108,7 +108,7 @@ const loadProfile = async () => {
     if (drawerName) drawerName.textContent = displayName
     if (p.is_admin) {
       const adminLink = document.getElementById('admin-nav-link')
-      if (adminLink) adminLink.style.display = 'inline-flex'
+      if (adminLink) adminLink.style.display = 'flex'
       const adminDrawerBtn = document.getElementById('drawer-btn-admin')
       if (adminDrawerBtn) adminDrawerBtn.style.display = 'flex'
       const profileAdminLink = document.getElementById('profile-admin-link')
