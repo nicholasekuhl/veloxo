@@ -186,7 +186,7 @@ body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-b
 .sidebar-credits { margin: 0; padding: 10px 16px 6px; background: transparent; border: none; border-top: 1px solid var(--border); border-radius: 0; flex-shrink: 0; cursor: pointer; }
 .sidebar-credits:hover { background: var(--bg-hover); }
 .credits-row { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.credits-icon { font-size: 11px; }
+.credits-icon { display: flex; align-items: center; justify-content: center; width: 15px; flex-shrink: 0; color: var(--sidebar-text-muted); }
 .credits-label { font-size: 11px; color: var(--sidebar-text-muted); flex: 1; text-transform: uppercase; letter-spacing: 0.05em; }
 .credits-value { font-size: 12px; font-weight: 600; color: var(--sidebar-text-secondary); }
 .credits-value.low { color: #f59e0b; }
