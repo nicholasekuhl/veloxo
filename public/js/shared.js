@@ -17,6 +17,7 @@ function toggleTheme() {
     html.setAttribute('data-theme', 'light')
     localStorage.setItem('theme', 'light')
   }
+  if (typeof filterLeads === 'function') filterLeads()
 }
 
 let currentUser = null
