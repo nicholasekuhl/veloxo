@@ -912,7 +912,7 @@ const renderLeads = (leads) => {
       <div class="lead-card ${lead.notes ? 'has-notes' : ''}" data-lead-id="${lead.id}" ${lead.do_not_contact ? 'style="opacity:0.55;"' : ''}>
         <div class="lead-card-body" style="display:flex;width:100%;min-width:0;">
 
-          <div class="col-contact" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:270px;width:270px;flex-shrink:0;overflow:hidden;">
+          <div class="col-contact" style="padding:12px 16px;border-right:1px solid var(--border-subtle);min-width:310px;width:310px;flex-shrink:0;overflow:hidden;">
             <div class="col-contact-top">
               <input type="checkbox" class="lead-cb lead-select-cb" data-id="${lead.id}" onchange="toggleLead(this)" ${selectedLeads.has(lead.id) ? 'checked' : ''}>
               <div class="lead-avatar" style="background:rgba(0,201,167,0.15);color:#00d4b4">${initials}</div>
