@@ -1557,12 +1557,23 @@ const processPendingAiResponses = async () => {
       .lt('ai_pending_at', cutoff)
       .limit(10)
     if (error) {
-      console.error('[AI worker] query error:', error.message)
+      console.error('[AI poller] query error:', error.message)
       return
     }
+    console.log('[AI poller] tick — checked, found:', pending?.length || 0, 'pending')
     if (!pending || pending.length === 0) return
 
-    const { processPendingAi } = require('./controllers/messagesController')
+    let processPendingAi
+    try {
+      ({ processPendingAi } = require('./controllers/messagesController'))
+      if (typeof processPendingAi !== 'function') {
+        console.error('[AI poller] processPendingAi is not a function — export missing from messagesController')
+        return
+      }
+    } catch (err) {
+      console.error('[AI poller] failed to require messagesController:', err.message)
+      return
+    }
 
     for (const conv of pending) {
       // Claim: clear the flag only if it hasn't moved (no newer inbound during
@@ -1578,13 +1589,14 @@ const processPendingAiResponses = async () => {
         continue
       }
       try {
+        console.log(`[AI poller] processing conv ${conv.id}`)
         await processPendingAi(conv.id)
       } catch (err) {
-        console.error(`[AI worker] processPendingAi threw for conv ${conv.id}:`, err.message)
+        console.error(`[AI poller] processPendingAi threw for conv ${conv.id}:`, err.message)
       }
     }
   } catch (err) {
-    console.error('[AI worker] processPendingAiResponses error:', err.message)
+    console.error('[AI poller] processPendingAiResponses error:', err.message)
   }
 }
 
@@ -1597,6 +1609,7 @@ const startScheduler = () => {
 
   setInterval(guardedProcessDrips, 300000)              // every 5 minutes
   setInterval(processPendingAiResponses, 15000)         // every 15 seconds — AI debounce worker
+  console.log('[AI poller] Started — polling every 15 seconds')
 
   scheduleMidnightReset()
   scheduleDailyAt9am()
