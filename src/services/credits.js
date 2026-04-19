@@ -72,24 +72,17 @@ async function getBalance(userId) {
  * Returns new balance.
  */
 async function deductSmsCredit(userId, fromNumber, toPhone, messageId) {
-  const cost = SMS_CREDIT_COST
-  const row = await getRow(userId)
-
-  if (!row) throw new InsufficientCreditsError(0, cost)
-
-  const currentBalance = parseFloat(row.balance)
-  if (currentBalance < cost) throw new InsufficientCreditsError(currentBalance, cost)
-
-  const newBalance       = parseFloat((currentBalance - cost).toFixed(4))
-  const lifetimeUsed     = parseFloat(((parseFloat(row.lifetime_used) || 0) + cost).toFixed(4))
-  const lifetimePurchased = parseFloat(row.lifetime_purchased) || 0
-
-  await upsertBalance(userId, newBalance, lifetimePurchased, lifetimeUsed)
-
   const desc = `SMS outbound${toPhone ? ' to ' + toPhone : ''}${fromNumber ? ' via ' + fromNumber : ''}${messageId ? ' (' + messageId + ')' : ''}`
-  await insertTransaction(userId, -cost, 'sms_outbound', desc, newBalance)
-
-  return newBalance
+  const { data, error } = await supabase.rpc('deduct_credit', {
+    p_user_id: userId,
+    p_amount: SMS_CREDIT_COST,
+    p_type: 'sms_outbound',
+    p_description: desc
+  })
+  if (error) throw error
+  const row = data?.[0]
+  if (!row?.success) throw new InsufficientCreditsError(row?.balance_after ?? 0, SMS_CREDIT_COST)
+  return row.balance_after
 }
 
 /**
@@ -99,26 +92,22 @@ async function deductSmsCredit(userId, fromNumber, toPhone, messageId) {
  */
 async function deductAiCredit(userId, inputTokens, outputTokens, model) {
   if (!userId) return null
-
   const pricing = PRICING[model] || PRICING['claude-sonnet-4-6']
   const rawCost = (inputTokens * pricing.input) + (outputTokens * pricing.output)
   const cost = parseFloat((rawCost * AI_MARKUP).toFixed(4))
-
   if (cost <= 0) return null
-
-  const row = await getRow(userId)
-  const currentBalance = row ? parseFloat(row.balance) : 0
-  const newBalance     = parseFloat((currentBalance - cost).toFixed(4))
-  const lifetimeUsed   = parseFloat(((row ? parseFloat(row.lifetime_used) : 0) + cost).toFixed(4))
-  const lifetimePurchased = row ? parseFloat(row.lifetime_purchased) : 0
-
-  // AI costs always deduct even if negative (logged but non-blocking)
-  await upsertBalance(userId, newBalance, lifetimePurchased, lifetimeUsed)
-
   const desc = `AI reply — ${model} (${inputTokens}in / ${outputTokens}out tokens)`
-  await insertTransaction(userId, -cost, 'ai_reply', desc, newBalance)
-
-  return newBalance
+  const { data, error } = await supabase.rpc('deduct_credit', {
+    p_user_id: userId,
+    p_amount: cost,
+    p_type: 'ai_reply',
+    p_description: desc
+  })
+  if (error) {
+    console.error('[credits] deductAiCredit error:', error.message)
+    return null
+  }
+  return data?.[0]?.balance_after ?? null
 }
 
 /**
