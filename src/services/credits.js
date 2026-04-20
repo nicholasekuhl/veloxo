@@ -67,21 +67,25 @@ async function getBalance(userId) {
 }
 
 /**
- * Deduct $0.0075 for one outbound SMS.
+ * Deduct $0.0075 per SMS segment for one outbound message.
+ * `segments` is Twilio's numSegments (160 chars GSM-7, 70 chars UCS-2).
+ * Default of 1 keeps old callers working, but under-bills multi-segment
+ * messages — always pass result.segments from the sendSMS return value.
  * Throws InsufficientCreditsError if balance would go negative.
  * Returns new balance.
  */
-async function deductSmsCredit(userId, fromNumber, toPhone, messageId) {
-  const desc = `SMS outbound${toPhone ? ' to ' + toPhone : ''}${fromNumber ? ' via ' + fromNumber : ''}${messageId ? ' (' + messageId + ')' : ''}`
+async function deductSmsCredit(userId, fromNumber, toPhone, messageId, segments = 1) {
+  const cost = parseFloat((SMS_CREDIT_COST * segments).toFixed(4))
+  const desc = `SMS outbound${toPhone ? ' to ' + toPhone : ''}${fromNumber ? ' via ' + fromNumber : ''}${segments > 1 ? ` (${segments} segments)` : ''}${messageId ? ' (' + messageId + ')' : ''}`
   const { data, error } = await supabase.rpc('deduct_credit', {
     p_user_id: userId,
-    p_amount: SMS_CREDIT_COST,
+    p_amount: cost,
     p_type: 'sms_outbound',
     p_description: desc
   })
   if (error) throw error
   const row = data?.[0]
-  if (!row?.success) throw new InsufficientCreditsError(row?.balance_after ?? 0, SMS_CREDIT_COST)
+  if (!row?.success) throw new InsufficientCreditsError(row?.balance_after ?? 0, cost)
   return row.balance_after
 }
 

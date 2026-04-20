@@ -516,7 +516,8 @@ const uploadLeads = async (req, res) => {
                   body: messageBody,
                   sent_at: sentAt,
                   twilio_sid: result.sid,
-                  status: 'sent'
+                  status: 'sent',
+                  from_number: fromNumber
                 })
                 await bumpMessageCount(conv.id)
               }
@@ -524,9 +525,12 @@ const uploadLeads = async (req, res) => {
               await supabase.from('leads').update({
                 status: 'contacted',
                 first_message_sent: true,
-                outbound_initiated_today: 1,
                 updated_at: sentAt
               }).eq('id', lead.id)
+              // Atomic counter bump via RPC. Lead was just created so the
+              // counter is 0 and this is equivalent to the old `= 1` assignment,
+              // but keeps behavior consistent with every other call site.
+              await supabase.rpc('bump_outbound_initiated', { p_lead_id: lead.id })
 
               if (enrollment?.id) {
                 if (isQuickCampaign) {

@@ -245,14 +245,14 @@ const checkGhostedConversations = async () => {
         sent_at: now.toISOString(),
         is_ai: true,
         twilio_sid: result.sid,
-        status: 'sent'
+        status: 'sent',
+        from_number: fromNumber
       })
       await bumpMessageCount(conv.id)
 
       // Increment system-initiated counter (re-engagement follows are system-initiated)
-      await supabase.from('leads')
-        .update({ outbound_initiated_today: (lead.outbound_initiated_today || 0) + 1 })
-        .eq('id', lead.id)
+      // Atomic via bump_outbound_initiated RPC — avoids read-modify-write race.
+      await supabase.rpc('bump_outbound_initiated', { p_lead_id: lead.id })
 
       const newFollowupCount = (conv.followup_count || 0) + 1
       const newStage = targetStage === 'stage4' ? 'completed' : targetStage
@@ -500,6 +500,7 @@ const processQuickFollowups = async () => {
           const result = await sendSMS(job.phone, job.message, job.fromNumber)
           if (!result.success) throw new Error(result.error || 'sendSMS failed')
           job._twilioSid = result.sid
+          job._segments = result.segments || 1
         },
 
         onSuccess: async (job) => {
@@ -521,11 +522,16 @@ const processQuickFollowups = async () => {
             body: job.message,
             sent_at: sentAt,
             twilio_sid: job._twilioSid,
-            status: 'sent'
+            status: 'sent',
+            from_number: job.fromNumber
           })
           await bumpMessageCount(conversation.id)
 
-          const leadUpdates = { updated_at: sentAt, outbound_initiated_today: (lead.outbound_initiated_today || 0) + 1 }
+          // Atomic counter bump via RPC — must not be combined with the leadUpdates
+          // UPDATE below because the UPDATE would overwrite the atomic increment.
+          await supabase.rpc('bump_outbound_initiated', { p_lead_id: job.leadId })
+
+          const leadUpdates = { updated_at: sentAt }
           if (canUpgrade(lead.status, 'contacted')) leadUpdates.status = 'contacted'
           if (job.stepToSend === 1 && !lead.first_message_sent) {
             leadUpdates.first_message_sent = true
@@ -563,7 +569,7 @@ const processQuickFollowups = async () => {
 
           await supabase.from('campaign_leads').update(stepUpdates).eq('id', job.enrollmentId)
           console.log(`[quickFollowups] Step ${job.stepToSend} sent to lead ${job.leadId}`)
-          if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, null).catch(err => console.error('[credits] SMS deduction failed:', err.message))
+          if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, job._twilioSid, job._segments || 1).catch(err => console.error('[credits] SMS deduction failed:', err.message))
         },
 
         onFailure: async (job, err) => {
@@ -805,6 +811,7 @@ const processScheduledMessages = async () => {
           const result = await sendSMS(job.phone, job.message, job.fromNumber)
           if (!result.success) throw new Error(result.error || 'sendSMS failed')
           job._twilioSid = result.sid
+          job._segments = result.segments || 1
         },
 
         onSuccess: async (job) => {
@@ -827,7 +834,8 @@ const processScheduledMessages = async () => {
             body: job.message,
             sent_at: sentAt,
             twilio_sid: job._twilioSid,
-            status: 'sent'
+            status: 'sent',
+            from_number: job.fromNumber
           })
           await bumpMessageCount(conversation.id)
 
@@ -837,8 +845,10 @@ const processScheduledMessages = async () => {
             leadUpdates.first_message_sent = true
             leadUpdates.first_message_sent_at = sentAt
           }
-          leadUpdates.outbound_initiated_today = (enrollment.leads.outbound_initiated_today || 0) + 1
           await supabase.from('leads').update(leadUpdates).eq('id', job.leadId)
+          // Atomic counter bump via RPC — separate call so the UPDATE above
+          // cannot overwrite the increment.
+          await supabase.rpc('bump_outbound_initiated', { p_lead_id: job.leadId })
 
           const nextStep = job.currentStep + 1
           const isLastStep = nextStep >= messages.length
@@ -864,7 +874,7 @@ const processScheduledMessages = async () => {
           }
           messagesSent++
           console.log('[scheduler] Day-based send queued successfully for lead', job.leadId)
-          if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, null).catch(err => console.error('[credits] SMS deduction failed:', err.message))
+          if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, job._twilioSid, job._segments || 1).catch(err => console.error('[credits] SMS deduction failed:', err.message))
         },
 
         onFailure: async (job, err) => {
@@ -962,6 +972,8 @@ const processScheduledMessages = async () => {
           sendFn: async (job) => {
             const result = await sendSMS(job.phone, job.message, job.fromNumber)
             if (!result.success) throw new Error(result.error || 'sendSMS failed')
+            job._twilioSid = result.sid
+            job._segments = result.segments || 1
           },
 
           onSuccess: async (job) => {
@@ -970,10 +982,11 @@ const processScheduledMessages = async () => {
             await supabase.from('scheduled_messages').update({ status: 'sent', sent_at: sentAt }).eq('id', job.scheduledMessageId)
             const smLeadUpdates = { updated_at: sentAt }
             if (canUpgrade(smSnapshot.leads.status, 'contacted')) smLeadUpdates.status = 'contacted'
-            if (!smIsAiQueued) {
-              smLeadUpdates.outbound_initiated_today = (smSnapshot.leads.outbound_initiated_today || 0) + 1
-            }
             await supabase.from('leads').update(smLeadUpdates).eq('id', job.leadId)
+            // Atomic counter bump — only for system-initiated sends, not AI conversational replies
+            if (!smIsAiQueued) {
+              await supabase.rpc('bump_outbound_initiated', { p_lead_id: job.leadId })
+            }
             if (job.conversationId) {
               await supabase.from('messages').insert({
                 conversation_id: job.conversationId,
@@ -981,12 +994,13 @@ const processScheduledMessages = async () => {
                 direction: 'outbound',
                 body: job.message,
                 sent_at: sentAt,
-                status: 'sent'
+                status: 'sent',
+                from_number: job.fromNumber
               })
               await bumpMessageCount(job.conversationId)
               await supabase.from('conversations').update({ updated_at: sentAt }).eq('id', job.conversationId)
             }
-            if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, null).catch(err => console.error('[credits] SMS deduction failed:', err.message))
+            if (job.userId) deductSmsCredit(job.userId, job.fromNumber, job.phone, job._twilioSid, job._segments || 1).catch(err => console.error('[credits] SMS deduction failed:', err.message))
           },
 
           onFailure: async (job, err) => {
@@ -1440,7 +1454,8 @@ const processDrips = async () => {
                 sent_at: new Date().toISOString(),
                 twilio_sid: smsResult.sid,
                 status: 'sent',
-                is_ai: false
+                is_ai: false,
+                from_number: fromNumber
               })
               await bumpMessageCount(conversation.id)
             }

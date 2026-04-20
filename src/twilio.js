@@ -71,7 +71,17 @@ const sendSMS = async (to, body, fromNumber) => {
     // Increment sent_today counter for this number
     incrementSentToday(from).catch(() => {})
 
-    return { success: true, sid: message.sid }
+    return {
+      success: true,
+      sid: message.sid,
+      // Twilio's numSegments is the billable segment count (160 chars GSM-7,
+      // 70 chars UCS-2). Used by deductSmsCredit so multi-segment messages
+      // are billed correctly.
+      segments: parseInt(message.numSegments || '1', 10),
+      // price is in Twilio's billing currency (may not be USD) — informational
+      // only, used for periodic reconciliation, not for billing the user.
+      price: message.price ? parseFloat(message.price) : null
+    }
   } catch (err) {
     console.error(`SMS failed to ${to}:`, err.message)
     return { success: false, error: err.message }

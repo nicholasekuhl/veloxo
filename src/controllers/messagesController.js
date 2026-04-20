@@ -248,7 +248,8 @@ const sendInitialOutreach = async (req, res) => {
       body: messageBody,
       sent_at: sentAt,
       twilio_sid: result.sid,
-      status: 'sent'
+      status: 'sent',
+      from_number: fromNumber
     })
     await bumpMessageCount(conversation.id)
 
@@ -412,7 +413,8 @@ const executeHandoff = async (lead, conversation, handoff, fromNumber) => {
           sent_at: new Date().toISOString(),
           is_ai: true,
           twilio_sid: result.sid,
-          status: 'sent'
+          status: 'sent',
+          from_number: fromNumber
         })
         await bumpMessageCount(conversation.id)
       }
@@ -514,7 +516,8 @@ const processInboundMessage = async (body) => {
           user_id: userId,
           direction: 'inbound',
           body: Body,
-          sent_at: new Date().toISOString()
+          sent_at: new Date().toISOString(),
+          from_number: toNumber
         })
         await bumpMessageCount(blockedConv.id)
         await supabase.from('conversations').update({ updated_at: new Date().toISOString() }).eq('id', blockedConv.id)
@@ -565,7 +568,8 @@ const processInboundMessage = async (body) => {
       user_id: userId,
       direction: 'inbound',
       body: Body,
-      sent_at: new Date().toISOString()
+      sent_at: new Date().toISOString(),
+      from_number: toNumber
     })
     await bumpMessageCount(conversation.id)
 
@@ -582,8 +586,13 @@ const processInboundMessage = async (body) => {
       .eq('id', conversation.id)
     conversation = { ...conversation, followup_count: 0, followup_stage: 'none', engagement_status: 'active' }
 
-    // Auto-extract structured data from inbound message
-    autoExtractLeadData(lead, Body)
+    // Auto-extract structured data from inbound message — awaited so the
+    // UPDATE it issues on `leads` finishes before the status-upgrade UPDATE
+    // below races it. Blocks the handler ~100-300ms but the Twilio webhook
+    // has already responded, so carrier-side timing is unaffected.
+    await autoExtractLeadData(lead, Body)
+    const { data: updatedLead } = await supabase.from('leads').select('*').eq('id', lead.id).single()
+    if (updatedLead) lead = updatedLead
 
     // Upgrade lead status to 'replied' if new or contacted
     const STATUS_PRIORITY = { new: 0, contacted: 1, replied: 2, booked: 3, sold: 4 }
@@ -790,7 +799,8 @@ const processPendingAi = async (convId) => {
     const now = new Date().toISOString()
     await supabase.from('messages').insert({
       conversation_id: convId, user_id: userId, direction: 'outbound',
-      body: aiBody, sent_at: now, is_ai: true, twilio_sid: result.sid, status: 'sent'
+      body: aiBody, sent_at: now, is_ai: true, twilio_sid: result.sid, status: 'sent',
+      from_number: fromNumber
     })
     await bumpMessageCount(convId)
     if (!lead.first_message_sent) {
@@ -811,7 +821,8 @@ const processPendingAi = async (convId) => {
       await supabase.from('messages').insert({
         conversation_id: convId, user_id: userId, direction: 'system',
         body: 'AI paused — waiting for agent to provide quote range',
-        sent_at: new Date().toISOString(), is_ai: true, status: 'sent'
+        sent_at: new Date().toISOString(), is_ai: true, status: 'sent',
+        from_number: null
       })
       await bumpMessageCount(convId)
     }
@@ -932,7 +943,8 @@ const sendManualMessage = async (req, res) => {
       sent_at: new Date().toISOString(),
       is_ai: false,
       twilio_sid: result.sid,
-      status: 'sent'
+      status: 'sent',
+      from_number: fromNumber
     })
     await bumpMessageCount(conversation_id)
 
@@ -1135,7 +1147,8 @@ const bookAppointment = async (lead, conversationId, appointmentData, profile, f
           sent_at: new Date().toISOString(),
           is_ai: true,
           twilio_sid: confirmResult.sid,
-          status: 'sent'
+          status: 'sent',
+          from_number: fromNumber
         })
         await bumpMessageCount(conversationId)
       }
@@ -1422,7 +1435,8 @@ const sendQuote = async (req, res) => {
             sent_at: new Date().toISOString(),
             is_ai: true,
             twilio_sid: result.sid,
-            status: 'sent'
+            status: 'sent',
+            from_number: fromNumber
           })
           await bumpMessageCount(conversation_id)
           await supabase.from('conversations')
@@ -1444,7 +1458,8 @@ const sendQuote = async (req, res) => {
           sent_at: new Date().toISOString(),
           is_ai: false,
           twilio_sid: result.sid,
-          status: 'sent'
+          status: 'sent',
+          from_number: fromNumber
         })
         await bumpMessageCount(conversation_id)
         await supabase.from('conversations')
@@ -1483,41 +1498,40 @@ const handleStatusCallback = async (req, res) => {
 
     await supabase.from('messages').update(update).eq('twilio_sid', MessageSid)
 
-    // Carrier violation tracking
+    // Carrier violation tracking — rate is scoped to the specific from-number
+    // that incurred the violation, computed as (failed with error / total sent)
+    // over the last 30 days. The from-number comes from Twilio's `From` field
+    // on the status callback, which is the sending number.
     if (ErrorCode && VIOLATION_CODES.has(String(ErrorCode))) {
       const fromNumber = From || req.body.from
       if (fromNumber) {
         const { data: pn } = await supabase
           .from('phone_numbers')
-          .select('id, violation_count, daily_limit, status')
+          .select('id, violation_count')
           .eq('phone_number', fromNumber)
           .single()
 
         if (pn) {
-          // Count violations in last 100 messages for this number
-          const { count: totalSent } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('twilio_sid', MessageSid) // placeholder — use from number join in practice
-
-          const newCount = (pn.violation_count || 0) + 1
-
-          // Fetch recent 100 sends to compute rate
-          const { count: recentViolations } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('status', 'failed')
-            .not('error_code', 'is', null)
-            .gte('sent_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-
-          const violationRate = Math.min(((recentViolations || 0) / 100) * 100, 100)
-
-          const statusUpdate = {
-            violation_count: newCount,
-            violation_rate: violationRate
-          }
-
-          await supabase.from('phone_numbers').update(statusUpdate).eq('id', pn.id)
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          const [{ count: recentSent }, { count: recentViolations }] = await Promise.all([
+            supabase.from('messages').select('id', { count: 'exact', head: true })
+              .eq('from_number', fromNumber)
+              .gte('sent_at', thirtyDaysAgo),
+            supabase.from('messages').select('id', { count: 'exact', head: true })
+              .eq('from_number', fromNumber)
+              .eq('status', 'failed')
+              .not('error_code', 'is', null)
+              .gte('sent_at', thirtyDaysAgo)
+          ])
+          const violationRate = recentSent > 0
+            ? Math.min(((recentViolations || 0) / recentSent) * 100, 100)
+            : 0
+          await supabase.from('phone_numbers')
+            .update({
+              violation_count: (pn.violation_count || 0) + 1,
+              violation_rate: violationRate
+            })
+            .eq('id', pn.id)
         }
       }
     }
