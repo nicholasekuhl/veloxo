@@ -124,7 +124,7 @@ const sendSMS = async (to, body, fromNumber, options = {}) => {
     }
 
     if (!skipBilling && userId && postDeductBalance != null) {
-      checkLowBalanceWarning(userId, postDeductBalance).then(shouldWarn => {
+      checkLowBalanceWarning(userId, 'sms').then(shouldWarn => {
         if (shouldWarn) {
           const { createNotification } = require('./notifications')
           createNotification(

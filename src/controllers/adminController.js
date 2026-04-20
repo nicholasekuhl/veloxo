@@ -200,13 +200,18 @@ const getStats = async (req, res) => {
 const addUserCredits = async (req, res) => {
   try {
     const { id } = req.params
-    const { amount, description } = req.body
+    const { amount, description, credit_type } = req.body
 
     const parsed = parseFloat(amount)
     if (!parsed || parsed <= 0) return res.status(400).json({ error: 'Amount must be a positive number' })
 
-    const newBalance = await addCredits(id, parsed, description || `Admin top-up by ${req.user.id}`)
-    res.json({ success: true, new_balance: newBalance })
+    const creditType = credit_type || 'sms'
+    if (!['sms', 'ai', 'dnc'].includes(creditType)) {
+      return res.status(400).json({ error: 'Invalid credit_type. Must be sms, ai, or dnc.' })
+    }
+
+    const newBalance = await addCredits(id, parsed, creditType, description || `Admin top-up by ${req.user.id}`)
+    res.json({ success: true, credit_type: creditType, new_balance: newBalance })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

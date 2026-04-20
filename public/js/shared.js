@@ -157,36 +157,43 @@ const loadProfile = async () => {
     const priorityAp = document.getElementById('priority-autopilot-enabled')
     if (priorityAp) priorityAp.checked = p.priority_autopilot === true
     if (typeof loadChecklist === 'function') loadChecklist(p)
-    // Populate sidebar credits
-    const formatCredits = (n) => {
-      if (n === undefined || n === null) return '—'
-      const num = parseFloat(n)
-      if (isNaN(num)) return '—'
-      if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
-      return Math.floor(num).toString()
-    }
-    const smsEl = document.getElementById('sidebar-sms-credits')
-    const aiEl = document.getElementById('sidebar-ai-credits')
-    const dncEl = document.getElementById('sidebar-dnc-credits')
-    if (smsEl) {
-      smsEl.textContent = formatCredits(p.sms_credits)
-      smsEl.classList.remove('low', 'critical')
-      if (parseFloat(p.sms_credits) < 100) smsEl.classList.add('low')
-      if (parseFloat(p.sms_credits) < 25) smsEl.classList.add('critical')
-    }
-    if (aiEl) {
-      aiEl.textContent = formatCredits(p.ai_credits)
-      aiEl.classList.remove('low', 'critical')
-      if (parseFloat(p.ai_credits) < 50) aiEl.classList.add('low')
-      if (parseFloat(p.ai_credits) < 10) aiEl.classList.add('critical')
-    }
-    if (dncEl) {
-      dncEl.textContent = formatCredits(p.dnc_credits)
-      dncEl.classList.remove('low', 'critical')
-      if (parseFloat(p.dnc_credits) < 50) dncEl.classList.add('low')
-      if (parseFloat(p.dnc_credits) < 10) dncEl.classList.add('critical')
-    }
+    renderCreditBalances()
   } catch (err) { console.error('Profile load error:', err) }
+}
+
+const formatCredits = (n) => {
+  if (n === undefined || n === null) return '—'
+  const num = parseFloat(n)
+  if (isNaN(num)) return '—'
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
+  return Math.floor(num).toString()
+}
+
+const renderCreditBalances = async () => {
+  try {
+    const [balRes, thresRes] = await Promise.all([
+      fetch('/api/credits/balance'),
+      fetch('/api/credits/thresholds')
+    ])
+    if (!balRes.ok || !thresRes.ok) return
+    const bal = await balRes.json()
+    const thres = await thresRes.json()
+
+    const applyBadge = (el, value, threshold) => {
+      if (!el) return
+      el.textContent = formatCredits(value)
+      el.classList.remove('low', 'critical')
+      const t = parseFloat(threshold) || 0
+      if (t > 0 && value < t) el.classList.add('low')
+      if (t > 0 && value < t * 0.25) el.classList.add('critical')
+    }
+
+    applyBadge(document.getElementById('sidebar-sms-credits'), bal.sms, thres.sms)
+    applyBadge(document.getElementById('sidebar-ai-credits'),  bal.ai,  thres.ai)
+    applyBadge(document.getElementById('sidebar-dnc-credits'), bal.dnc, thres.dnc)
+  } catch (err) {
+    console.error('[credits] renderCreditBalances failed:', err)
+  }
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────

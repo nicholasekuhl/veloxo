@@ -567,7 +567,13 @@ async function unsuspendUser(id) {
 }
 
 async function topUpCredits(userId, label) {
-  const input = prompt(`Add credits to ${label}\n\nEnter amount in USD (e.g. 10.00):`)
+  const typeInput = prompt(`Add credits to ${label}\n\nWhich credit type? Enter: sms, ai, or dnc`, 'sms')
+  if (!typeInput) return
+  const creditType = typeInput.trim().toLowerCase()
+  if (!['sms', 'ai', 'dnc'].includes(creditType)) {
+    return alert('Invalid credit type. Must be sms, ai, or dnc.')
+  }
+  const input = prompt(`Add ${creditType.toUpperCase()} credits to ${label}\n\nEnter amount in USD (e.g. 10.00):`)
   if (!input) return
   const amount = parseFloat(input)
   if (!amount || amount <= 0) return alert('Enter a valid positive amount.')
@@ -576,11 +582,11 @@ async function topUpCredits(userId, label) {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount, description: note || undefined })
+    body: JSON.stringify({ amount, credit_type: creditType, description: note || undefined })
   })
   const data = await res.json()
   if (!res.ok) return alert('Error: ' + (data.error || 'Unknown error'))
-  alert(`Credits added. New balance: $${data.new_balance.toFixed(2)}`)
+  alert(`${data.credit_type?.toUpperCase() || creditType.toUpperCase()} credits added. New balance: $${parseFloat(data.new_balance).toFixed(2)}`)
   loadUsers()
 }
 

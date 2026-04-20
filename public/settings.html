@@ -1130,7 +1130,7 @@
             <div class="credit-progress-label" id="sms-progress-label" style="display:none;"></div>
           </div>
           <div class="credit-card">
-            <div class="credit-card-label">AI Credits</div>
+            <div class="credit-card-label">AI Reply Credits</div>
             <div class="credit-card-value" id="billing-ai-credits">—</div>
             <div class="credit-card-desc">Used when AI autopilot responds to leads</div>
             <div class="credit-progress" id="ai-progress-wrap" style="display:none;"><div class="credit-progress-bar" id="ai-progress-bar" style="width:0%"></div></div>
@@ -1144,6 +1144,25 @@
             <div class="credit-progress-label" id="dnc-progress-label" style="display:none;"></div>
           </div>
         </div>
+
+        <!-- Low-Balance Alert Thresholds -->
+        <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">Low-Balance Alerts</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Get notified when any balance drops below these amounts.</div>
+        <div class="billing-grid" style="margin-bottom:12px;">
+          <div class="credit-card">
+            <div class="credit-card-label">SMS Threshold</div>
+            <input type="number" id="threshold-sms" class="input" style="margin-top:8px;" min="0" step="1" placeholder="100">
+          </div>
+          <div class="credit-card">
+            <div class="credit-card-label">AI Reply Threshold</div>
+            <input type="number" id="threshold-ai" class="input" style="margin-top:8px;" min="0" step="1" placeholder="50">
+          </div>
+          <div class="credit-card">
+            <div class="credit-card-label">DNC Threshold</div>
+            <input type="number" id="threshold-dnc" class="input" style="margin-top:8px;" min="0" step="1" placeholder="50">
+          </div>
+        </div>
+        <button class="btn-secondary" style="width:auto;margin-bottom:24px;" onclick="saveThresholds()">Save Thresholds</button>
 
         <!-- Purchase Credits -->
         <div style="font-size:15px;font-weight:600;color:var(--text-secondary);margin-bottom:4px;">Purchase Credits</div>
@@ -1173,7 +1192,7 @@
         </div>
 
         <div class="packages-section">
-          <h3>AI Credits</h3>
+          <h3>AI Reply Credits</h3>
           <div class="packages-row" id="ai-packages">
             <div class="pkg-card" onclick="selectPkg(this, 'ai', 200)">
               <div class="pkg-credits">200</div>
@@ -1192,7 +1211,7 @@
               <div class="pkg-rate">$0.010 / credit</div>
             </div>
           </div>
-          <button class="btn-primary" style="width:auto;" onclick="purchaseCredits('ai')">Purchase AI Credits</button>
+          <button class="btn-primary" style="width:auto;" onclick="purchaseCredits('ai')">Purchase AI Reply Credits</button>
         </div>
 
         <div class="packages-section">
@@ -2736,10 +2755,15 @@
 
   const loadBillingData = async () => {
     try {
-      const res = await fetch('/auth/me')
-      if (!res.ok) return
-      const data = await res.json()
-      const p = data.user
+      const [meRes, balRes, thresRes] = await Promise.all([
+        fetch('/auth/me'),
+        fetch('/api/credits/balance'),
+        fetch('/api/credits/thresholds')
+      ])
+      if (!meRes.ok || !balRes.ok) return
+      const { user: p } = await meRes.json()
+      const bal = await balRes.json()
+      const thres = thresRes.ok ? await thresRes.json() : { sms: 100, ai: 50, dnc: 50 }
 
       // Plan
       const planName = p.plan || 'Trial'
@@ -2748,12 +2772,12 @@
       document.getElementById('plan-status-text').textContent = isActive ? 'Active' : 'Inactive'
       document.getElementById('plan-dot').style.background = isActive ? '#34d399' : '#f87171'
 
-      // Credit balances
-      document.getElementById('billing-sms-credits').textContent = formatNum(p.sms_credits)
-      document.getElementById('billing-ai-credits').textContent = formatNum(p.ai_credits)
-      document.getElementById('billing-dnc-credits').textContent = formatNum(p.dnc_credits)
+      // Credit balances (per-type from /api/credits/balance)
+      document.getElementById('billing-sms-credits').textContent = formatNum(bal.sms)
+      document.getElementById('billing-ai-credits').textContent = formatNum(bal.ai)
+      document.getElementById('billing-dnc-credits').textContent = formatNum(bal.dnc)
 
-      // Progress bars
+      // Progress bars: compare balance against monthly limit on user_profiles
       const showProgress = (type, credits, limit) => {
         const lim = parseFloat(limit)
         if (!lim || lim <= 0) return
@@ -2765,10 +2789,41 @@
         if (wrap) { wrap.style.display = 'block'; bar.style.width = pct + '%' }
         if (label) { label.style.display = 'block'; label.textContent = `${Math.floor(used)} / ${Math.floor(lim)} used this month` }
       }
-      showProgress('sms', p.sms_credits, p.monthly_sms_limit)
-      showProgress('ai', p.ai_credits, p.monthly_ai_limit)
-      showProgress('dnc', p.dnc_credits, p.monthly_dnc_limit)
+      showProgress('sms', bal.sms, p.monthly_sms_limit)
+      showProgress('ai',  bal.ai,  p.monthly_ai_limit)
+      showProgress('dnc', bal.dnc, p.monthly_dnc_limit)
+
+      // Threshold inputs
+      const smsT = document.getElementById('threshold-sms')
+      const aiT  = document.getElementById('threshold-ai')
+      const dncT = document.getElementById('threshold-dnc')
+      if (smsT) smsT.value = thres.sms
+      if (aiT)  aiT.value  = thres.ai
+      if (dncT) dncT.value = thres.dnc
     } catch (err) { console.error('Billing data load error:', err) }
+  }
+
+  const saveThresholds = async () => {
+    try {
+      const body = {
+        sms: parseFloat(document.getElementById('threshold-sms').value),
+        ai:  parseFloat(document.getElementById('threshold-ai').value),
+        dnc: parseFloat(document.getElementById('threshold-dnc').value)
+      }
+      const res = await fetch('/api/credits/thresholds', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      if (res.ok) {
+        if (typeof toast === 'function') toast('Thresholds saved', 'success')
+      } else {
+        if (typeof toast === 'function') toast('Failed to save thresholds', 'error')
+      }
+    } catch (err) {
+      console.error('Threshold save error:', err)
+      if (typeof toast === 'function') toast('Failed to save thresholds', 'error')
+    }
   }
 
   const loadTransactionHistory = async () => {
@@ -2785,9 +2840,11 @@
         const date = new Date(t.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         const amt = parseFloat(t.amount)
         const isPositive = amt > 0
+        const label = t.notes || t.transaction_type || '—'
+        const typeBadge = t.credit_type ? ` <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">[${t.credit_type}]</span>` : ''
         return `<tr>
           <td>${date}</td>
-          <td>${t.type || t.description || '—'}</td>
+          <td>${label}${typeBadge}</td>
           <td class="${isPositive ? 'credit-positive' : 'credit-negative'}">${isPositive ? '+' : ''}${amt}</td>
           <td>${t.balance_after !== null ? parseFloat(t.balance_after).toLocaleString() : '—'}</td>
         </tr>`
