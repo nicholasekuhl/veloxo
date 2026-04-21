@@ -1,4 +1,5 @@
 const supabase = require('../db')
+const { pushAppointment, deleteAppointmentEvent } = require('../services/googleCalendar')
 
 const getAppointments = async (req, res) => {
   try {
@@ -85,6 +86,12 @@ const createAppointment = async (req, res) => {
     }
 
     res.json({ success: true, appointment: data })
+
+    // Fire-and-forget push to Google Calendar
+    if (data?.id) {
+      pushAppointment(req.user.id, data.id).catch(err =>
+        console.error('[google push] create failed:', err.message))
+    }
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -109,6 +116,12 @@ const updateAppointment = async (req, res) => {
       .single()
     if (error) throw error
     res.json({ success: true, appointment: data })
+
+    // Fire-and-forget push to Google Calendar
+    if (data?.id) {
+      pushAppointment(req.user.id, data.id).catch(err =>
+        console.error('[google push] update failed:', err.message))
+    }
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -116,6 +129,14 @@ const updateAppointment = async (req, res) => {
 
 const deleteAppointment = async (req, res) => {
   try {
+    // Fetch first so we still have google_event_id for the Google-side delete
+    const { data: appt } = await supabase
+      .from('appointments')
+      .select('id, google_event_id')
+      .eq('id', req.params.id)
+      .eq('user_id', req.user.id)
+      .maybeSingle()
+
     const { error } = await supabase
       .from('appointments')
       .delete()
@@ -123,6 +144,12 @@ const deleteAppointment = async (req, res) => {
       .eq('user_id', req.user.id)
     if (error) throw error
     res.json({ success: true })
+
+    // Fire-and-forget Google delete
+    if (appt?.google_event_id) {
+      deleteAppointmentEvent(req.user.id, appt).catch(err =>
+        console.error('[google push] delete failed:', err.message))
+    }
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

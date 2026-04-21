@@ -1253,6 +1253,60 @@
 
       <!-- INTEGRATIONS PANEL -->
       <div class="settings-panel" id="panel-integrations">
+        <!-- Google Calendar Integration -->
+        <div class="settings-card" id="google-integration-card">
+          <h2>Google Calendar</h2>
+          <p id="google-status-subtitle">Connect your Google Calendar to sync appointments and see your personal events alongside your Veloxo calendar.</p>
+
+          <div id="google-disconnected-view">
+            <button class="btn-primary" onclick="connectGoogle()" style="width:auto;display:inline-flex;align-items:center;">
+              <svg width="16" height="16" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:8px;" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Connect Google Calendar
+            </button>
+          </div>
+
+          <div id="google-connected-view" style="display:none;">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;margin-bottom:14px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:rgba(52,211,153,0.15);display:flex;align-items:center;justify-content:center;color:#34d399;font-weight:700;">✓</div>
+              <div style="flex:1;">
+                <div style="font-weight:600;color:var(--text-primary);font-size:13.5px;">Connected</div>
+                <div style="font-size:12.5px;color:var(--text-muted);" id="google-email-label"></div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 0;">
+                <input type="checkbox" id="google-push-toggle" onchange="updateGoogleSetting('push_enabled', this.checked)" style="margin-top:3px;">
+                <span>
+                  <div style="font-weight:500;color:var(--text-primary);font-size:13.5px;">Push appointments to Google</div>
+                  <div style="font-size:12px;color:var(--text-muted);">New, updated, and cancelled appointments sync to your Google Calendar.</div>
+                </span>
+              </label>
+
+              <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:8px 0;">
+                <input type="checkbox" id="google-pull-toggle" onchange="updateGoogleSetting('pull_enabled', this.checked)" style="margin-top:3px;">
+                <span>
+                  <div style="font-weight:500;color:var(--text-primary);font-size:13.5px;">Show Google events on Veloxo calendar</div>
+                  <div style="font-size:12px;color:var(--text-muted);">Your personal Google events appear as faded pills on the Veloxo calendar view.</div>
+                </span>
+              </label>
+            </div>
+
+            <div id="google-error-banner" style="display:none;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:#f87171;"></div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn-ghost" onclick="syncGoogleNow()">Sync now</button>
+              <button onclick="disconnectGoogle()" style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);cursor:pointer;">Disconnect</button>
+            </div>
+            <div id="google-last-sync" style="font-size:11.5px;color:var(--text-muted);margin-top:10px;"></div>
+          </div>
+        </div>
+
         <!-- Inbound Webhook -->
         <div class="settings-card">
           <h2>Inbound Webhook URL</h2>
@@ -2918,6 +2972,74 @@
 
   // ─── INIT ─────────────────────────────────────────────────────────────────────
 
+  const loadGoogleStatus = async () => {
+    try {
+      const res = await fetch('/api/google/status')
+      const data = await res.json()
+      if (data.connected) {
+        document.getElementById('google-disconnected-view').style.display = 'none'
+        document.getElementById('google-connected-view').style.display = 'block'
+        document.getElementById('google-email-label').textContent = data.google_email || ''
+        document.getElementById('google-push-toggle').checked = !!data.push_enabled
+        document.getElementById('google-pull-toggle').checked = !!data.pull_enabled
+        const err = data.last_pull_error || data.last_push_error
+        const banner = document.getElementById('google-error-banner')
+        if (err) { banner.textContent = err; banner.style.display = 'block' }
+        else banner.style.display = 'none'
+        if (data.last_pull_at) {
+          const when = new Date(data.last_pull_at).toLocaleString()
+          document.getElementById('google-last-sync').textContent = `Last synced: ${when}`
+        }
+      } else {
+        document.getElementById('google-disconnected-view').style.display = 'block'
+        document.getElementById('google-connected-view').style.display = 'none'
+      }
+    } catch (err) {
+      console.error('Failed to load Google status:', err)
+    }
+  }
+
+  const connectGoogle = () => { window.location.href = '/api/google/connect' }
+
+  const disconnectGoogle = async () => {
+    if (typeof confirmModal === 'function') {
+      if (!await confirmModal('Disconnect Google Calendar?', 'Veloxo will stop syncing appointments to Google and will stop pulling your Google events. You can reconnect any time.', 'Disconnect', true)) return
+    } else if (!confirm('Disconnect Google Calendar?')) { return }
+    const res = await fetch('/api/google/disconnect', { method: 'POST' })
+    const data = await res.json()
+    if (data.success) { toast.success('Disconnected', 'Google Calendar unlinked'); await loadGoogleStatus() }
+    else toast.error('Error', data.error || 'Failed to disconnect')
+  }
+
+  const updateGoogleSetting = async (key, value) => {
+    const res = await fetch('/api/google/settings', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [key]: value })
+    })
+    const data = await res.json()
+    if (!data.success) toast.error('Error', data.error || 'Failed to update setting')
+  }
+
+  const syncGoogleNow = async () => {
+    toast.info('Syncing', 'Fetching your Google Calendar events')
+    const res = await fetch('/api/google/sync-now', { method: 'POST' })
+    const data = await res.json()
+    if (data.success) { toast.success('Synced', `${data.updated || 0} events updated`); await loadGoogleStatus() }
+    else toast.error('Sync failed', data.error || 'Try again in a minute')
+  }
+
+  const handleGoogleOAuthResult = () => {
+    const params = new URLSearchParams(window.location.search)
+    const googleStatus = params.get('google')
+    if (!googleStatus) return
+    if (googleStatus === 'connected') toast.success('Connected', 'Google Calendar is now linked')
+    else if (googleStatus === 'denied') toast.error('Cancelled', 'You denied access to Google Calendar')
+    else if (googleStatus === 'error') toast.error('Connection failed', params.get('reason') || 'Unknown error')
+    params.delete('google'); params.delete('reason')
+    const qs = params.toString()
+    window.history.replaceState({}, '', window.location.pathname + (qs ? '?' + qs : ''))
+  }
+
   const init = async () => {
     const authed = await checkAuth()
     if (!authed) return
@@ -2930,7 +3052,8 @@
       allBuckets = bucketsData.buckets || []
     } catch (e) {}
 
-    await Promise.all([loadDispositionTags(), loadTemplates(), loadProfile()])
+    await Promise.all([loadDispositionTags(), loadTemplates(), loadProfile(), loadGoogleStatus()])
+    handleGoogleOAuthResult()
     renderCompliancePage(currentUser)
     loadCalBadge()
     loadNotifBadge()

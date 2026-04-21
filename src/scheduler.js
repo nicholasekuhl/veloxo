@@ -5,6 +5,8 @@ const { smsQueue } = require('./smsQueue')
 const nodemailer = require('nodemailer')
 const { isValidTimezone, isWithinQuietHours, checkSystemInitiatedLimit, getNextSendWindow } = require('./compliance')
 const { bumpMessageCount } = require('./utils/messageCount')
+const { pullExternalEvents } = require('./services/googleCalendar')
+const { getAuthenticatedClient } = require('./services/googleAuth')
 
 const HEALTH_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
 const HEALTH_ALERT_THRESHOLD_MS = 5 * 60 * 1000
@@ -1612,6 +1614,66 @@ const processPendingAiResponses = async () => {
   }
 }
 
+// Pull each connected user's Google Calendar events every 15 minutes so the
+// Veloxo calendar view shows personal events alongside Veloxo appointments.
+let isProcessingGooglePull = false
+const pullAllGoogleCalendars = async () => {
+  if (isProcessingGooglePull) {
+    console.log('[google pull] previous tick still running — skipping')
+    return
+  }
+  isProcessingGooglePull = true
+  try {
+    const { data: integrations } = await supabase
+      .from('google_integrations')
+      .select('user_id')
+      .eq('sync_enabled', true)
+      .eq('pull_enabled', true)
+    if (!integrations || integrations.length === 0) return
+
+    console.log(`[google pull] syncing ${integrations.length} user calendars`)
+    for (const row of integrations) {
+      try {
+        await pullExternalEvents(row.user_id)
+      } catch (err) {
+        console.error(`[google pull] user ${row.user_id}:`, err.message)
+      }
+    }
+  } catch (err) {
+    console.error('[google pull] batch failed:', err.message)
+  } finally {
+    isProcessingGooglePull = false
+  }
+}
+
+// Pre-refresh access tokens that expire within the next 30 minutes so they
+// don't expire mid-sync. getAuthenticatedClient does this lazily too, but
+// pre-refreshing keeps the actual sync paths fast.
+let isProcessingGoogleRefresh = false
+const refreshExpiringGoogleTokens = async () => {
+  if (isProcessingGoogleRefresh) return
+  isProcessingGoogleRefresh = true
+  try {
+    const soon = new Date(Date.now() + 30 * 60 * 1000).toISOString()
+    const { data: expiring } = await supabase
+      .from('google_integrations')
+      .select('user_id')
+      .eq('sync_enabled', true)
+      .lte('token_expires_at', soon)
+    if (!expiring || expiring.length === 0) return
+
+    console.log(`[google refresh] refreshing ${expiring.length} tokens`)
+    for (const row of expiring) {
+      await getAuthenticatedClient(row.user_id).catch(err =>
+        console.error(`[google refresh] user ${row.user_id}:`, err.message))
+    }
+  } catch (err) {
+    console.error('[google refresh] batch failed:', err.message)
+  } finally {
+    isProcessingGoogleRefresh = false
+  }
+}
+
 const startScheduler = () => {
   console.log('Campaign scheduler started — master Twilio account active')
   setInterval(guardedProcessScheduledMessages, 90000)   // every 90 seconds
@@ -1622,6 +1684,13 @@ const startScheduler = () => {
   setInterval(guardedProcessDrips, 300000)              // every 5 minutes
   setInterval(processPendingAiResponses, 15000)         // every 15 seconds — AI debounce worker
   console.log('[AI poller] Started — polling every 15 seconds')
+
+  setInterval(pullAllGoogleCalendars, 15 * 60 * 1000)      // every 15 minutes
+  setInterval(refreshExpiringGoogleTokens, 10 * 60 * 1000) // every 10 minutes
+
+  // Run once on startup so new deploys don't wait 15 min for first sync
+  pullAllGoogleCalendars().catch(() => {})
+  refreshExpiringGoogleTokens().catch(() => {})
 
   scheduleMidnightReset()
   scheduleDailyAt9am()

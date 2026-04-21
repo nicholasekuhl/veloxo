@@ -44,6 +44,8 @@ const apiLeadsRouter = require('./routes/apiLeads')
 const leadVendorsRouter = require('./routes/leadVendors')
 const dripsRouter = require('./routes/drips')
 const advisorRouter = require('./routes/advisor')
+const googleRouter = require('./routes/google')
+const { callback: googleCallback } = require('./controllers/googleController')
 const { smsQueue } = require('./smsQueue')
 
 if (!process.env.MAKE_WEBHOOK_SECRET) {
@@ -170,6 +172,12 @@ app.use('/tasks', authMiddleware, tasksRouter)
 app.use('/stats', authMiddleware, statsRouter)
 app.use('/phone-numbers', authMiddleware, phoneNumbersRouter)
 app.use('/appointments', authMiddleware, appointmentsRouter)
+
+// Google OAuth callback — NO authMiddleware. Google redirects the browser
+// here without a session cookie; user identity comes from the signed state param.
+app.get('/api/google/callback', googleCallback)
+app.use('/api/google', authMiddleware, googleRouter)
+
 app.use('/scheduled-messages', authMiddleware, scheduledMessagesRouter)
 app.use('/notifications', authMiddleware, notificationsRouter)
 app.use('/buckets', authMiddleware, bucketsRouter)

@@ -31,6 +31,7 @@
     .cal-dot-scheduled { background: #00c9a7; }
     .cal-dot-completed { background: #34d399; }
     .cal-dot-cancelled { background: #f87171; }
+    .cal-dot-external { background: #94a3b8; opacity: 0.6; }
     .appt-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; margin-bottom: 10px; }
     .appt-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .appt-name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
@@ -143,6 +144,7 @@
 <script src="/js/shared.js?v=1"></script>
 <script>
   let allAppointments = []
+  let allExternalEvents = []
   let allLeads = []
   let calYear = new Date().getFullYear()
   let calMonth = new Date().getMonth()
@@ -156,9 +158,18 @@
       ).join('')
     }
     try {
-      const res = await fetch('/appointments')
-      const data = await res.json()
+      const [apptRes, extRes] = await Promise.all([
+        fetch('/appointments'),
+        fetch('/api/google/external-events').catch(() => null)
+      ])
+      const data = await apptRes.json()
       allAppointments = data.appointments || []
+      if (extRes && extRes.ok) {
+        const extData = await extRes.json()
+        allExternalEvents = extData.events || []
+      } else {
+        allExternalEvents = []
+      }
       renderCalendar()
       renderTodayAppts()
       updateCalBadge()
@@ -220,6 +231,13 @@
       apptsByDate[d].push(a)
     })
 
+    const externalByDate = {}
+    allExternalEvents.forEach(e => {
+      const d = new Date(e.starts_at).toLocaleDateString('en-CA', { timeZone: tz })
+      if (!externalByDate[d]) externalByDate[d] = 0
+      externalByDate[d]++
+    })
+
     let cells = ''
     for (let i = 0; i < firstDay; i++) {
       const d = daysInPrev - firstDay + i + 1
@@ -231,9 +249,12 @@
       const isSelected = dateStr === selectedCalDate
       const dayAppts = apptsByDate[dateStr] || []
       const dots = dayAppts.slice(0, 3).map(a => `<div class="cal-dot cal-dot-${a.status}" title="${a.lead_name}"></div>`).join('')
+      const extCount = externalByDate[dateStr] || 0
+      const extDot = extCount > 0 ? `<div class="cal-dot cal-dot-external" title="${extCount} Google event${extCount > 1 ? 's' : ''}"></div>` : ''
       cells += `<div class="cal-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" onclick="selectCalDate('${dateStr}')">
         <div class="cal-date">${d}</div>
         ${dots}
+        ${extDot}
       </div>`
     }
     const remaining = 42 - firstDay - daysInMonth
@@ -250,11 +271,29 @@
     const dayAppts = allAppointments.filter(a => {
       return new Date(a.scheduled_at).toLocaleDateString('en-CA', { timeZone: tz }) === dateStr
     })
+    const dayExternal = allExternalEvents.filter(e => {
+      return new Date(e.starts_at).toLocaleDateString('en-CA', { timeZone: tz }) === dateStr
+    })
     const label = new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
     document.getElementById('day-view-label').textContent = label
     const container = document.getElementById('day-appts')
-    if (!dayAppts.length) { container.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No appointments this day</div>`; return }
-    container.innerHTML = dayAppts.map(a => renderApptCard(a)).join('')
+    if (!dayAppts.length && !dayExternal.length) { container.innerHTML = `<div style="color:#9ca3af;font-size:13px;padding:12px 0;">No appointments this day</div>`; return }
+
+    let html = dayAppts.map(a => renderApptCard(a)).join('')
+    if (dayExternal.length) {
+      html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">From Google Calendar</div>'
+      html += dayExternal.map(e => {
+        const time = e.is_all_day
+          ? 'All day'
+          : new Date(e.starts_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: tz })
+        const title = (e.title || '(no title)').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        return `<div style="padding:8px 12px;background:var(--bg-hover);border-radius:7px;margin-bottom:6px;opacity:0.7;">
+          <div style="font-size:12.5px;font-weight:500;color:var(--text-primary);">${title}</div>
+          <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">${time}</div>
+        </div>`
+      }).join('')
+    }
+    container.innerHTML = html
   }
 
   const renderApptCard = (a) => {
