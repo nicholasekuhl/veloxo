@@ -2965,6 +2965,9 @@ const openLeadActionsMenu = (leadId, leadName, btn) => {
       <button class="ami-item" onclick="closeLeadActionsMenu();openScheduleFollowupModal('${leadId}','${leadName}')">
         <span class="ami-icon">📅</span> Schedule Follow-up
       </button>
+      <button class="ami-item" onclick="closeLeadActionsMenu();openBookAppointment('${leadId}','${leadName}')">
+        <span class="ami-icon">📆</span> Book Appointment
+      </button>
       <div class="ami-divider"></div>
       <div class="ami-section">PIPELINE</div>
       <button class="ami-item" onclick="closeLeadActionsMenu();openDispositionModal('${leadId}','${leadName}')">
@@ -3364,6 +3367,74 @@ const saveScheduleFollowup = async () => {
       toast.success('Follow-up scheduled', title)
     } else toast.error('Save failed', data.error || 'Could not schedule follow-up')
   } catch (err) { toast.error('Error', 'Something went wrong') }
+}
+
+// ===== BOOK APPOINTMENT =====
+// Opens the shared #book-appointment-modal (defined in leads.html) for a specific
+// lead. Blocks submission if the lead already has a future scheduled appointment.
+const openBookAppointment = async (leadId, leadName) => {
+  const modal = document.getElementById('book-appointment-modal')
+  if (!modal) {
+    console.error('book-appointment-modal not found')
+    return
+  }
+  const name = leadName || 'lead'
+  document.getElementById('book-appt-lead-id').value = leadId
+  document.getElementById('book-appt-lead-name').textContent = `Book an appointment with ${name}`
+  document.getElementById('book-appt-datetime').value = ''
+  document.getElementById('book-appt-notes').value = ''
+  document.getElementById('book-appt-existing').style.display = 'none'
+
+  try {
+    const res = await fetch(`/appointments/lead/${leadId}`, { credentials: 'include' })
+    const data = await res.json()
+    const future = (data.appointments || []).filter(a =>
+      a.status === 'scheduled' && new Date(a.scheduled_at) > new Date()
+    )
+    if (future.length > 0) {
+      const next = future[0]
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+      const when = new Date(next.scheduled_at).toLocaleString('en-US', {
+        timeZone: tz, weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit'
+      })
+      const banner = document.getElementById('book-appt-existing')
+      banner.innerHTML = `⚠ This lead already has an appointment scheduled for <strong>${when}</strong>. Reschedule or cancel it first.`
+      banner.style.display = 'block'
+    }
+  } catch (err) {
+    console.error('Failed to check existing appointments:', err)
+  }
+
+  modal.classList.add('open')
+}
+
+const saveBookAppointment = async () => {
+  const leadId = document.getElementById('book-appt-lead-id').value
+  const dt = document.getElementById('book-appt-datetime').value
+  const notes = document.getElementById('book-appt-notes').value.trim()
+  const existingBanner = document.getElementById('book-appt-existing')
+  if (existingBanner.style.display !== 'none') {
+    return toast.error('Existing appointment', 'Reschedule or cancel the existing one first.')
+  }
+  if (!dt) return toast.error('Required', 'Please pick a date and time')
+  try {
+    const res = await fetch('/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ lead_id: leadId, scheduled_at: new Date(dt).toISOString(), notes })
+    })
+    const data = await res.json()
+    if (data.success) {
+      document.getElementById('book-appointment-modal').classList.remove('open')
+      toast.success('Appointment booked', 'The appointment is saved')
+    } else {
+      toast.error('Error', data.error || 'Failed to book appointment')
+    }
+  } catch (err) {
+    toast.error('Error', 'Something went wrong')
+  }
 }
 
 // ===== INIT =====

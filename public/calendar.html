@@ -32,6 +32,14 @@
     .cal-dot-completed { background: #34d399; }
     .cal-dot-cancelled { background: #f87171; }
     .cal-dot-external { background: #94a3b8; opacity: 0.6; }
+    .lead-search-item { padding: 8px 12px; cursor: pointer; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle); }
+    .lead-search-item:last-child { border-bottom: none; }
+    .lead-search-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .lead-search-item .lsi-name { font-weight: 500; }
+    .lead-search-item .lsi-phone { font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+    .lead-search-selected { padding: 8px 12px; background: rgba(0,201,167,0.1); border: 1px solid rgba(0,201,167,0.3); border-radius: 8px; font-size: 13px; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; }
+    .lead-search-selected .lss-clear { background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 0 4px; line-height: 1; }
+    .lead-search-selected .lss-clear:hover { color: var(--text-primary); }
     .appt-card { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 9px; padding: 12px 14px; margin-bottom: 10px; }
     .appt-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .appt-name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
@@ -103,9 +111,12 @@
       <h2>New Appointment</h2>
       <button class="modal-close" onclick="document.getElementById('create-appt-modal').classList.remove('open')">×</button>
     </div>
-    <div class="form-group">
+    <div class="form-group" style="position:relative;">
       <label>Lead</label>
-      <select id="appt-lead-id"><option value="">Select a lead...</option></select>
+      <input type="text" id="appt-lead-search" placeholder="Start typing a name or phone number..." autocomplete="off" oninput="onLeadSearchInput(this.value)" onfocus="onLeadSearchFocus()">
+      <input type="hidden" id="appt-lead-id" value="">
+      <div id="appt-lead-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--dropdown-bg);border:1px solid var(--input-border);border-radius:8px;box-shadow:0 4px 20px var(--modal-shadow);max-height:240px;overflow-y:auto;z-index:1000;margin-top:2px;"></div>
+      <div id="appt-lead-existing" style="display:none;margin-top:8px;padding:10px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;font-size:12.5px;color:#fbbf24;"></div>
     </div>
     <div class="form-group">
       <label>Date & Time</label>
@@ -145,7 +156,6 @@
 <script>
   let allAppointments = []
   let allExternalEvents = []
-  let allLeads = []
   let calYear = new Date().getFullYear()
   let calMonth = new Date().getMonth()
   let selectedCalDate = null
@@ -357,35 +367,135 @@
     if (selectedCalDate) selectCalDate(selectedCalDate)
   }
 
-  const openCreateApptModal = () => {
-    const select = document.getElementById('appt-lead-id')
-    select.innerHTML = '<option value="">Select a lead...</option>' + allLeads.map(l => `<option value="${l.id}">${l.first_name} ${l.last_name} — ${l.phone}</option>`).join('')
+  let leadSearchDebounce = null
+  let leadSearchCache = new Map() // query → results
+
+  const openCreateApptModal = (prefilledLead) => {
+    document.getElementById('appt-lead-search').value = ''
+    document.getElementById('appt-lead-id').value = ''
     document.getElementById('appt-notes').value = ''
     document.getElementById('appt-datetime').value = ''
+    document.getElementById('appt-lead-results').style.display = 'none'
+    document.getElementById('appt-lead-existing').style.display = 'none'
+    if (prefilledLead) {
+      selectLeadForAppt(prefilledLead)
+    }
     document.getElementById('create-appt-modal').classList.add('open')
+  }
+
+  const onLeadSearchFocus = () => {
+    const query = document.getElementById('appt-lead-search').value.trim()
+    if (query.length >= 2) onLeadSearchInput(query)
+  }
+
+  const onLeadSearchInput = (query) => {
+    const q = query.trim()
+    // Clear selected lead if user starts typing again
+    document.getElementById('appt-lead-id').value = ''
+    document.getElementById('appt-lead-existing').style.display = 'none'
+
+    const container = document.getElementById('appt-lead-results')
+    if (q.length < 2) { container.style.display = 'none'; return }
+
+    clearTimeout(leadSearchDebounce)
+    leadSearchDebounce = setTimeout(async () => {
+      let results
+      if (leadSearchCache.has(q)) {
+        results = leadSearchCache.get(q)
+      } else {
+        try {
+          const res = await fetch(`/leads?search=${encodeURIComponent(q)}&limit=10`, { credentials: 'include' })
+          const data = await res.json()
+          results = data.leads || []
+          leadSearchCache.set(q, results)
+        } catch {
+          results = []
+        }
+      }
+      renderLeadSearchResults(results)
+    }, 250)
+  }
+
+  const renderLeadSearchResults = (results) => {
+    const container = document.getElementById('appt-lead-results')
+    if (!results.length) {
+      container.innerHTML = `<div class="lead-search-item" style="cursor:default;color:var(--text-muted);">No matching leads found</div>`
+      container.style.display = 'block'
+      return
+    }
+    container.innerHTML = results.map(l => {
+      const name = [l.first_name, l.last_name].filter(Boolean).join(' ') || '(no name)'
+      const escPhone = (l.phone || '').replace(/'/g, "\\'")
+      return `<div class="lead-search-item" onclick="selectLeadForAppt({ id: '${l.id}', first_name: '${(l.first_name || '').replace(/'/g, "\\'")}', last_name: '${(l.last_name || '').replace(/'/g, "\\'")}', phone: '${escPhone}' })">
+        <span class="lsi-name">${name}</span>
+        <span class="lsi-phone">${l.phone || ''}</span>
+      </div>`
+    }).join('')
+    container.style.display = 'block'
+  }
+
+  const selectLeadForAppt = async (lead) => {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || lead.phone
+    document.getElementById('appt-lead-search').value = name
+    document.getElementById('appt-lead-id').value = lead.id
+    document.getElementById('appt-lead-results').style.display = 'none'
+
+    // Check for existing future appointments
+    try {
+      const res = await fetch(`/appointments/lead/${lead.id}`, { credentials: 'include' })
+      const data = await res.json()
+      const future = (data.appointments || []).filter(a =>
+        a.status === 'scheduled' && new Date(a.scheduled_at) > new Date()
+      )
+      const banner = document.getElementById('appt-lead-existing')
+      if (future.length > 0) {
+        const next = future[0]
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const when = new Date(next.scheduled_at).toLocaleString('en-US', {
+          timeZone: tz, weekday: 'short', month: 'short', day: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        })
+        banner.innerHTML = `⚠ This lead already has an appointment scheduled for <strong>${when}</strong>. Reschedule or cancel it first, then try again.`
+        banner.style.display = 'block'
+      } else {
+        banner.style.display = 'none'
+      }
+    } catch (err) {
+      console.error('Failed to check existing appointments:', err)
+    }
   }
 
   const saveNewAppt = async () => {
     const lead_id = document.getElementById('appt-lead-id').value
     const scheduled_at = document.getElementById('appt-datetime').value
     const notes = document.getElementById('appt-notes').value.trim()
-    if (!lead_id || !scheduled_at) return toast.error('Required', 'Lead and date/time are required')
-    const res = await fetch('/appointments', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lead_id, scheduled_at: new Date(scheduled_at).toISOString(), notes }) })
+    const existingBanner = document.getElementById('appt-lead-existing')
+    if (existingBanner.style.display !== 'none') {
+      return toast.error('Existing appointment', 'This lead already has a future appointment. Reschedule or cancel it first.')
+    }
+    if (!lead_id) return toast.error('Required', 'Please select a lead')
+    if (!scheduled_at) return toast.error('Required', 'Please pick a date and time')
+    const res = await fetch('/appointments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ lead_id, scheduled_at: new Date(scheduled_at).toISOString(), notes })
+    })
     const data = await res.json()
-    if (data.success) { document.getElementById('create-appt-modal').classList.remove('open'); await loadAppointments(); toast.success('Appointment created', 'Appointment added to calendar') }
-    else toast.error('Error', data.error || 'Failed to create appointment')
+    if (data.success) {
+      document.getElementById('create-appt-modal').classList.remove('open')
+      await loadAppointments()
+      toast.success('Appointment created', 'Appointment added to calendar')
+    } else {
+      toast.error('Error', data.error || 'Failed to create appointment')
+    }
   }
 
   const init = async () => {
     const ok = await checkAuth()
     if (!ok) return
     await Promise.all([loadProfile(), loadAppointments()])
-    // Load leads for the create-appt modal dropdown
-    try {
-      const res = await fetch('/leads')
-      const data = await res.json()
-      allLeads = data.leads || []
-    } catch {}
+    // Leads are now loaded on-demand via typeahead; no preload needed.
     loadCalBadge()
     loadNotifBadge()
     setInterval(loadNotifBadge, 60000)

@@ -1286,6 +1286,31 @@
   </div>
 </div>
 
+<!-- BOOK APPOINTMENT MODAL -->
+<div class="modal-overlay" id="book-appointment-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h2 style="font-size:17px;">Book Appointment</h2>
+      <button class="modal-close" onclick="document.getElementById('book-appointment-modal').classList.remove('open')">×</button>
+    </div>
+    <div id="book-appt-lead-name" style="font-size:14px;color:var(--text-muted);margin-bottom:16px;"></div>
+    <input type="hidden" id="book-appt-lead-id" value="">
+    <div class="form-group">
+      <label>Date &amp; Time</label>
+      <input type="datetime-local" id="book-appt-datetime">
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="book-appt-notes" placeholder="Any notes about this appointment..." rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;background:var(--input-bg);color:var(--input-text);"></textarea>
+    </div>
+    <div id="book-appt-existing" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;font-size:12.5px;color:#fbbf24;"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="document.getElementById('book-appointment-modal').classList.remove('open')">Cancel</button>
+      <button class="btn-primary" onclick="saveBookAppointment()">Book Appointment</button>
+    </div>
+  </div>
+</div>
+
 
 <script src="/js/shared.js?v=1"></script>
 <script src="/js/leads.js?v=6"></script>

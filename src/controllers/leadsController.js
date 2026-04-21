@@ -691,7 +691,14 @@ const getLeads = async (req, res) => {
         }
       }
       if (req.query.search) {
+        // Escape PostgREST .or() delimiters and ilike wildcards so searches
+        // containing commas, parens, percent signs, or underscores don't break
+        // the query (e.g., "Smith, John" or "O'Brien"). Typeahead in particular
+        // passes arbitrary user input here.
         const s = req.query.search
+          .replace(/[,()]/g, m => '\\' + m)
+          .replace(/%/g, '\\%')
+          .replace(/_/g, '\\_')
         q = q.or(`first_name.ilike.%${s}%,last_name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)
       }
       if (req.query.status) q = q.eq('status', req.query.status)

@@ -332,6 +332,7 @@
             <button class="btn btn-call" onclick="callLead()">📞 Call</button>
             <button class="btn btn-disposition" onclick="toggleDispositionPicker()">🏷️ Disposition</button>
             <button class="btn btn-primary" onclick="switchTab('sms')">💬 Send SMS</button>
+            <button class="btn btn-secondary" onclick="openBookApptModal()">📆 Book Appointment</button>
             ${lead.is_sold
               ? `<span style="background:#d1fae5;color:#065f46;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px;">✓ SOLD</span>`
               : `<button class="btn" style="background:#10b981;color:white;font-weight:600;" onclick="openMarkSoldModal()">🎉 Mark as Sold</button>`}
@@ -1197,6 +1198,62 @@
     } catch (e) { toast.error('Error', 'Could not update product') }
   }
 
+  const openBookApptModal = async () => {
+    const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'this lead'
+    document.getElementById('lp-book-appt-lead-name').textContent = `Booking an appointment with ${name}`
+    document.getElementById('lp-book-appt-datetime').value = ''
+    document.getElementById('lp-book-appt-notes').value = ''
+    document.getElementById('lp-book-appt-existing').style.display = 'none'
+    document.getElementById('lp-book-appt-modal').style.display = 'flex'
+
+    // Check for existing future appointments
+    try {
+      const res = await fetch(`/appointments/lead/${leadId}`, { credentials: 'include' })
+      const data = await res.json()
+      const future = (data.appointments || []).filter(a =>
+        a.status === 'scheduled' && new Date(a.scheduled_at) > new Date()
+      )
+      if (future.length > 0) {
+        const next = future[0]
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+        const when = new Date(next.scheduled_at).toLocaleString('en-US', {
+          timeZone: tz, weekday: 'short', month: 'short', day: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        })
+        const banner = document.getElementById('lp-book-appt-existing')
+        banner.innerHTML = `⚠ ${name} already has an appointment scheduled for <strong>${when}</strong>. Reschedule or cancel it first.`
+        banner.style.display = 'block'
+      }
+    } catch (err) { console.error('Failed to check existing appointments:', err) }
+
+    setTimeout(() => document.getElementById('lp-book-appt-datetime').focus(), 100)
+  }
+
+  const submitBookAppt = async () => {
+    const dt = document.getElementById('lp-book-appt-datetime').value
+    const notes = document.getElementById('lp-book-appt-notes').value.trim()
+    const existingBanner = document.getElementById('lp-book-appt-existing')
+    if (existingBanner.style.display !== 'none') {
+      return toast.error('Existing appointment', 'Reschedule or cancel the existing one first.')
+    }
+    if (!dt) return toast.error('Required', 'Please pick a date and time')
+    try {
+      const res = await fetch('/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ lead_id: leadId, scheduled_at: new Date(dt).toISOString(), notes })
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'Failed to book')
+      document.getElementById('lp-book-appt-modal').style.display = 'none'
+      toast.success('Appointment booked', 'The appointment is saved to your calendar')
+      loadLeadAppointments()
+    } catch (err) {
+      toast.error('Error', err.message || 'Could not book appointment')
+    }
+  }
+
   const openMarkSoldModal = () => {
     const name = [lead.first_name, lead.last_name].filter(Boolean).join(' ') || 'Lead'
     document.getElementById('lp-sold-modal-title').textContent = `Mark ${name} as Sold 🎉`
@@ -1283,6 +1340,30 @@
     <div style="display:flex;gap:10px;justify-content:flex-end;">
       <button onclick="document.getElementById('lp-sold-modal').style.display='none'" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg-hover);color:var(--text-secondary);border:none;">Cancel</button>
       <button onclick="submitMarkSold()" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:#10b981;color:white;border:none;">Mark as Sold</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK APPOINTMENT MODAL (lead profile) -->
+<div style="display:none;position:fixed;inset:0;background:var(--overlay-bg);z-index:100000;align-items:center;justify-content:center;padding:20px;" id="lp-book-appt-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--bg-card);border-radius:16px;padding:28px;width:100%;max-width:420px;box-shadow:0 20px 60px var(--modal-shadow);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <div style="font-size:17px;font-weight:700;color:var(--text-primary);">Book Appointment</div>
+      <button onclick="document.getElementById('lp-book-appt-modal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted);line-height:1;">×</button>
+    </div>
+    <div id="lp-book-appt-lead-name" style="font-size:13px;color:var(--text-muted);margin-bottom:16px;"></div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Date &amp; Time</label>
+      <input type="datetime-local" id="lp-book-appt-datetime" style="width:100%;padding:8px 12px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;outline:none;background:var(--input-bg);color:var(--input-text);">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="display:block;font-size:12px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;">Notes (optional)</label>
+      <textarea id="lp-book-appt-notes" placeholder="Any notes about this appointment..." rows="3" style="width:100%;padding:8px 12px;border:1px solid var(--input-border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;outline:none;background:var(--input-bg);color:var(--input-text);"></textarea>
+    </div>
+    <div id="lp-book-appt-existing" style="display:none;margin-bottom:12px;padding:10px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;font-size:12.5px;color:#fbbf24;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="document.getElementById('lp-book-appt-modal').style.display='none'" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:var(--bg-hover);color:var(--text-secondary);border:none;">Cancel</button>
+      <button onclick="submitBookAppt()" style="padding:9px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;background:linear-gradient(135deg, #00c9a7, #0ea5e9);color:#0b0f12;border:none;">Book Appointment</button>
     </div>
   </div>
 </div>
