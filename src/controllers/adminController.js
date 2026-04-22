@@ -285,81 +285,16 @@ const createAccessRequest = async (req, res) => {
     }
 
     // Fire-and-forget notification emails — never block or fail the request
-    sendAccessRequestEmails({ name: cleanName, email: normalised, notes: cleanNotes })
-      .catch(err => console.error('[access-request emails]', err.message))
+    const { sendAccessRequestConfirmationEmail } = require('../emails/accessRequestConfirmation')
+    const { sendAccessRequestNotificationEmail } = require('../emails/accessRequestNotification')
+    sendAccessRequestConfirmationEmail({ name: cleanName, email: normalised })
+    sendAccessRequestNotificationEmail({ name: cleanName, email: normalised, notes: cleanNotes })
 
     res.json({ success: true })
   } catch (err) {
     console.error('[access-request] unexpected error:', err)
     res.status(500).json({ error: err.message || 'Failed to save' })
   }
-}
-
-const sendAccessRequestEmails = async ({ name, email, notes }) => {
-  const { resend, FROM } = require('../utils/email')
-  const displayName = name || 'there'
-  const displayNotes = notes || 'None provided'
-  const timestamp = new Date().toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' }) + ' ET'
-
-  const confirmationHtml = `
-    <div style="font-family:system-ui,-apple-system,sans-serif;background:#08080f;padding:40px 20px;margin:0;">
-      <div style="max-width:520px;margin:0 auto;background:#0f0f18;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;">
-        <div style="padding:32px 36px 8px;text-align:center;">
-          <div style="display:inline-flex;align-items:center;gap:10px;">
-            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#00c9a7,#0ea5e9);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;">
-              <span style="color:#fff;font-weight:700;font-size:16px;letter-spacing:-1px;">&rsaquo;&rsaquo;&rsaquo;</span>
-            </div>
-            <span style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#fff;vertical-align:middle;"><span style="color:#00d4b4;">Velox</span>o</span>
-          </div>
-        </div>
-        <div style="padding:24px 36px 36px;color:rgba(255,255,255,0.75);font-size:15px;line-height:1.65;">
-          <h1 style="font-size:22px;font-weight:700;letter-spacing:-0.3px;color:#fff;margin:0 0 18px;">You're on the list</h1>
-          <p style="margin:0 0 14px;">Hi ${displayName},</p>
-          <p style="margin:0 0 14px;">Thanks for your interest in Veloxo. We've received your request and you're on our early access list.</p>
-          <p style="margin:0 0 14px;">We're onboarding agents carefully to make sure every user gets the best experience. We'll reach out to <strong style="color:#34d8b8;">${email}</strong> as soon as a spot opens up.</p>
-          <p style="margin:0 0 18px;">In the meantime, if you have questions you can reach us at <a href="mailto:support@veloxo.io" style="color:#34d8b8;text-decoration:none;">support@veloxo.io</a>.</p>
-          <p style="margin:0;color:rgba(255,255,255,0.55);">— The Veloxo Team</p>
-        </div>
-        <div style="padding:16px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;font-size:12px;color:rgba(255,255,255,0.35);">
-          <a href="https://veloxo.io" style="color:rgba(255,255,255,0.55);text-decoration:none;">veloxo.io</a>
-          &nbsp;&middot;&nbsp;
-          <a href="mailto:support@veloxo.io" style="color:rgba(255,255,255,0.55);text-decoration:none;">support@veloxo.io</a>
-        </div>
-      </div>
-    </div>
-  `
-
-  const adminHtml = `
-    <div style="font-family:system-ui,-apple-system,sans-serif;max-width:520px;margin:0 auto;padding:24px;color:#111;">
-      <h2 style="margin:0 0 16px;font-size:18px;">New access request received.</h2>
-      <table style="width:100%;border-collapse:collapse;font-size:14px;">
-        <tr><td style="padding:8px 0;color:#666;width:80px;">Name:</td><td style="padding:8px 0;font-weight:500;">${displayName}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;">Email:</td><td style="padding:8px 0;font-weight:500;">${email}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;vertical-align:top;">Notes:</td><td style="padding:8px 0;white-space:pre-wrap;">${displayNotes}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;">Time:</td><td style="padding:8px 0;">${timestamp}</td></tr>
-      </table>
-      <p style="margin:20px 0 0;font-size:14px;">
-        Review and invite at:<br>
-        <a href="https://app.veloxo.io/admin.html" style="color:#0ea5e9;">https://app.veloxo.io/admin.html</a>
-      </p>
-    </div>
-  `
-
-  const applicantPromise = resend.emails.send({
-    from: FROM.invites,
-    to: email,
-    subject: "You're on the list — Veloxo Early Access",
-    html: confirmationHtml
-  }).catch(err => console.error('[access-request confirmation email]', err.message))
-
-  const adminPromise = resend.emails.send({
-    from: FROM.noreply,
-    to: process.env.ADMIN_EMAIL || 'nick@veloxo.io',
-    subject: `New Access Request — ${displayName} (${email})`,
-    html: adminHtml
-  }).catch(err => console.error('[access-request admin email]', err.message))
-
-  await Promise.all([applicantPromise, adminPromise])
 }
 
 const getAccessRequests = async (req, res) => {

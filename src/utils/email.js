@@ -14,6 +14,31 @@ const FROM = {
   support: process.env.RESEND_FROM_SUPPORT || 'support@veloxo.io',
 }
 
+// Wraps body content in the standard Veloxo branded shell
+// (dark theme, gradient logo header, footer).
+const brand = ({ bodyHtml }) => `
+    <div style="font-family:system-ui,-apple-system,sans-serif;background:#08080f;padding:40px 20px;margin:0;">
+      <div style="max-width:520px;margin:0 auto;background:#0f0f18;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;">
+        <div style="padding:32px 36px 8px;text-align:center;">
+          <div style="display:inline-flex;align-items:center;gap:10px;">
+            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#00c9a7,#0ea5e9);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;">
+              <span style="color:#fff;font-weight:700;font-size:16px;letter-spacing:-1px;">&rsaquo;&rsaquo;&rsaquo;</span>
+            </div>
+            <span style="font-size:22px;font-weight:700;letter-spacing:-0.5px;color:#fff;vertical-align:middle;"><span style="color:#00d4b4;">Velox</span>o</span>
+          </div>
+        </div>
+        <div style="padding:24px 36px 36px;color:rgba(255,255,255,0.75);font-size:15px;line-height:1.65;">
+          ${bodyHtml}
+        </div>
+        <div style="padding:16px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;font-size:12px;color:rgba(255,255,255,0.35);">
+          <a href="https://veloxo.io" style="color:rgba(255,255,255,0.55);text-decoration:none;">veloxo.io</a>
+          &nbsp;&middot;&nbsp;
+          <a href="mailto:support@veloxo.io" style="color:rgba(255,255,255,0.55);text-decoration:none;">support@veloxo.io</a>
+        </div>
+      </div>
+    </div>
+  `
+
 const sendCreditPurchaseEmail = async ({
   toEmail, agentName, creditType,
   creditAmount, dollarAmount, newBalance
@@ -58,4 +83,4 @@ const sendCreditPurchaseEmail = async ({
   })
 }
 
-module.exports = { sendCreditPurchaseEmail, FROM, resend }
+module.exports = { sendCreditPurchaseEmail, FROM, resend, brand }

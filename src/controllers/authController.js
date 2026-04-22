@@ -1,6 +1,5 @@
 const supabase = require('../db')
 const crypto = require('crypto')
-const { resend, FROM } = require('../utils/email')
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -199,24 +198,8 @@ const inviteAgent = async (req, res) => {
     const appUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`
     const inviteUrl = `${appUrl}/invite.html?token=${token}`
 
-    if (process.env.RESEND_API_KEY) {
-      await resend.emails.send({
-        from: FROM.invites,
-        to: email,
-        subject: 'You have been invited to Veloxo',
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2 style="color: #7c6ff7;">You're invited to Veloxo</h2>
-            <p>You've been invited to join Veloxo, the AI-powered SMS platform for insurance agents.</p>
-            <p>Click the button below to set up your account:</p>
-            <a href="${inviteUrl}" style="display: inline-block; background: #7c6ff7; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500;">Accept Invite</a>
-            <p style="color: #999; font-size: 13px; margin-top: 24px;">This link expires in 7 days. If you didn't expect this invite, you can ignore this email.</p>
-          </div>
-        `
-      })
-    } else {
-      console.warn('[inviteAgent] RESEND_API_KEY not set — invite email not sent. Link:', inviteUrl)
-    }
+    const { sendInviteAgentEmail } = require('../emails/inviteAgent')
+    await sendInviteAgentEmail({ email, inviteUrl })
 
     res.json({ success: true, invite_link: inviteUrl })
   } catch (err) {
